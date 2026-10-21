@@ -1,0 +1,19 @@
+# ../docs/memory.md#the-program
+
+var kernel = DynamicLibrary("kernel32.dll")
+
+func sleep(milliseconds: Integer) {
+    kernel.Sleep(milliseconds)
+}
+
+func working_directory(): String {
+    var room = Buffer(1024)
+    var length = kernel.GetCurrentDirectoryA(1024, room)
+    return room.text(0, length)
+}
+
+func executable_path(): String {
+    var room = Buffer(1024)
+    var length = kernel.GetModuleFileNameA(0, room, 1024)
+    return room.text(0, length)
+}

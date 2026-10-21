@@ -1,0 +1,39 @@
+# ../docs/memory.md#the-console
+
+var input = 0
+
+func read_line(): String? {
+    if input == 0 {
+        input = library._fdopen_as_long(0, "r")
+    }
+    var line = ""
+    var read_anything = false
+    var more = _read_a_line()
+    while more {
+        read_anything = true
+        var piece = more
+        if piece.ends_with("\n") {
+            var piece_length = piece.length()
+            line = "{line}{piece.slice(0, piece_length - 1)}"
+            more = ""
+        } else {
+            line = "{line}{piece}"
+            more = _read_a_line()
+        }
+    }
+    assert read_anything
+    if line.ends_with("\r") {
+        var line_length = line.length()
+        return line.slice(0, line_length - 1)
+    }
+    return line
+}
+
+func _read_a_line(): String {
+    var room = Buffer(256)
+    var read = library.fgets(room, 256, input)
+    if read == 0 {
+        return ""
+    }
+    return room.text(0, room.count())
+}

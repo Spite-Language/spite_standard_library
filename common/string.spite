@@ -1,0 +1,230 @@
+# ../docs/memory.md#the-string
+
+var _buffer = Buffer(1024)
+var _length = 0
+
+func length(): Integer {
+    return _length
+}
+
+func is_empty(): Boolean {
+    return _length == 0
+}
+
+func code_at(index: Integer): Integer {
+    return _buffer._read_byte_at(index)
+}
+
+func append_code(code: Integer) {
+    _buffer._write_byte_at(_length, code)
+    _length = _length + 1
+}
+
+func character_at(index: Integer): String {
+    var character = String()
+    character.append_code(code_at(index))
+    return character
+}
+
+func slice(start: Integer, end: Integer): String {
+    var first = _clamped(start)
+    var last = _clamped(end)
+    if last <= first {
+        return String()
+    }
+    var sliced = String()
+    var index = first
+    while index < last {
+        sliced.append_code(code_at(index))
+        index = index + 1
+    }
+    return sliced
+}
+
+func _clamped(position: Integer): Integer {
+    if position < 0 {
+        return 0
+    }
+    if _length < position {
+        return _length
+    }
+    return position
+}
+
+func sum(other: String): String {
+    var summed = String()
+    var index = 0
+    while index < _length {
+        summed.append_code(code_at(index))
+        index = index + 1
+    }
+    var other_index = 0
+    while other_index < other.length() {
+        summed.append_code(other.code_at(other_index))
+        other_index = other_index + 1
+    }
+    return summed
+}
+
+func equals(other: String): Boolean {
+    if _length != other.length() {
+        return false
+    }
+    var index = 0
+    while index < _length {
+        if code_at(index) != other.code_at(index) {
+            return false
+        }
+        index = index + 1
+    }
+    return true
+}
+
+func less_than(other: String): Boolean {
+    var index = 0
+    while index < _length and index < other.length() {
+        var mine = code_at(index)
+        var theirs = other.code_at(index)
+        if mine != theirs {
+            return mine < theirs
+        }
+        index = index + 1
+    }
+    return _length < other.length()
+}
+
+func greater_than(other: String): Boolean {
+    var index = 0
+    while index < _length and index < other.length() {
+        var mine = code_at(index)
+        var theirs = other.code_at(index)
+        if mine != theirs {
+            return mine > theirs
+        }
+        index = index + 1
+    }
+    return _length > other.length()
+}
+
+func starts_with(text: String): Boolean {
+    if text.length() > _length {
+        return false
+    }
+    var index = 0
+    while index < text.length() {
+        if code_at(index) != text.code_at(index) {
+            return false
+        }
+        index = index + 1
+    }
+    return true
+}
+
+func ends_with(text: String): Boolean {
+    if text.length() > _length {
+        return false
+    }
+    var index = text.length()
+    while index > 0 {
+        var mine = code_at(_length - text.length() + index - 1)
+        var theirs = text.code_at(index - 1)
+        if mine != theirs {
+            return false
+        }
+        index = index - 1
+    }
+    return true
+}
+
+func contains(text: String): Boolean {
+    if text.length() > _length {
+        return false
+    }
+    var start = 0
+    while start + text.length() <= _length {
+        if _starts_the_text_at(start, text) {
+            return true
+        }
+        start = start + 1
+    }
+    return false
+}
+
+func _starts_the_text_at(start: Integer, text: String): Boolean {
+    var index = 0
+    while index < text.length() {
+        if code_at(start + index) != text.code_at(index) {
+            return false
+        }
+        index = index + 1
+    }
+    return true
+}
+
+func split(separator: String): List<String> {
+    var pieces = List<String>()
+    var piece = String()
+    var index = 0
+    while index < _length {
+        if _starts_the_separator_at(index, separator) {
+            pieces.append(piece)
+            piece = String()
+            index = index + separator.length()
+        } else {
+            piece.append_code(code_at(index))
+            index = index + 1
+        }
+    }
+    pieces.append(piece)
+    return pieces
+}
+
+func _starts_the_separator_at(index: Integer, separator: String): Boolean {
+    if index + separator.length() > _length {
+        return false
+    }
+    return _starts_the_text_at(index, separator)
+}
+
+func to_long(): Long? {
+    var index = 0
+    var negative = false
+    if _length > 0 and code_at(0) == 45 {
+        negative = true
+        index = 1
+    }
+    var digits = 0
+    var value: Long = 0
+    while index < _length {
+        var code = code_at(index)
+        if code < 48 or code > 57 {
+            return null
+        }
+        value = value * 10 + (code - 48)
+        digits = digits + 1
+        index = index + 1
+    }
+    if digits == 0 {
+        return null
+    }
+    if negative {
+        return 0 - value
+    }
+    return value
+}
+
+func to_integer(): Integer? {
+    var value = to_long()
+    if value {
+        return value
+    }
+    return null
+}
+
+func to_string(): String {
+    return slice(0, _length)
+}
+
+func to_debug(): String {
+    return to_string()
+}

@@ -1,0 +1,7 @@
+# ../docs/memory.md#the-numbers
+
+var _buffer = Buffer(8)
+
+func to_buffer(): Buffer {
+    return _buffer.copy_first_bytes(8)
+}

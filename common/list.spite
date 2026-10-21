@@ -1,0 +1,176 @@
+# ../docs/memory.md#the-list
+
+generic $element_type
+
+var _buffer = Buffer(1024)
+var _length = 0
+var _capacity = 1024
+
+func _read_value(index: Integer): $element_type
+
+func _write_value(index: Integer, value: $element_type)
+
+func count(): Integer {
+    return _length
+}
+
+func is_empty(): Boolean {
+    return _length == 0
+}
+
+func append(value: $element_type) {
+    make_room()
+    _write_value(_length, value)
+    _length = _length + 1
+}
+
+func prepend(value: $element_type) {
+    insert(0, value)
+}
+
+func insert(index: Integer, value: $element_type) {
+    var position = index
+    if position < 0 {
+        position = 0
+    }
+    if position > _length {
+        position = _length
+    }
+    make_room()
+    _move_values(position + 1, position, _length - position)
+    _write_value(position, value)
+    _length = _length + 1
+}
+
+func get_at(index: Integer): $element_type? {
+    if index >= 0 and index < _length {
+        return _read_value(index)
+    }
+    return null
+}
+
+func set_at(index: Integer, value: $element_type) {
+    crash index >= 0 and index < _length
+    _write_value(index, value)
+}
+
+func remove_at(index: Integer) {
+    crash index >= 0 and index < _length
+    _move_values(index, index + 1, _length - index - 1)
+    _length = _length - 1
+}
+
+func remove_last(): $element_type? {
+    if _length > 0 {
+        var last = _read_value(_length - 1)
+        _length = _length - 1
+        return last
+    }
+    return null
+}
+
+func remove_first(): $element_type? {
+    if _length > 0 {
+        var first = _read_value(0)
+        remove_at(0)
+        return first
+    }
+    return null
+}
+
+func first(): $element_type? {
+    if _length > 0 {
+        return _read_value(0)
+    }
+    return null
+}
+
+func last(): $element_type? {
+    if _length > 0 {
+        return _read_value(_length - 1)
+    }
+    return null
+}
+
+func clear() {
+    _length = 0
+}
+
+func contains(value: $element_type): Boolean {
+    var index = 0
+    while index < _length {
+        var held = _read_value(index)
+        if held == value {
+            return true
+        }
+        index = index + 1
+    }
+    return false
+}
+
+func index_of(value: $element_type): Integer? {
+    var index = 0
+    while index < _length {
+        var held = _read_value(index)
+        if held == value {
+            return index
+        }
+        index = index + 1
+    }
+    return null
+}
+
+func join(separator: String): String {
+    var joined = String()
+    var index = 0
+    while index < _length {
+        if index > 0 {
+            joined = joined.sum(separator)
+        }
+        var held = _read_value(index)
+        joined = joined.sum(held.to_string())
+        index = index + 1
+    }
+    return joined
+}
+
+func copy(): List<$element_type> {
+    var copied = List<$element_type>()
+    var index = 0
+    while index < _length {
+        var held = _read_value(index)
+        copied.append(held)
+        index = index + 1
+    }
+    return copied
+}
+
+func each(callback: Spite.Function<$element_type>) {
+    var index = 0
+    while index < _length {
+        var held = _read_value(index)
+        callback(held)
+        index = index + 1
+    }
+}
+
+func make_room() {
+    if _length == _capacity {
+        reserve(_length + 1)
+    }
+}
+
+func reserve(wanted: Integer) {
+    if wanted > _capacity {
+        crash wanted <= _capacity
+    }
+}
+
+func _move_values(from: Integer, to: Integer, wanted: Integer) {
+    var index = 0
+    while index < wanted {
+        var held = _read_value(from + index)
+        _write_value(to + index, held)
+        index = index + 1
+    }
+}

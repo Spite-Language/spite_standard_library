@@ -1,0 +1,10 @@
+# ../docs/memory.md#the-program
+
+singleton
+
+var library = DynamicLibrary("ucrtbase.dll")
+
+func exit(code: Integer) {
+    console.flush()
+    library.exit(code)
+}

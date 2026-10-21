@@ -1,0 +1,52 @@
+# ../docs/memory.md#the-console
+
+singleton
+
+var library = DynamicLibrary("ucrtbase.dll")
+var output = 0
+var error_output = 0
+
+func print(text: String) {
+    write(text)
+    write("\n")
+    flush()
+}
+
+func write(text: String) {
+    _write_to(text, _the_output())
+}
+
+func error(text: String) {
+    flush()
+    _write_to(text, _the_error_output())
+    _write_to("\n", _the_error_output())
+    flush()
+}
+
+func debug(text: String) {
+    write(text)
+    write("\n")
+    flush()
+}
+
+func flush() {
+    library.fflush(0)
+}
+
+func _the_output(): Long {
+    if output == 0 {
+        output = library._fdopen_as_long(1, "w")
+    }
+    return output
+}
+
+func _the_error_output(): Long {
+    if error_output == 0 {
+        error_output = library._fdopen_as_long(2, "w")
+    }
+    return error_output
+}
+
+func _write_to(text: String, stream: Long) {
+    library.fwrite(text, 1, text.length(), stream)
+}

@@ -1,0 +1,149 @@
+# ../docs/memory.md#the-numbers
+
+var _buffer = Buffer(4)
+
+func to_buffer(): Buffer {
+    return _buffer.copy_first_bytes(4)
+}
+
+func to_boolean(): Boolean {
+    var mine = to_buffer()
+    return mine.read_integer_little_endian_at(0) != 0
+}
+
+func to_tiny(): Tiny {
+    var mine = to_buffer()
+    return mine.read_tiny_at(0)
+}
+
+func to_byte(): Byte {
+    var mine = to_buffer()
+    return mine.read_byte_at(0)
+}
+
+func to_short(): Short {
+    var mine = to_buffer()
+    return mine.read_short_little_endian_at(0)
+}
+
+func to_unsigned_short(): UnsignedShort {
+    var mine = to_buffer()
+    return mine.read_unsigned_short_little_endian_at(0)
+}
+
+func to_integer(): Integer {
+    var mine = to_buffer()
+    return mine.read_integer_little_endian_at(0)
+}
+
+func to_unsigned_integer(): UnsignedInteger {
+    var mine = to_buffer()
+    return mine.read_unsigned_integer_little_endian_at(0)
+}
+
+func to_long(): Long {
+    var mine = to_buffer()
+    return mine.read_integer_little_endian_at(0)
+}
+
+func to_unsigned_long(): UnsignedLong {
+    var mine = to_buffer()
+    return mine.read_integer_little_endian_at(0)
+}
+
+func absolute(): Integer {
+    var mine = to_buffer()
+    var read = mine.read_integer_little_endian_at(0)
+    if read < 0 {
+        return 0 - read
+    }
+    return read
+}
+
+func minimum(other: Integer): Integer {
+    var mine = to_buffer()
+    var theirs = other.to_buffer()
+    var left = mine.read_integer_little_endian_at(0)
+    var right = theirs.read_integer_little_endian_at(0)
+    if left < right {
+        return left
+    }
+    return right
+}
+
+func maximum(other: Integer): Integer {
+    var mine = to_buffer()
+    var theirs = other.to_buffer()
+    var left = mine.read_integer_little_endian_at(0)
+    var right = theirs.read_integer_little_endian_at(0)
+    if left > right {
+        return left
+    }
+    return right
+}
+
+func sum(other: Integer): Integer {
+    var mine = to_buffer()
+    var theirs = other.to_buffer()
+    var left = mine.read_integer_little_endian_at(0)
+    var right = theirs.read_integer_little_endian_at(0)
+    return left + right
+}
+
+func subtract(other: Integer): Integer {
+    var mine = to_buffer()
+    var theirs = other.to_buffer()
+    var left = mine.read_integer_little_endian_at(0)
+    var right = theirs.read_integer_little_endian_at(0)
+    return left - right
+}
+
+func multiply(other: Integer): Integer {
+    var mine = to_buffer()
+    var theirs = other.to_buffer()
+    var left = mine.read_integer_little_endian_at(0)
+    var right = theirs.read_integer_little_endian_at(0)
+    return left * right
+}
+
+func divide(other: Integer): Integer {
+    var mine = to_buffer()
+    var theirs = other.to_buffer()
+    var left = mine.read_integer_little_endian_at(0)
+    var right = theirs.read_integer_little_endian_at(0)
+    return left / right
+}
+
+func remainder(other: Integer): Integer {
+    var mine = to_buffer()
+    var theirs = other.to_buffer()
+    var left = mine.read_integer_little_endian_at(0)
+    var right = theirs.read_integer_little_endian_at(0)
+    return left % right
+}
+
+func _compare_to(other: Integer): Integer {
+    var mine = to_buffer()
+    var theirs = other.to_buffer()
+    var left = mine.read_integer_little_endian_at(0)
+    var right = theirs.read_integer_little_endian_at(0)
+    if left < right {
+        return -1
+    }
+    if left > right {
+        return 1
+    }
+    return 0
+}
+
+func equals(other: Integer): Boolean {
+    return _compare_to(other) == 0
+}
+
+func less_than(other: Integer): Boolean {
+    return _compare_to(other) < 0
+}
+
+func greater_than(other: Integer): Boolean {
+    return _compare_to(other) > 0
+}

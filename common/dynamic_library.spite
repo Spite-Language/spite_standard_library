@@ -1,0 +1,17 @@
+# ../docs/memory.md#the-dynamic-library
+
+var handle = 0
+var file_name = ""
+
+func DynamicLibrary(library_file_name: String) {
+    file_name = library_file_name
+    handle = open_library(library_file_name)
+}
+
+func drop() {
+    close_library(handle)
+}
+
+func to_debug(): String {
+    return "DynamicLibrary {file_name}"
+}

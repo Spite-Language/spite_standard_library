@@ -1,0 +1,58 @@
+# ../docs/memory.md#the-dictionary
+
+generic $key_type
+generic $value_type
+
+var _keys = List<$key_type>()
+var _values = List<$value_type>()
+
+func count(): Integer {
+    return _keys.count()
+}
+
+func is_empty(): Boolean {
+    return _keys.is_empty()
+}
+
+func contains(key: $key_type): Boolean {
+    return _keys.contains(key)
+}
+
+func get_at(key: $key_type): $value_type? {
+    var index = _keys.index_of(key)
+    if index {
+        return _values.get_at(index)
+    }
+    return null
+}
+
+func set_at(key: $key_type, value: $value_type) {
+    var index = _keys.index_of(key)
+    if index {
+        _values.set_at(index, value)
+        return
+    }
+    _keys.append(key)
+    _values.append(value)
+}
+
+func remove_at(key: $key_type) {
+    var index = _keys.index_of(key)
+    if index {
+        _keys.remove_at(index)
+        _values.remove_at(index)
+    }
+}
+
+func clear() {
+    _keys.clear()
+    _values.clear()
+}
+
+func keys(): List<$key_type> {
+    return _keys.copy()
+}
+
+func values(): List<$value_type> {
+    return _values.copy()
+}
