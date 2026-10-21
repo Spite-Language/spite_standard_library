@@ -128,7 +128,8 @@ func join(separator: String): String {
             joined = joined.sum(separator)
         }
         var held = _read_value(index)
-        joined = joined.sum(held.to_string())
+        var written = held.to_string()
+        joined = joined.sum(written)
         index = index + 1
     }
     return joined

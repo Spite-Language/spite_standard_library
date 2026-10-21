@@ -13,13 +13,15 @@ func print(text: String) {
 }
 
 func write(text: String) {
-    _write_to(text, _the_output())
+    var stream = _the_output()
+    _write_to(text, stream)
 }
 
 func error(text: String) {
     flush()
-    _write_to(text, _the_error_output())
-    _write_to("\n", _the_error_output())
+    var stream = _the_error_output()
+    _write_to(text, stream)
+    _write_to("\n", stream)
     flush()
 }
 
@@ -48,5 +50,6 @@ func _the_error_output(): Long {
 }
 
 func _write_to(text: String, stream: Long) {
-    library.fwrite(text, 1, text.length(), stream)
+    var length = text.length()
+    library.fwrite(text, 1, length, stream)
 }

@@ -35,5 +35,6 @@ func _read_a_line(): String {
     if read == 0 {
         return ""
     }
-    return room.text(0, room.count())
+    var room_count = room.count()
+    return room.text(0, room_count)
 }

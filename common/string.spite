@@ -22,7 +22,8 @@ func append_code(code: Integer) {
 
 func character_at(index: Integer): String {
     var character = String()
-    character.append_code(code_at(index))
+    var code = code_at(index)
+    character.append_code(code)
     return character
 }
 
@@ -35,7 +36,8 @@ func slice(start: Integer, end: Integer): String {
     var sliced = String()
     var index = first
     while index < last {
-        sliced.append_code(code_at(index))
+        var code = code_at(index)
+        sliced.append_code(code)
         index = index + 1
     }
     return sliced
@@ -55,12 +57,14 @@ func sum(other: String): String {
     var summed = String()
     var index = 0
     while index < _length {
-        summed.append_code(code_at(index))
+        var code = code_at(index)
+        summed.append_code(code)
         index = index + 1
     }
     var other_index = 0
     while other_index < other.length() {
-        summed.append_code(other.code_at(other_index))
+        var code = other.code_at(other_index)
+        summed.append_code(code)
         other_index = other_index + 1
     }
     return summed
@@ -126,7 +130,8 @@ func ends_with(text: String): Boolean {
     }
     var index = text.length()
     while index > 0 {
-        var mine = code_at(_length - text.length() + index - 1)
+        var text_length = text.length()
+        var mine = code_at(_length - text_length + index - 1)
         var theirs = text.code_at(index - 1)
         if mine != theirs {
             return false
@@ -171,7 +176,8 @@ func split(separator: String): List<String> {
             piece = String()
             index = index + separator.length()
         } else {
-            piece.append_code(code_at(index))
+            var code = code_at(index)
+            piece.append_code(code)
             index = index + 1
         }
     }
@@ -197,16 +203,12 @@ func to_long(): Long? {
     var value: Long = 0
     while index < _length {
         var code = code_at(index)
-        if code < 48 or code > 57 {
-            return null
-        }
+        assert code >= 48 and code <= 57
         value = value * 10 + (code - 48)
         digits = digits + 1
         index = index + 1
     }
-    if digits == 0 {
-        return null
-    }
+    assert digits != 0
     if negative {
         return 0 - value
     }
