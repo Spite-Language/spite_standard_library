@@ -10,14 +10,14 @@ var item_count = 0
 var capacity = 1024
 var position = 0
 
-func _read_byte_at(at: Integer): Integer
-
-func _write_byte_at(at: Integer, value: Integer)
-
 func Buffer(size: Integer) {
     crash size <= 1024
     capacity = size
 }
+
+func _read_byte_at(at: Integer): Integer
+
+func _write_byte_at(at: Integer, value: Integer)
 
 func count(): Integer {
     return item_count
