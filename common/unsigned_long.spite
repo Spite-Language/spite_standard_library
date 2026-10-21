@@ -53,8 +53,7 @@ func to_unsigned_long(): UnsignedLong {
 
 func absolute(): Integer {
     var mine = to_buffer()
-    var read = mine.read_unsigned_long_little_endian_at(0)
-    return read
+    return mine.read_unsigned_long_little_endian_at(0)
 }
 
 func minimum(other: UnsignedLong): Integer {
