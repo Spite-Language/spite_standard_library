@@ -1,5 +1,3 @@
-# ../docs/memory.md#the-program
-
 var kernel = DynamicLibrary("kernel32.dll")
 
 func sleep(milliseconds: Integer) {

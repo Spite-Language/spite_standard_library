@@ -1,5 +1,3 @@
-# ../docs/memory.md#the-dynamic-library
-
 var handle = 0
 var file_name = ""
 

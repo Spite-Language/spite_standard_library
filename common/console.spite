@@ -1,5 +1,3 @@
-# ../docs/memory.md#the-console
-
 singleton
 
 var library = DynamicLibrary("ucrtbase.dll")
