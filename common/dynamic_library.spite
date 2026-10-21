@@ -1,10 +1,14 @@
-var handle = 0
+var handle: Long = 0
 var file_name = ""
 
 func DynamicLibrary(library_file_name: String) {
     file_name = library_file_name
     handle = open_library(library_file_name)
 }
+
+func open_library(library_file_name: String): Long
+
+func close_library(library_handle: Long)
 
 func drop() {
     close_library(handle)

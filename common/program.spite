@@ -1,6 +1,7 @@
 singleton
 
 var library = DynamicLibrary("ucrtbase.dll")
+var console = Console()
 
 func exit(code: Integer) {
     console.flush()

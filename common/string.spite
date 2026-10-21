@@ -1,6 +1,6 @@
 # ../docs/memory.md#the-string
 
-var _buffer = Buffer(1024)
+var _buffer = Buffer(16)
 var _length = 0
 
 func length(): Integer {
@@ -16,7 +16,7 @@ func code_at(index: Integer): Integer {
 }
 
 func append_code(code: Integer) {
-    _buffer._write_byte_at(_length, code)
+    _buffer.append(code)
     _length = _length + 1
 }
 

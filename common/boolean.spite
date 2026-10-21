@@ -1,58 +1,53 @@
-# ../docs/memory.md#the-boolean
+# ../docs/memory.md#the-numbers
 
 var _buffer = Buffer(1)
+
+func _value(): Byte {
+    return _buffer._read_byte_at(0)
+}
 
 func to_buffer(): Buffer {
     return _buffer.copy_first_bytes(1)
 }
 
 func to_boolean(): Boolean {
-    var mine = to_buffer()
-    return mine.read_byte_at(0) != 0
-}
-
-func to_tiny(): Tiny {
-    var mine = to_buffer()
-    return mine.read_tiny_at(0)
+    return _value() != 0
 }
 
 func to_byte(): Byte {
-    var mine = to_buffer()
-    return mine.read_byte_at(0)
+    return _value()
+}
+
+func to_tiny(): Tiny {
+    return _value()
 }
 
 func to_short(): Short {
-    var mine = to_buffer()
-    return mine.read_tiny_at(0)
+    return _value()
 }
 
 func to_unsigned_short(): UnsignedShort {
-    var mine = to_buffer()
-    return mine.read_tiny_at(0)
+    return _value()
 }
 
 func to_integer(): Integer {
-    var mine = to_buffer()
-    return mine.read_byte_at(0)
+    return _value()
 }
 
 func to_unsigned_integer(): UnsignedInteger {
-    var mine = to_buffer()
-    return mine.read_byte_at(0)
+    return _value()
 }
 
 func to_long(): Long {
-    var mine = to_buffer()
-    return mine.read_byte_at(0)
+    return _value()
 }
 
 func to_unsigned_long(): UnsignedLong {
-    var mine = to_buffer()
-    return mine.read_byte_at(0)
+    return _value()
 }
 
 func to_string(): String {
-    if _buffer[0] != 0 {
+    if _value() != 0 {
         return "true"
     }
     return "false"
@@ -63,19 +58,7 @@ func to_debug(): String {
 }
 
 func equals(other: Boolean): Boolean {
-    var mine = to_buffer()
-    var theirs = other.to_buffer()
-    return mine.compare_bytes(theirs, 0, 1) == 0
-}
-
-func less_than(other: Boolean): Boolean {
-    var mine = to_buffer()
-    var theirs = other.to_buffer()
-    return mine.read_byte_at(0) < theirs.read_byte_at(0)
-}
-
-func greater_than(other: Boolean): Boolean {
-    var mine = to_buffer()
-    var theirs = other.to_buffer()
-    return mine.read_byte_at(0) > theirs.read_byte_at(0)
+    var left = _value()
+    var right = other._value()
+    return left == right
 }

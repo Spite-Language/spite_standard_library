@@ -2,148 +2,154 @@
 
 var _buffer = Buffer(8)
 
+func _value(): Long {
+    return _buffer._read_long_at(0)
+}
+
 func to_buffer(): Buffer {
     return _buffer.copy_first_bytes(8)
 }
 
 func to_boolean(): Boolean {
-    var mine = to_buffer()
-    return mine.read_long_little_endian_at(0) != 0
-}
-
-func to_tiny(): Tiny {
-    var mine = to_buffer()
-    return mine.read_tiny_at(0)
+    return _value() != 0
 }
 
 func to_byte(): Byte {
-    var mine = to_buffer()
-    return mine.read_byte_at(0)
+    return _value()
+}
+
+func to_tiny(): Tiny {
+    return _value()
 }
 
 func to_short(): Short {
-    var mine = to_buffer()
-    return mine.read_short_little_endian_at(0)
+    return _value()
 }
 
 func to_unsigned_short(): UnsignedShort {
-    var mine = to_buffer()
-    return mine.read_unsigned_short_little_endian_at(0)
+    return _value()
 }
 
 func to_integer(): Integer {
-    var mine = to_buffer()
-    return mine.read_integer_little_endian_at(0)
+    return _value()
 }
 
 func to_unsigned_integer(): UnsignedInteger {
-    var mine = to_buffer()
-    return mine.read_unsigned_integer_little_endian_at(0)
+    return _value()
 }
 
 func to_long(): Long {
-    var mine = to_buffer()
-    return mine.read_long_little_endian_at(0)
+    return _value()
 }
 
 func to_unsigned_long(): UnsignedLong {
-    var mine = to_buffer()
-    return mine.read_unsigned_long_little_endian_at(0)
+    return _value()
 }
 
-func absolute(): Integer {
-    var mine = to_buffer()
-    var read = mine.read_long_little_endian_at(0)
-    if read < 0 {
-        return 0 - read
+func absolute(): Long {
+    var value = _value()
+    if value >= 0 {
+        return value
     }
-    return read
+    var zero: Long = 0
+    return zero - value
 }
 
-func minimum(other: Long): Integer {
-    var mine = to_buffer()
-    var theirs = other.to_buffer()
-    var left = mine.read_long_little_endian_at(0)
-    var right = theirs.read_long_little_endian_at(0)
-    if left < right {
-        return left
-    }
-    return right
-}
-
-func maximum(other: Long): Integer {
-    var mine = to_buffer()
-    var theirs = other.to_buffer()
-    var left = mine.read_long_little_endian_at(0)
-    var right = theirs.read_long_little_endian_at(0)
-    if left > right {
-        return left
-    }
-    return right
-}
-
-func sum(other: Long): Integer {
-    var mine = to_buffer()
-    var theirs = other.to_buffer()
-    var left = mine.read_long_little_endian_at(0)
-    var right = theirs.read_long_little_endian_at(0)
+func sum(other: Long): Long {
+    var left = _value()
+    var right = other._value()
     return left + right
 }
 
-func subtract(other: Long): Integer {
-    var mine = to_buffer()
-    var theirs = other.to_buffer()
-    var left = mine.read_long_little_endian_at(0)
-    var right = theirs.read_long_little_endian_at(0)
+func subtract(other: Long): Long {
+    var left = _value()
+    var right = other._value()
     return left - right
 }
 
-func multiply(other: Long): Integer {
-    var mine = to_buffer()
-    var theirs = other.to_buffer()
-    var left = mine.read_long_little_endian_at(0)
-    var right = theirs.read_long_little_endian_at(0)
+func multiply(other: Long): Long {
+    var left = _value()
+    var right = other._value()
     return left * right
 }
 
-func divide(other: Long): Integer {
-    var mine = to_buffer()
-    var theirs = other.to_buffer()
-    var left = mine.read_long_little_endian_at(0)
-    var right = theirs.read_long_little_endian_at(0)
+func divide(other: Long): Long {
+    var left = _value()
+    var right = other._value()
     return left / right
 }
 
-func remainder(other: Long): Integer {
-    var mine = to_buffer()
-    var theirs = other.to_buffer()
-    var left = mine.read_long_little_endian_at(0)
-    var right = theirs.read_long_little_endian_at(0)
+func remainder(other: Long): Long {
+    var left = _value()
+    var right = other._value()
     return left % right
 }
 
-func _compare_to(other: Long): Integer {
-    var mine = to_buffer()
-    var theirs = other.to_buffer()
-    var left = mine.read_long_little_endian_at(0)
-    var right = theirs.read_long_little_endian_at(0)
+func minimum(other: Long): Long {
+    var left = _value()
+    var right = other._value()
     if left < right {
-        return -1
+        return left
     }
+    return right
+}
+
+func maximum(other: Long): Long {
+    var left = _value()
+    var right = other._value()
     if left > right {
-        return 1
+        return left
     }
-    return 0
+    return right
 }
 
 func equals(other: Long): Boolean {
-    return _compare_to(other) == 0
+    var left = _value()
+    var right = other._value()
+    return left == right
 }
 
 func less_than(other: Long): Boolean {
-    return _compare_to(other) < 0
+    var left = _value()
+    var right = other._value()
+    return left < right
 }
 
 func greater_than(other: Long): Boolean {
-    return _compare_to(other) > 0
+    var left = _value()
+    var right = other._value()
+    return left > right
+}
+
+func to_string(): String {
+    var value = _value()
+    if value == 0 {
+        return "0"
+    }
+    var negative = value < 0
+    var digits = Buffer(20)
+    while value != 0 {
+        var remainder = value % 10
+        var code: Integer = remainder
+        if code < 0 {
+            code = 0 - code
+        }
+        digits.append(code + 48)
+        value = value / 10
+    }
+    var made = ""
+    if negative {
+        made.append_code(45)
+    }
+    var index = digits.count() - 1
+    while index >= 0 {
+        var digit = digits._read_byte_at(index)
+        made.append_code(digit)
+        index = index - 1
+    }
+    return made
+}
+
+func to_debug(): String {
+    return to_string()
 }
