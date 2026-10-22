@@ -1,0 +1,3 @@
+func _loads_the_common_library() {
+    load "../common"
+}

@@ -74,3 +74,7 @@ func command_arguments(): List<String> {
     pieces.remove_first()
     return pieces
 }
+
+func _loads_the_common_library() {
+    load "../common"
+}
