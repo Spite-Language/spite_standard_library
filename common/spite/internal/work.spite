@@ -20,9 +20,16 @@ func finished_value(): $result_type? {
 
 func get_finished(): Boolean {
     if _running {
-        return _running.done
+        return finished_running(_running)
     }
     return true
+}
+
+func finished_running(running: Spite.Internal.Running): Boolean {
+    if running.on_a_thread and not running.done {
+        return _frame_done(running.frame)
+    }
+    return running.done
 }
 
 func _settled(): $result_type? {
@@ -48,3 +55,5 @@ func drop() {
 func _frame_result(frame: Long): $result_type?
 
 func _free_frame(frame: Long)
+
+func _frame_done(frame: Long): Boolean

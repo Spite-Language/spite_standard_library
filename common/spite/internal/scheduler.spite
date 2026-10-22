@@ -43,12 +43,22 @@ func run_once(): Integer {
 }
 
 func wait_for(running: Spite.Internal.Running) {
+    if running.on_a_thread {
+        joined(running)
+        return
+    }
     while not running.done {
         var finished = run_once()
         if not running.done and finished == 0 {
             pause()
         }
     }
+}
+
+func joined(running: Spite.Internal.Running) {
+    assert not running.done
+    _join_thread(running.frame)
+    running.done = true
 }
 
 func drain() {
@@ -104,3 +114,5 @@ func ticks(): Long {
 }
 
 func _step(frame: Long): Boolean
+
+func _join_thread(frame: Long)
