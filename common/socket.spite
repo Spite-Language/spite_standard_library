@@ -105,13 +105,36 @@ func read_line_now(): String? {
 }
 
 func read_bytes(): Buffer? {
-    var bytes = _chunk(true)
+    var bytes = _chunk(true, 65536)
     assert bytes.count() > 0
     return bytes
 }
 
 func read_bytes_now(): Buffer {
-    return _chunk(false)
+    return _chunk(false, 65536)
+}
+
+func read_text_up_to(limit: Integer): String {
+    var bytes = _chunk(true, limit)
+    var counted = bytes.count()
+    return _text_of(bytes, counted)
+}
+
+func read_text_up_to_now(limit: Integer): String {
+    var bytes = _chunk(false, limit)
+    var counted = bytes.count()
+    return _text_of(bytes, counted)
+}
+
+func read_text(count: Integer): String? {
+    var text = ""
+    while text.length() < count {
+        var wanted = count - text.length()
+        var more = read_text_up_to(wanted)
+        assert more.length() > 0
+        text = text + more
+    }
+    return text
 }
 
 func write_line(text: String): Boolean {
@@ -219,22 +242,22 @@ func _text_of(room: Buffer, count: Integer): String {
     return text
 }
 
-func _chunk(blocking: Boolean): Buffer {
-    var taken = take_pending(65536)
+func _chunk(blocking: Boolean, limit: Integer): Buffer {
+    var taken = take_pending(limit)
     if taken.count() > 0 or closed {
         return taken
     }
-    var room = Buffer(65536)
+    var room = Buffer(limit)
     var received = 0
     if blocking {
         use_blocking_calls()
-        received = receive_into(room, 65536)
+        received = receive_into(room, limit)
         if received <= 0 {
             closed = true
             return room
         }
     } else {
-        received = receive_now(room, 65536)
+        received = receive_now(room, limit)
         if received < 0 {
             closed = true
             return room

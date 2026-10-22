@@ -1,0 +1,233 @@
+var largest_body = 16777216
+var largest_idle = 8
+var _idle = List<Socket>()
+var _idle_keys = List<String>()
+
+func send(host: String, port: Integer, request: HttpRequest): HttpResponse? {
+    var key = "{host} {port}"
+    var reused = _take_idle(key)
+    if reused {
+        var first_line = _ask(reused, host, request)
+        if first_line {
+            return _finish(reused, key, request, first_line)
+        }
+        reused.close()
+    }
+    var connection = Socket()
+    var connected = connection.connect(host, port)
+    assert connected
+    var answer = _ask(connection, host, request)
+    if not answer {
+        connection.close()
+    }
+    assert answer
+    return _finish(connection, key, request, answer)
+}
+
+func close() {
+    var index = 0
+    while index < _idle.count() {
+        var idle = _idle[index]
+        crash idle
+        idle.close()
+        index = index + 1
+    }
+    _idle.clear()
+    _idle_keys.clear()
+}
+
+func drop() {
+    close()
+}
+
+func _take_idle(key: String): Socket? {
+    var index = 0
+    while index < _idle_keys.count() {
+        var held_key = _idle_keys[index]
+        if held_key == key {
+            var taken = _idle[index]
+            _idle.remove_at(index)
+            _idle_keys.remove_at(index)
+            return taken
+        }
+        index = index + 1
+    }
+    return null
+}
+
+func _ask(connection: Socket, host: String, request: HttpRequest): String? {
+    var body_length = request.body.length()
+    var host_header = host
+    if host.contains(":") {
+        host_header = "[{host}]"
+    }
+    var method = request.method
+    var path = request.path
+    var head = "{method} {path} HTTP/1.1\r\nhost: {host_header}\r\n"
+    var names = request.headers.keys()
+    var index = 0
+    while index < names.count() {
+        var name = names[index]
+        crash name
+        var value = request.headers[name]
+        crash value
+        if name != "host" and name != "content-length" {
+            head = "{head}{name}: {value}\r\n"
+        }
+        index = index + 1
+    }
+    head = "{head}content-length: {body_length}\r\n\r\n"
+    var whole = head + request.body
+    var bytes = whole.to_bytes()
+    var written = connection.write_bytes(bytes)
+    assert written
+    return connection.read_line()
+}
+
+func _finish(connection: Socket, key: String, request: HttpRequest, first_line: String): HttpResponse? {
+    var response = _read_response(connection, request, first_line)
+    if not response or connection.closed or _idle.count() >= largest_idle {
+        connection.close()
+    } else {
+        _idle.append(connection)
+        _idle_keys.append(key)
+    }
+    return response
+}
+
+func _read_response(connection: Socket, request: HttpRequest, first_line: String): HttpResponse? {
+    assert first_line.starts_with("HTTP/1.")
+    var line_length = first_line.length()
+    assert line_length >= 12
+    var status_text = first_line.slice(9, 12)
+    var status = status_text.to_integer()
+    assert status
+    var response = HttpResponse()
+    response.status = status
+    var headers_read = _read_headers(connection, response.headers)
+    assert headers_read
+    var asked = ""
+    var connection_header = response.header("connection")
+    if connection_header {
+        asked = connection_header.lower_case()
+    }
+    var keep = not asked.contains("close") and (first_line.starts_with("HTTP/1.1") or asked.contains("keep-alive"))
+    var declared = response.header("content-length")
+    var encoding = response.header("transfer-encoding")
+    var bodiless = request.method == "HEAD" or status == 204 or status == 304 or status < 200
+    if bodiless {
+        response.body = ""
+    } else if encoding {
+        assert encoding.lower_case() == "chunked"
+        var chunked = _read_chunks(connection)
+        assert chunked
+        response.body = chunked
+    } else if declared {
+        var length = declared.to_integer()
+        assert length
+        assert length >= 0 and length <= largest_body
+        var body = connection.read_text(length)
+        assert body
+        response.body = body
+    } else {
+        var rest = _read_until_closed(connection)
+        assert rest
+        response.body = rest
+        keep = false
+    }
+    if not keep {
+        connection.close()
+    }
+    return response
+}
+
+func _read_headers(connection: Socket, headers: Dictionary<String, String>): Boolean {
+    var count = 0
+    while count < 200 {
+        var line = connection.read_line()
+        if not line {
+            return false
+        }
+        if line.is_empty() {
+            return true
+        }
+        var colon = line.index_of(":")
+        if not colon or colon <= 0 {
+            return false
+        }
+        var name = line.slice(0, colon)
+        var line_length = line.length()
+        var value = line.slice(colon + 1, line_length)
+        var lowered = name.lower_case()
+        var trimmed = value.trim()
+        headers[lowered] = trimmed
+        count = count + 1
+    }
+    return false
+}
+
+func _read_chunks(connection: Socket): String? {
+    var body = ""
+    while true {
+        var size_line = connection.read_line()
+        assert size_line
+        var size = _hex_value(size_line)
+        assert size >= 0
+        assert body.length() + size <= largest_body
+        if size == 0 {
+            var trailers = Dictionary<String, String>()
+            var trailer_read = _read_headers(connection, trailers)
+            assert trailer_read
+            return body
+        }
+        var chunk = connection.read_text(size)
+        assert chunk
+        body = body + chunk
+        var ending = connection.read_line()
+        assert ending
+        assert ending.is_empty()
+    }
+}
+
+func _hex_value(line: String): Integer {
+    var end = line.length()
+    var semicolon = line.index_of(";")
+    if semicolon {
+        end = semicolon
+    }
+    var digits = line.slice(0, end)
+    var trimmed = digits.trim()
+    var trimmed_length = trimmed.length()
+    if trimmed_length == 0 or trimmed_length > 7 {
+        return -1
+    }
+    var value = 0
+    var index = 0
+    while index < trimmed_length {
+        var code = trimmed.code_at(index)
+        var digit = -1
+        if code >= 48 and code <= 57 {
+            digit = code - 48
+        } else if code >= 97 and code <= 102 {
+            digit = code - 87
+        } else if code >= 65 and code <= 70 {
+            digit = code - 55
+        }
+        if digit < 0 {
+            return -1
+        }
+        value = value * 16 + digit
+        index = index + 1
+    }
+    return value
+}
+
+func _read_until_closed(connection: Socket): String? {
+    var body = ""
+    while not connection.closed {
+        var piece = connection.read_text_up_to(4096)
+        body = body + piece
+        assert body.length() <= largest_body
+    }
+    return body
+}

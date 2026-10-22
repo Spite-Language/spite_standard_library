@@ -1,0 +1,16 @@
+var method = "GET"
+var path = "/"
+var version = "HTTP/1.1"
+var headers = Dictionary<String, String>()
+var body = ""
+var connection = Socket()
+
+func header(name: String): String? {
+    var lowered = name.lower_case()
+    return headers[lowered]
+}
+
+func set_header(name: String, value: String) {
+    var lowered = name.lower_case()
+    headers[lowered] = value
+}
