@@ -153,13 +153,172 @@ func copy(): List<$element_type> {
     return copied
 }
 
-func each(callback: Spite.Function<$element_type>) {
+func each(callback: Spite.Function<$element_type, Nothing>) {
     var index = 0
     while index < _length {
         var held = _read_value(index)
         callback(held)
         index = index + 1
     }
+}
+
+func filter(test: Spite.Function<$element_type, Boolean>): List<$element_type> {
+    var filtered = List<$element_type>()
+    var index = 0
+    while index < _length {
+        var item = _read_value(index)
+        if test(item) {
+            filtered.append(item)
+        }
+        index = index + 1
+    }
+    return filtered
+}
+
+func remove_where(test: Spite.Function<$element_type, Boolean>) {
+    var kept = 0
+    var index = 0
+    while index < _length {
+        var item = _read_value(index)
+        if not test(item) {
+            _write_value(kept, item)
+            kept = kept + 1
+        }
+        index = index + 1
+    }
+    _shrink_to(kept)
+}
+
+func count_where(test: Spite.Function<$element_type, Boolean>): Integer {
+    var counted = 0
+    var index = 0
+    while index < _length {
+        var item = _read_value(index)
+        if test(item) {
+            counted = counted + 1
+        }
+        index = index + 1
+    }
+    return counted
+}
+
+func any(test: Spite.Function<$element_type, Boolean>): Boolean {
+    var index = 0
+    while index < _length {
+        var item = _read_value(index)
+        if test(item) {
+            return true
+        }
+        index = index + 1
+    }
+    return false
+}
+
+func all(test: Spite.Function<$element_type, Boolean>): Boolean {
+    var index = 0
+    while index < _length {
+        var item = _read_value(index)
+        if not test(item) {
+            return false
+        }
+        index = index + 1
+    }
+    return true
+}
+
+func find(test: Spite.Function<$element_type, Boolean>): $element_type? {
+    var index = 0
+    while index < _length {
+        var item = _read_value(index)
+        if test(item) {
+            return item
+        }
+        index = index + 1
+    }
+    return null
+}
+
+func sum(measure: Spite.Function<$element_type, Integer>): Integer {
+    var total = 0
+    var index = 0
+    while index < _length {
+        var item = _read_value(index)
+        total = total + measure(item)
+        index = index + 1
+    }
+    return total
+}
+
+func sort_by(measure: Spite.Function<$element_type, Integer>): List<$element_type> {
+    var keys = List<Integer>()
+    var order = List<Integer>()
+    var index = 0
+    while index < _length {
+        var item = _read_value(index)
+        var key = measure(item)
+        keys.append(key)
+        order.append(index)
+        index = index + 1
+    }
+    var spare = order.copy()
+    var width = 1
+    while width < _length {
+        var start = 0
+        while start < _length {
+            var middle = start + width
+            var end = start + width * 2
+            if middle > _length {
+                middle = _length
+            }
+            if end > _length {
+                end = _length
+            }
+            var left = start
+            var right = middle
+            var place = start
+            while place < end {
+                var takes_left = left < middle
+                if takes_left and right < end {
+                    var left_index = order[left]
+                    var right_index = order[right]
+                    crash left_index
+                    crash right_index
+                    var left_key = keys[left_index]
+                    var right_key = keys[right_index]
+                    crash left_key
+                    crash right_key
+                    takes_left = not (right_key < left_key)
+                }
+                if takes_left {
+                    var taken_left = order[left]
+                    crash taken_left
+                    spare[place] = taken_left
+                    left = left + 1
+                } else {
+                    var taken_right = order[right]
+                    crash taken_right
+                    spare[place] = taken_right
+                    right = right + 1
+                }
+                place = place + 1
+            }
+            start = end
+        }
+        var swapped = order
+        order = spare
+        spare = swapped
+        width = width * 2
+    }
+    var sorted = List<$element_type>()
+    index = 0
+    while index < _length {
+        var at = order[index]
+        crash at
+        var item = _read_value(at)
+        sorted.append(item)
+        index = index + 1
+    }
+    return sorted
 }
 
 func make_room() {
