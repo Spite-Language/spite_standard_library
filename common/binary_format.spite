@@ -82,7 +82,7 @@ func write_dictionary(value: $value_type, output: BinaryWriterCursor) {
     var entry = BinaryFormat<$value_type.value_type>()
     var key_format = BinaryFormat<$value_type.key_type>()
     var index = 0
-    while index < count {
+    while index < keys.count() and index < entries.count() {
         var key = keys[index]
         key_format.write(key, output)
         var item = entries[index]

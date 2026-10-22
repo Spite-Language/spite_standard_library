@@ -57,6 +57,20 @@ func clear() {
     _values.clear()
 }
 
+func copy(): Dictionary<$key_type, $value_type> {
+    var copied = Dictionary<$key_type, $value_type>()
+    copied._keys = _keys.copy()
+    copied._values = _values.copy()
+    return copied
+}
+
+func deep_copy(): Dictionary<$key_type, $value_type> {
+    var copied = Dictionary<$key_type, $value_type>()
+    copied._keys = _keys.deep_copy()
+    copied._values = _values.deep_copy()
+    return copied
+}
+
 func keys(): List<$key_type> {
     return _keys.copy()
 }
