@@ -131,19 +131,11 @@ The compiler turns an index into a call: `a[b]` is `a.get_at(b)`, and `a[b] = v`
 so a dictionary answers `get_at` and `set_at` with a key and a value.
 
 
-## The weak reference
+## The copy table
 
-A `Weak<T>` holds an object without counting it, so it never keeps the object alive. `Weak(object)`
-makes one, `Weak<T>(null)` an empty one, and `get()` answers the object while something else keeps it,
-and `null` once it is gone. The weak reference holds a small box the compiler makes for the object,
-and the compiler empties the box when the object is freed:
+A deep copy of a structure whose references can lead back to an object already being copied
+remembers every object it copies in a `Spite.Internal.CopyTable`, so each object is copied once.
+A reference the compiler keeps uncounted, such as a child's `parent`, is copied as the original
+object first, and the table settles it with `later` and `settle` once every object is copied: it
+then holds the copy when the same deep copy made one, and the original object otherwise.
 
-```spite
-func _box_of(object: $object_type?): Spite.Internal.WeakBox?
-
-func _object_in(box: Spite.Internal.WeakBox?): $object_type?
-```
-
-A deep copy of a weak reference holds the copy of its object when the same copy made one, and the
-object itself otherwise: `_deep_copy_in` makes the copy and lets the copy table settle it once every
-object is copied.
