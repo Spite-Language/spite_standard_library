@@ -7,7 +7,7 @@ func AttributeDeclaration(starting_name: String, starting_index: Integer) {
     _index = starting_index
 }
 
-func get_name(): String {
+func get_name(): Symbol {
     return _name
 }
 

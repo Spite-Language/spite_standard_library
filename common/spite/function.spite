@@ -13,7 +13,7 @@ func Function(starting_name: String) {
     _name = starting_name
 }
 
-func get_name(): String {
+func get_name(): Symbol {
     return _name
 }
 
