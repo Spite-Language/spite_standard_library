@@ -68,10 +68,9 @@ func values(): List<$value_type> {
 func to_debug(): String {
     var shown = List<String>()
     var index = 0
-    while index < _keys.count() {
+    while index < _keys.count() and index < _values.count() {
         var key = _keys[index]
         var value = _values[index]
-        crash value
         var key_text = key.to_debug()
         var value_text = value.to_debug()
         shown.append("{key_text}: {value_text}")

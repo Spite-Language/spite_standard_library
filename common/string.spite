@@ -170,6 +170,9 @@ func _starts_the_text_at(start: Integer, text: String): Boolean {
 }
 
 func split(separator: String): List<String> {
+    if separator.is_empty() {
+        return _characters()
+    }
     var pieces = List<String>()
     var piece = String()
     var index = 0
@@ -186,6 +189,19 @@ func split(separator: String): List<String> {
     }
     pieces.append(piece)
     return pieces
+}
+
+func _characters(): List<String> {
+    var characters = List<String>()
+    var index = 0
+    while index < _length {
+        var code = code_at(index)
+        var character = String()
+        character.append_code(code)
+        characters.append(character)
+        index = index + 1
+    }
+    return characters
 }
 
 func _starts_the_separator_at(index: Integer, separator: String): Boolean {
