@@ -1,5 +1,3 @@
-singleton
-
 var handle: Long = 0
 var file_name = ""
 var header_file_name = ""
