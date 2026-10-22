@@ -6,9 +6,11 @@ func report(code: Long, address: Long, detail: Long, accessed: Long) {
     fields.append("spite.fault")
     var kind = kind_of(code, detail)
     fields.append(kind)
-    fields.append("-")
-    fields.append("-")
-    fields.append("-")
+    var place = "-	-	-"
+    if site == 0 {
+        place = program_place(address)
+    }
+    fields.append(place)
     if code == 3221225477 {
         var accessed_text = hexadecimal(accessed)
         fields.append("address=0x{accessed_text}")
@@ -19,8 +21,8 @@ func report(code: Long, address: Long, detail: Long, accessed: Long) {
     } else {
         fields.append("code=0x{code_text}")
     }
-    var place = module_place(address)
-    fields.append("at={place}")
+    var module = module_place(address)
+    fields.append("at={module}")
     if site > 0 {
         add_the_foreign_call(fields, site, library)
     }
@@ -40,6 +42,44 @@ func add_the_foreign_call(fields: List<String>, site: Long, library: DynamicLibr
         fields.append("library={library.file_name}")
     }
     fields.append(called_from)
+}
+
+func program_place(address: Long): String {
+    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+    var own = kernel.GetModuleHandleA_as_long(0)
+    var code_offset = address - own - 4096
+    if code_offset < 0 {
+        return "-	-	-"
+    }
+    var table = _place_table()
+    var count = _read_long(table)
+    var at = table + 8
+    var found = "-	-	-"
+    var index: Long = 0
+    while index < count {
+        var start = _read_long(at)
+        var length = _read_long(at + 8)
+        if start > code_offset {
+            return found
+        }
+        found = text_at(at + 16, length)
+        var padded = (length + 7) / 8 * 8
+        at = at + 16 + padded
+        index = index + 1
+    }
+    return found
+}
+
+func text_at(at: Long, length: Long): String {
+    var written = ""
+    var index: Long = 0
+    while index < length {
+        var code = _read_byte(at + index)
+        var character: Integer = code
+        written.append_code(character)
+        index = index + 1
+    }
+    return written
 }
 
 func kind_of(code: Long, detail: Long): String {
@@ -110,3 +150,9 @@ func _foreign_site(): Long
 func _foreign_site_text(site: Long): String
 
 func _foreign_library(): DynamicLibrary?
+
+func _place_table(): Long
+
+func _read_long(at: Long): Long
+
+func _read_byte(at: Long): Long
