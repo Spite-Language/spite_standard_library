@@ -25,6 +25,20 @@ func get_finished(): Boolean {
     return true
 }
 
+func _finished_or_waited(): Boolean {
+    var finished = get_finished()
+    if not finished {
+        _note_the_wait()
+    }
+    return finished
+}
+
+func _note_the_wait() {
+    assert _running
+    var scheduler = Spite.Internal.Scheduler()
+    scheduler.waits_on(_running)
+}
+
 func finished_running(running: Spite.Internal.Running): Boolean {
     if running.on_a_thread and not running.done {
         return _frame_done(running.frame)
