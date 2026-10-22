@@ -20,6 +20,29 @@ func append_code(code: Integer) {
     _length = _length + 1
 }
 
+func _is_held_once(): Boolean
+
+func _ready_to_grow(): String {
+    if _is_held_once() {
+        return this
+    }
+    var grown = String()
+    var room = _length * 2
+    grown._buffer.reserve(room)
+    grown._append_text(this)
+    return grown
+}
+
+func _append_text(other: String) {
+    var count = other.length()
+    var index = 0
+    while index < count {
+        var code = other.code_at(index)
+        append_code(code)
+        index = index + 1
+    }
+}
+
 func character_at(index: Integer): String {
     var character = String()
     if index < 0 or index >= _length {
