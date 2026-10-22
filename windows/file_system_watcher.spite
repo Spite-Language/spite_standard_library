@@ -1,0 +1,227 @@
+var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+var handles = List<Long>()
+var events = List<Long>()
+var overlaps = List<Buffer>()
+var buffers = List<Buffer>()
+var roots = List<String>()
+var file_names = List<String>()
+
+func watch_folder(path: String): Boolean {
+    return open_watch(path, path, "")
+}
+
+func watch_file(path: String): Boolean {
+    var cut = path.length()
+    var found = false
+    while cut > 0 and not found {
+        var before = path.character_at(cut - 1)
+        found = before == "/" or before == "\\"
+        if not found {
+            cut = cut - 1
+        }
+    }
+    var path_length = path.length()
+    var name = path.slice(cut, path_length)
+    var lower_name = name.lower_case()
+    var folder = "."
+    if cut > 1 {
+        folder = path.slice(0, cut - 1)
+    } else if cut == 1 {
+        folder = path.slice(0, 1)
+    }
+    return open_watch(folder, path, lower_name)
+}
+
+func zeroed(size: Integer): Buffer {
+    var room = Buffer(size)
+    var index = 0
+    while index < size {
+        room.append(0)
+        index = index + 1
+    }
+    return room
+}
+
+func open_watch(folder: String, root: String, file_name: String): Boolean {
+    var no_value: Long = 0
+    var handle = kernel.CreateFileA_as_long(folder, 1, 7, no_value, 3, 1107296256, no_value)
+    if handle == -1 {
+        return false
+    }
+    var overlap = zeroed(32)
+    var event = kernel.CreateEventA_as_long(no_value, 1, 0, no_value)
+    overlap.write_long_little_endian_at(24, event)
+    var buffer = Buffer(65536)
+    handles.append(handle)
+    events.append(event)
+    overlaps.append(overlap)
+    buffers.append(buffer)
+    roots.append(root)
+    file_names.append(file_name)
+    var watching = handles.count() - 1
+    var requested = request(watching)
+    if not requested {
+        close_watch(watching)
+    }
+    return requested
+}
+
+func request(watching: Integer): Boolean {
+    var event = events[watching]
+    var file_name = file_names[watching]
+    var handle = handles[watching]
+    var buffer = buffers[watching]
+    var overlap = overlaps[watching]
+    crash event
+    crash file_name
+    crash handle
+    crash buffer
+    crash overlap
+    kernel.ResetEvent(event)
+    var subtree = 0
+    if file_name.is_empty() {
+        subtree = 1
+    }
+    var no_value: Long = 0
+    var requested = kernel.ReadDirectoryChangesW(handle, buffer, 65536, subtree, 27, no_value, overlap, no_value)
+    return requested != 0
+}
+
+func collect() {
+    var transferred = zeroed(8)
+    var watching = 0
+    while watching < handles.count() {
+        collect_from(watching, transferred)
+        watching = watching + 1
+    }
+}
+
+func collect_from(watching: Integer, transferred: Buffer) {
+    var handle = handles[watching]
+    var overlap = overlaps[watching]
+    var root = roots[watching]
+    crash handle
+    crash overlap
+    crash root
+    assert handle != -1
+    transferred.write_long_little_endian_at(0, 0)
+    var result = kernel.GetOverlappedResult(handle, overlap, transferred, 0)
+    if result == 0 {
+        var failure = kernel.GetLastError()
+        if failure != 996 {
+            note(root)
+            close_watch(watching)
+        }
+        return
+    }
+    var length = transferred.read_integer_little_endian_at(0)
+    crash length
+    if length == 0 {
+        note(root)
+    } else {
+        read_notices(watching, length)
+    }
+    if not request(watching) {
+        close_watch(watching)
+    }
+}
+
+func read_notices(watching: Integer, length: Integer) {
+    var buffer = buffers[watching]
+    crash buffer
+    buffer.take_written(length)
+    var offset = 0
+    var more = true
+    while more {
+        var next = buffer.read_integer_little_endian_at(offset)
+        var action = buffer.read_integer_little_endian_at(offset + 4)
+        var name_bytes = buffer.read_integer_little_endian_at(offset + 8)
+        crash next
+        crash action
+        crash name_bytes
+        var wide_name = buffer.read_bytes_at(offset + 12, name_bytes)
+        crash wide_name
+        var wide_length = name_bytes / 2
+        var text = Buffer(1024)
+        var no_value: Long = 0
+        var written = kernel.WideCharToMultiByte(65001, 0, wide_name, wide_length, text, 1024, no_value, no_value)
+        text.take_written(written)
+        var written_name = text.text(0, written)
+        crash written_name
+        var name = written_name.replace("\\", "/")
+        note_notice(watching, name, action)
+        offset = offset + next
+        more = next != 0
+    }
+}
+
+func note_notice(watching: Integer, name: String, action: Integer) {
+    var root = roots[watching]
+    var file_name = file_names[watching]
+    crash root
+    crash file_name
+    if not file_name.is_empty() {
+        var lower_name = name.lower_case()
+        if lower_name == file_name {
+            note(root)
+        }
+        return
+    }
+    var path = joined(root, name)
+    var attributes = kernel.GetFileAttributesA(path)
+    var is_folder = attributes != -1 and attributes.bits_and(16) != 0
+    if action != 3 or not is_folder {
+        note(path)
+    }
+}
+
+func wait_for_event(milliseconds: Long) {
+    var watch_count = handles.count()
+    var waiting = Buffer(watch_count * 8 + 8)
+    var count = 0
+    var index = 0
+    while index < watch_count {
+        var handle = handles[index]
+        crash handle
+        if handle != -1 {
+            var event = events[index]
+            crash event
+            waiting.append_long_little_endian(event)
+            count = count + 1
+        }
+        index = index + 1
+    }
+    if count > 0 {
+        kernel.WaitForMultipleObjects(count, waiting, 0, milliseconds)
+    } else {
+        kernel.Sleep(milliseconds)
+    }
+}
+
+func close_watch(watching: Integer) {
+    var handle = handles[watching]
+    var overlap = overlaps[watching]
+    var event = events[watching]
+    crash handle
+    crash overlap
+    crash event
+    assert handle != -1
+    kernel.CancelIoEx(handle, overlap)
+    var transferred = zeroed(8)
+    kernel.GetOverlappedResult(handle, overlap, transferred, 1)
+    kernel.CloseHandle(handle)
+    kernel.CloseHandle(event)
+    handles[watching] = -1
+}
+
+func drop() {
+    var index = 0
+    while index < handles.count() {
+        var handle = handles[index]
+        crash handle
+        if handle != -1 {
+            close_watch(index)
+        }
+        index = index + 1
+    }
+}
