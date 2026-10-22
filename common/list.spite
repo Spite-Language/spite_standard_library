@@ -12,6 +12,17 @@ func _read_value(index: Integer): $element_type
 
 func _write_value(index: Integer, value: $element_type)
 
+func _forget_value(index: Integer)
+
+func _shrink_to(kept_count: Integer) {
+    var index = kept_count
+    while index < _length {
+        _forget_value(index)
+        index = index + 1
+    }
+    _length = kept_count
+}
+
 func count(): Integer {
     return _length
 }
@@ -52,14 +63,14 @@ func set_at(index: Integer, value: $element_type) {
 
 func remove_at(index: Integer) {
     crash index >= 0 and index < _length
-    _move_values(index, index + 1, _length - index - 1)
-    _length = _length - 1
+    _move_values(index + 1, index, _length - index - 1)
+    _shrink_to(_length - 1)
 }
 
 func remove_last(): $element_type? {
     if _length > 0 {
         var last = _read_value(_length - 1)
-        _length = _length - 1
+        _shrink_to(_length - 1)
         return last
     }
     return null
@@ -89,7 +100,7 @@ func last(): $element_type? {
 }
 
 func clear() {
-    _length = 0
+    _shrink_to(0)
 }
 
 func contains(value: $element_type): Boolean {
@@ -211,7 +222,7 @@ func swap(first_index: Integer, second_index: Integer) {
 func truncate(kept_count: Integer) {
     crash kept_count >= 0
     if kept_count < _length {
-        _length = kept_count
+        _shrink_to(kept_count)
     }
 }
 
@@ -219,7 +230,7 @@ func remove_swapping(index: Integer) {
     crash index >= 0 and index < _length
     var last = _read_value(_length - 1)
     _write_value(index, last)
-    _length = _length - 1
+    _shrink_to(_length - 1)
 }
 
 func filter_member(member: Spite.AttributeDeclaration<$element_type>): List<$element_type> {
@@ -246,7 +257,7 @@ func remove_where_member(member: Spite.AttributeDeclaration<$element_type>) {
         }
         index = index + 1
     }
-    _length = kept
+    _shrink_to(kept)
 }
 
 func count_member(member: Spite.AttributeDeclaration<$element_type>): Integer {
