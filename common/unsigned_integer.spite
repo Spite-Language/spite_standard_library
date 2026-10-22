@@ -226,8 +226,8 @@ func to_string(): String {
     }
     var digits = Buffer(20)
     while value != 0 {
-        var remainder = value % 10
-        var code: Integer = remainder
+        var left_over = value % 10
+        var code: Integer = left_over
         digits.append(code + 48)
         value = value / 10
     }

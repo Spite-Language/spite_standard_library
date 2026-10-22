@@ -617,8 +617,8 @@ func get_not_a_number(): Double {
 }
 
 func get_largest(): Double {
-    var bits: Long = 9218868437227405311
-    return bits.bits_as_double()
+    var pattern: Long = 9218868437227405311
+    return pattern.bits_as_double()
 }
 
 func get_smallest(): Double {

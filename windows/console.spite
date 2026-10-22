@@ -7,7 +7,7 @@ func read_line(): String? {
     var line = ""
     var read_anything = false
     var more = _read_a_line()
-    while more {
+    while not more.is_empty() {
         read_anything = true
         var piece = more
         if piece.ends_with("\n") {
@@ -33,6 +33,9 @@ func _read_a_line(): String {
     if read == 0 {
         return ""
     }
-    var room_count = room.count()
-    return room.text(0, room_count)
+    var room_count = library.strlen(room)
+    room.take_written(room_count)
+    var text = room.text(0, room_count)
+    crash text
+    return text
 }

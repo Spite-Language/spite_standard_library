@@ -262,10 +262,10 @@ func negate(): Float {
 }
 
 func to_half_precision(): UnsignedShort {
-    var bits: Long = bits().to_long()
-    var sign: Long = bits / 2147483648
-    var exponent: Long = (bits / 8388608) % 256
-    var mantissa: Long = bits % 8388608
+    var pattern: Long = bits().to_long()
+    var sign: Long = pattern / 2147483648
+    var exponent: Long = (pattern / 8388608) % 256
+    var mantissa: Long = pattern % 8388608
     var magnitude: Long = 31744
     if exponent == 255 {
         magnitude = _half_special(mantissa)
@@ -331,13 +331,13 @@ func get_infinity(): Float {
 }
 
 func get_not_a_number(): Float {
-    var bits: UnsignedInteger = 2143289344
-    return bits.bits_as_float()
+    var pattern: UnsignedInteger = 2143289344
+    return pattern.bits_as_float()
 }
 
 func get_largest(): Float {
-    var bits: UnsignedInteger = 2139095039
-    return bits.bits_as_float()
+    var pattern: UnsignedInteger = 2139095039
+    return pattern.bits_as_float()
 }
 
 func get_smallest(): Float {

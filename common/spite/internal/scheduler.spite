@@ -61,6 +61,15 @@ func joined(running: Spite.Internal.Running) {
     running.done = true
 }
 
+func wait_for_a_helper(frame: Long) {
+    while not _frame_done(frame) {
+        var finished = run_once()
+        if finished == 0 {
+            kernel.Sleep(1)
+        }
+    }
+}
+
 func drain() {
     while any_running() {
         var finished = run_once()
@@ -116,3 +125,5 @@ func ticks(): Long {
 func _step(frame: Long): Boolean
 
 func _join_thread(frame: Long)
+
+func _frame_done(frame: Long): Boolean

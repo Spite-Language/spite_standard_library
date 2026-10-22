@@ -69,18 +69,18 @@ func remove_at(index: Integer) {
 
 func remove_last(): $element_type? {
     if _length > 0 {
-        var last = _read_value(_length - 1)
+        var back = _read_value(_length - 1)
         _shrink_to(_length - 1)
-        return last
+        return back
     }
     return null
 }
 
 func remove_first(): $element_type? {
     if _length > 0 {
-        var first = _read_value(0)
+        var front = _read_value(0)
         remove_at(0)
-        return first
+        return front
     }
     return null
 }
@@ -373,10 +373,10 @@ func reverse() {
     var low = 0
     var high = _length - 1
     while low < high {
-        var first = _read_value(low)
+        var front = _read_value(low)
         var second = _read_value(high)
         _write_value(low, second)
-        _write_value(high, first)
+        _write_value(high, front)
         low = low + 1
         high = high - 1
     }
@@ -384,10 +384,10 @@ func reverse() {
 
 func swap(first_index: Integer, second_index: Integer) {
     crash first_index >= 0 and first_index < _length and second_index >= 0 and second_index < _length
-    var first = _read_value(first_index)
+    var front = _read_value(first_index)
     var second = _read_value(second_index)
     _write_value(first_index, second)
-    _write_value(second_index, first)
+    _write_value(second_index, front)
 }
 
 func truncate(kept_count: Integer) {
@@ -399,8 +399,8 @@ func truncate(kept_count: Integer) {
 
 func remove_swapping(index: Integer) {
     crash index >= 0 and index < _length
-    var last = _read_value(_length - 1)
-    _write_value(index, last)
+    var back = _read_value(_length - 1)
+    _write_value(index, back)
     _shrink_to(_length - 1)
 }
 
