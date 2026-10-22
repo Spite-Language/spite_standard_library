@@ -122,13 +122,12 @@ func wrapping_multiply(other: UnsignedInteger): UnsignedInteger {
 }
 
 func clamp(lowest: UnsignedInteger, highest: UnsignedInteger): UnsignedInteger {
-    crash lowest <= highest
     var value = _value()
     if value < lowest {
-        return lowest
+        value = lowest
     }
     if value > highest {
-        return highest
+        value = highest
     }
     return value
 }

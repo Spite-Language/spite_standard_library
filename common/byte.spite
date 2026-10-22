@@ -122,13 +122,12 @@ func wrapping_multiply(other: Byte): Byte {
 }
 
 func clamp(lowest: Byte, highest: Byte): Byte {
-    crash lowest <= highest
     var value = _value()
     if value < lowest {
-        return lowest
+        value = lowest
     }
     if value > highest {
-        return highest
+        value = highest
     }
     return value
 }

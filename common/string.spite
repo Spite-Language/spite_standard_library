@@ -22,6 +22,9 @@ func append_code(code: Integer) {
 
 func character_at(index: Integer): String {
     var character = String()
+    if index < 0 or index >= _length {
+        return character
+    }
     var code = code_at(index)
     character.append_code(code)
     return character

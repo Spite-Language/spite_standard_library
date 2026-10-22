@@ -1,0 +1,16 @@
+singleton
+
+var _active = List<Long>()
+
+func enters(address: Long): Boolean {
+    if _active.contains(address) {
+        return false
+    }
+    _active.append(address)
+    return true
+}
+
+func leaves() {
+    var last = _active.count() - 1
+    _active.remove_at(last)
+}

@@ -127,13 +127,12 @@ func wrapping_multiply(other: Short): Short {
 }
 
 func clamp(lowest: Short, highest: Short): Short {
-    crash lowest <= highest
     var value = _value()
     if value < lowest {
-        return lowest
+        value = lowest
     }
     if value > highest {
-        return highest
+        value = highest
     }
     return value
 }
