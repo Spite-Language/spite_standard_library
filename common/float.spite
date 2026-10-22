@@ -10,6 +10,38 @@ func _bits(): UnsignedInteger
 
 func _square_root(): Float
 
+func _sine(): Float
+
+func _cosine(): Float
+
+func _tangent(): Float
+
+func _arc_sine(): Float
+
+func _arc_cosine(): Float
+
+func _arc_tangent(): Float
+
+func _arc_tangent_over(run: Float): Float
+
+func _raised_to(exponent: Float): Float
+
+func _exponential(): Float
+
+func _logarithm(): Float
+
+func _logarithm_base_2(): Float
+
+func _logarithm_base_10(): Float
+
+func _floor(): Float
+
+func _ceiling(): Float
+
+func _truncate(): Float
+
+func _round(): Float
+
 func bits(): UnsignedInteger {
     return _bits()
 }
@@ -118,101 +150,67 @@ func to_debug(): String {
 
 
 func sine(): Float {
-    var value = _value()
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.sinf_as_float(value)
+    return _sine()
 }
 
 func cosine(): Float {
-    var value = _value()
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.cosf_as_float(value)
+    return _cosine()
 }
 
 func tangent(): Float {
-    var value = _value()
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.tanf_as_float(value)
+    return _tangent()
 }
 
 func arc_sine(): Float {
-    var value = _value()
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.asinf_as_float(value)
+    return _arc_sine()
 }
 
 func arc_cosine(): Float {
-    var value = _value()
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.acosf_as_float(value)
+    return _arc_cosine()
 }
 
 func arc_tangent(): Float {
-    var value = _value()
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.atanf_as_float(value)
+    return _arc_tangent()
 }
 
 func arc_tangent_over(run: Float): Float {
-    var rise = _value()
-    var across = run._value()
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.atan2f_as_float(rise, across)
+    return _arc_tangent_over(run)
 }
 
 func power(exponent: Float): Float {
-    var base = _value()
-    var raised = exponent._value()
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.powf_as_float(base, raised)
+    return _raised_to(exponent)
 }
 
 func exponential(): Float {
-    var value = _value()
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.expf_as_float(value)
+    return _exponential()
 }
 
 func logarithm(): Float {
-    var value = _value()
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.logf_as_float(value)
+    return _logarithm()
 }
 
 func logarithm_base_2(): Float {
-    var value = _value()
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.log2f_as_float(value)
+    return _logarithm_base_2()
 }
 
 func logarithm_base_10(): Float {
-    var value = _value()
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.log10f_as_float(value)
+    return _logarithm_base_10()
 }
 
 func floor(): Float {
-    var value = _value()
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.floorf_as_float(value)
+    return _floor()
 }
 
 func ceiling(): Float {
-    var value = _value()
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.ceilf_as_float(value)
+    return _ceiling()
 }
 
 func truncate(): Float {
-    var value = _value()
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.truncf_as_float(value)
+    return _truncate()
 }
 
 func round(): Float {
-    var value = _value()
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.roundf_as_float(value)
+    return _round()
 }
 
 func clamp(low: Float, high: Float): Float {

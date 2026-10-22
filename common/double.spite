@@ -10,6 +10,38 @@ func _bits(): Long
 
 func _square_root(): Double
 
+func _sine(): Double
+
+func _cosine(): Double
+
+func _tangent(): Double
+
+func _arc_sine(): Double
+
+func _arc_cosine(): Double
+
+func _arc_tangent(): Double
+
+func _arc_tangent_over(run: Double): Double
+
+func _raised_to(exponent: Double): Double
+
+func _exponential(): Double
+
+func _logarithm(): Double
+
+func _logarithm_base_2(): Double
+
+func _logarithm_base_10(): Double
+
+func _floor(): Double
+
+func _ceiling(): Double
+
+func _truncate(): Double
+
+func _round(): Double
+
 func bits(): Long {
     return _bits()
 }
@@ -450,101 +482,67 @@ func _scientific_text(digits: String, exponent: Long): String {
 
 
 func sine(): Double {
-    var value = _value()
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.sin_as_double(value)
+    return _sine()
 }
 
 func cosine(): Double {
-    var value = _value()
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.cos_as_double(value)
+    return _cosine()
 }
 
 func tangent(): Double {
-    var value = _value()
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.tan_as_double(value)
+    return _tangent()
 }
 
 func arc_sine(): Double {
-    var value = _value()
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.asin_as_double(value)
+    return _arc_sine()
 }
 
 func arc_cosine(): Double {
-    var value = _value()
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.acos_as_double(value)
+    return _arc_cosine()
 }
 
 func arc_tangent(): Double {
-    var value = _value()
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.atan_as_double(value)
+    return _arc_tangent()
 }
 
 func arc_tangent_over(run: Double): Double {
-    var rise = _value()
-    var across = run._value()
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.atan2_as_double(rise, across)
+    return _arc_tangent_over(run)
 }
 
 func power(exponent: Double): Double {
-    var base = _value()
-    var raised = exponent._value()
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.pow_as_double(base, raised)
+    return _raised_to(exponent)
 }
 
 func exponential(): Double {
-    var value = _value()
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.exp_as_double(value)
+    return _exponential()
 }
 
 func logarithm(): Double {
-    var value = _value()
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.log_as_double(value)
+    return _logarithm()
 }
 
 func logarithm_base_2(): Double {
-    var value = _value()
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.log2_as_double(value)
+    return _logarithm_base_2()
 }
 
 func logarithm_base_10(): Double {
-    var value = _value()
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.log10_as_double(value)
+    return _logarithm_base_10()
 }
 
 func floor(): Double {
-    var value = _value()
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.floor_as_double(value)
+    return _floor()
 }
 
 func ceiling(): Double {
-    var value = _value()
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.ceil_as_double(value)
+    return _ceiling()
 }
 
 func truncate(): Double {
-    var value = _value()
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.trunc_as_double(value)
+    return _truncate()
 }
 
 func round(): Double {
-    var value = _value()
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.round_as_double(value)
+    return _round()
 }
 
 func clamp(low: Double, high: Double): Double {
