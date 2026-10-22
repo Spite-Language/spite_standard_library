@@ -1,0 +1,50 @@
+generic $result_type
+
+var _running: Spite.Internal.Running? = null
+var _result: $result_type? = null
+
+func Work(running: Spite.Internal.Running?) {
+    _running = running
+}
+
+func finished_with(result: $result_type) {
+    _result = result
+}
+
+func finished_value(): $result_type? {
+    if get_finished() {
+        return _settled()
+    }
+    return null
+}
+
+func get_finished(): Boolean {
+    if _running {
+        return _running.done
+    }
+    return true
+}
+
+func _settled(): $result_type? {
+    _settle()
+    return _result
+}
+
+func _settle() {
+    assert _running
+    if not _running.done {
+        var scheduler = Spite.Internal.Scheduler()
+        scheduler.wait_for(_running)
+    }
+    _result = _frame_result(_running.frame)
+    _free_frame(_running.frame)
+    _running = null
+}
+
+func drop() {
+    _settle()
+}
+
+func _frame_result(frame: Long): $result_type?
+
+func _free_frame(frame: Long)

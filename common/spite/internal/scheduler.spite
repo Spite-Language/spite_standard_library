@@ -1,0 +1,106 @@
+singleton
+
+var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+var _running = List<Spite.Internal.Running>()
+var _nearest: Long = -1
+var _depth = 0
+
+func start(running: Spite.Internal.Running) {
+    step(running)
+    if not running.done {
+        _running.append(running)
+    }
+}
+
+func step(running: Spite.Internal.Running): Boolean {
+    running.stepping = true
+    var finished = _step(running.frame)
+    running.stepping = false
+    if finished {
+        running.done = true
+    }
+    return finished
+}
+
+func run_once(): Integer {
+    _depth = _depth + 1
+    _nearest = -1
+    var finished = 0
+    var index = 0
+    while index < _running.count() {
+        var running = _running[index]
+        var is_ready = not running.stepping and not running.done
+        if is_ready and step(running) {
+            finished = finished + 1
+        }
+        index = index + 1
+    }
+    _depth = _depth - 1
+    if _depth == 0 {
+        _running.remove_where_done()
+    }
+    return finished
+}
+
+func wait_for(running: Spite.Internal.Running) {
+    while not running.done {
+        var finished = run_once()
+        if not running.done and finished == 0 {
+            pause()
+        }
+    }
+}
+
+func drain() {
+    while any_running() {
+        var finished = run_once()
+        if finished == 0 and any_running() {
+            pause()
+        }
+    }
+}
+
+func sleep(milliseconds: Integer) {
+    var deadline = ticks() + milliseconds
+    var now = ticks()
+    while now < deadline {
+        var finished = run_once()
+        note_deadline(deadline)
+        if finished == 0 {
+            pause()
+        }
+        now = ticks()
+    }
+}
+
+func any_running(): Boolean {
+    var index = 0
+    while index < _running.count() {
+        var running = _running[index]
+        if not running.done {
+            return true
+        }
+        index = index + 1
+    }
+    return false
+}
+
+func pause() {
+    crash _nearest >= 0
+    var now = ticks()
+    if _nearest > now {
+        kernel.Sleep(_nearest - now)
+    }
+}
+
+func note_deadline(at: Long) {
+    if _nearest < 0 or at < _nearest {
+        _nearest = at
+    }
+}
+
+func ticks(): Long {
+    return kernel.GetTickCount64_as_long()
+}
+
+func _step(frame: Long): Boolean

@@ -1,0 +1,7 @@
+var frame: Long = 0
+var done = false
+var stepping = false
+
+func Running(starting_frame: Long) {
+    frame = starting_frame
+}
