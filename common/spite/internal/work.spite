@@ -43,6 +43,11 @@ func _settle() {
         var scheduler = Spite.Internal.Scheduler()
         scheduler.wait_for(_running)
     }
+    _take_the_result()
+}
+
+func _take_the_result() {
+    assert _running
     _result = _frame_result(_running.frame)
     _free_frame(_running.frame)
     _running = null
