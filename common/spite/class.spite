@@ -20,11 +20,11 @@ func Class(starting_name: String) {
     _name_with_namespaces = starting_name
 }
 
-func get_name(): String {
+func get_name(): Symbol {
     return _name
 }
 
-func get_name_with_namespaces(): String {
+func get_name_with_namespaces(): Symbol {
     return _name_with_namespaces
 }
 
