@@ -2,6 +2,61 @@
 
 var _buffer = Buffer(16)
 var _length = 0
+var irregulars = {
+    "person": "people"
+    "man": "men"
+    "woman": "women"
+    "child": "children"
+    "sex": "sexes"
+    "move": "moves"
+    "zombie": "zombies"
+    "foot": "feet"
+    "tooth": "teeth"
+    "goose": "geese"
+    "cactus": "cacti"
+    "fungus": "fungi"
+    "nucleus": "nuclei"
+    "radius": "radii"
+    "stimulus": "stimuli"
+    "syllabus": "syllabi"
+    "alumnus": "alumni"
+    "criterion": "criteria"
+    "phenomenon": "phenomena"
+    "appendix": "appendices"
+    "leaf": "leaves"
+    "loaf": "loaves"
+    "thief": "thieves"
+    "hoof": "hooves"
+    "hero": "heroes"
+    "potato": "potatoes"
+    "echo": "echoes"
+    "veto": "vetoes"
+    "torpedo": "torpedoes"
+}
+var uncountables = [
+    "data"
+    "equipment"
+    "health"
+    "information"
+    "rice"
+    "money"
+    "species"
+    "series"
+    "fish"
+    "sheep"
+    "jeans"
+    "police"
+    "deer"
+    "moose"
+    "aircraft"
+    "news"
+    "furniture"
+    "luggage"
+    "advice"
+    "software"
+    "hardware"
+    "knowledge"
+]
 
 func length(): Integer {
     return _length
@@ -534,81 +589,21 @@ func _cased_like(original: String, changed: String): String {
     return changed
 }
 
-func irregulars(): Dictionary<String, String> {
-    return {
-        "person": "people"
-        "man": "men"
-        "woman": "women"
-        "child": "children"
-        "sex": "sexes"
-        "move": "moves"
-        "zombie": "zombies"
-        "foot": "feet"
-        "tooth": "teeth"
-        "goose": "geese"
-        "cactus": "cacti"
-        "fungus": "fungi"
-        "nucleus": "nuclei"
-        "radius": "radii"
-        "stimulus": "stimuli"
-        "syllabus": "syllabi"
-        "alumnus": "alumni"
-        "criterion": "criteria"
-        "phenomenon": "phenomena"
-        "appendix": "appendices"
-        "leaf": "leaves"
-        "loaf": "loaves"
-        "thief": "thieves"
-        "hoof": "hooves"
-        "hero": "heroes"
-        "potato": "potatoes"
-        "echo": "echoes"
-        "veto": "vetoes"
-        "torpedo": "torpedoes"
-    }
-}
 
-func uncountables(): List<String> {
-    return [
-        "data"
-        "equipment"
-        "health"
-        "information"
-        "rice"
-        "money"
-        "species"
-        "series"
-        "fish"
-        "sheep"
-        "jeans"
-        "police"
-        "deer"
-        "moose"
-        "aircraft"
-        "news"
-        "furniture"
-        "luggage"
-        "advice"
-        "software"
-        "hardware"
-        "knowledge"
-    ]
-}
 
 func _is_uncountable(word: String): Boolean {
-    var words = uncountables()
-    return words.contains(word)
+    return uncountables.contains(word)
 }
 
 func _irregular(word: String, to_plural: Boolean): String {
-    var table = irregulars()
     if to_plural {
-        return _irregular_plural(table, word)
+        return _irregular_plural(word)
     }
-    return _irregular_singular(table, word)
+    return _irregular_singular(word)
 }
 
-func _irregular_plural(table: Dictionary<String, String>, word: String): String {
+func _irregular_plural(word: String): String {
+    var table = irregulars
     var plural = table[word]
     if plural {
         return plural
@@ -620,7 +615,8 @@ func _irregular_plural(table: Dictionary<String, String>, word: String): String 
     return ""
 }
 
-func _irregular_singular(table: Dictionary<String, String>, word: String): String {
+func _irregular_singular(word: String): String {
+    var table = irregulars
     if table.contains(word) {
         return word
     }
