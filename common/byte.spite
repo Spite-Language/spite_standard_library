@@ -238,3 +238,39 @@ func to_string(): String {
 func to_debug(): String {
     return to_string()
 }
+
+func set_bit_count(): Integer {
+    var count = 0
+    var index = 0
+    while index < 8 {
+        if _bit_at(index) {
+            count = count + 1
+        }
+        index = index + 1
+    }
+    return count
+}
+
+func leading_zero_count(): Integer {
+    var count = 0
+    var index = 7
+    while index >= 0 and not _bit_at(index) {
+        count = count + 1
+        index = index - 1
+    }
+    return count
+}
+
+func trailing_zero_count(): Integer {
+    var count = 0
+    while count < 8 and not _bit_at(count) {
+        count = count + 1
+    }
+    return count
+}
+
+func _bit_at(index: Integer): Boolean {
+    var moved = _shifted_right(index)
+    var lowest = moved._bits_and(1)
+    return lowest == 1
+}
