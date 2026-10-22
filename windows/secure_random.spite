@@ -1,0 +1,7 @@
+var _crypt = DynamicLibrary("bcrypt.dll")
+
+func _fill(room: Buffer, count: Integer) {
+    var no_algorithm: Long = 0
+    var status = _crypt.BCryptGenRandom(no_algorithm, room, count, 2)
+    crash status == 0
+}

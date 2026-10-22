@@ -115,3 +115,182 @@ func to_string(): String {
 func to_debug(): String {
     return to_string()
 }
+
+
+func sine(): Float {
+    var value = _value()
+    var library = DynamicLibrary("ucrtbase.dll")
+    return library.sinf_as_float(value)
+}
+
+func cosine(): Float {
+    var value = _value()
+    var library = DynamicLibrary("ucrtbase.dll")
+    return library.cosf_as_float(value)
+}
+
+func tangent(): Float {
+    var value = _value()
+    var library = DynamicLibrary("ucrtbase.dll")
+    return library.tanf_as_float(value)
+}
+
+func arc_sine(): Float {
+    var value = _value()
+    var library = DynamicLibrary("ucrtbase.dll")
+    return library.asinf_as_float(value)
+}
+
+func arc_cosine(): Float {
+    var value = _value()
+    var library = DynamicLibrary("ucrtbase.dll")
+    return library.acosf_as_float(value)
+}
+
+func arc_tangent(): Float {
+    var value = _value()
+    var library = DynamicLibrary("ucrtbase.dll")
+    return library.atanf_as_float(value)
+}
+
+func arc_tangent_over(run: Float): Float {
+    var rise = _value()
+    var across = run._value()
+    var library = DynamicLibrary("ucrtbase.dll")
+    return library.atan2f_as_float(rise, across)
+}
+
+func power(exponent: Float): Float {
+    var base = _value()
+    var raised = exponent._value()
+    var library = DynamicLibrary("ucrtbase.dll")
+    return library.powf_as_float(base, raised)
+}
+
+func exponential(): Float {
+    var value = _value()
+    var library = DynamicLibrary("ucrtbase.dll")
+    return library.expf_as_float(value)
+}
+
+func logarithm(): Float {
+    var value = _value()
+    var library = DynamicLibrary("ucrtbase.dll")
+    return library.logf_as_float(value)
+}
+
+func logarithm_base_2(): Float {
+    var value = _value()
+    var library = DynamicLibrary("ucrtbase.dll")
+    return library.log2f_as_float(value)
+}
+
+func logarithm_base_10(): Float {
+    var value = _value()
+    var library = DynamicLibrary("ucrtbase.dll")
+    return library.log10f_as_float(value)
+}
+
+func floor(): Float {
+    var value = _value()
+    var library = DynamicLibrary("ucrtbase.dll")
+    return library.floorf_as_float(value)
+}
+
+func ceiling(): Float {
+    var value = _value()
+    var library = DynamicLibrary("ucrtbase.dll")
+    return library.ceilf_as_float(value)
+}
+
+func truncate(): Float {
+    var value = _value()
+    var library = DynamicLibrary("ucrtbase.dll")
+    return library.truncf_as_float(value)
+}
+
+func round(): Float {
+    var value = _value()
+    var library = DynamicLibrary("ucrtbase.dll")
+    return library.roundf_as_float(value)
+}
+
+func clamp(low: Float, high: Float): Float {
+    var value = _value()
+    var lowest = low._value()
+    var highest = high._value()
+    if value != value {
+        return value
+    }
+    if lowest != lowest {
+        return lowest
+    }
+    if highest != highest {
+        return highest
+    }
+    var held = value
+    if held < lowest {
+        held = lowest
+    }
+    if held > highest {
+        held = highest
+    }
+    return held
+}
+
+func is_not_a_number(): Boolean {
+    var value = _value()
+    return value != value
+}
+
+func is_finite(): Boolean {
+    var value = _value()
+    var difference = value - value
+    return difference == 0.0
+}
+
+func is_infinite(): Boolean {
+    var value = _value()
+    var difference = value - value
+    return difference != 0.0 and value == value
+}
+
+func negate(): Float {
+    var value = _value()
+    var minus_one: Float = -1.0
+    return value * minus_one
+}
+
+func get_pi(): Float {
+    return 3.1415927
+}
+
+func get_tau(): Float {
+    return 6.2831855
+}
+
+func get_euler_number(): Float {
+    return 2.7182817
+}
+
+func get_infinity(): Float {
+    var one: Float = 1.0
+    var zero: Float = 0.0
+    return one / zero
+}
+
+func get_not_a_number(): Float {
+    var zero: Float = 0.0
+    return zero / zero
+}
+
+func get_largest(): Float {
+    var bits: UnsignedInteger = 2139095039
+    return bits.bits_as_float()
+}
+
+func get_smallest(): Float {
+    var largest = get_largest()
+    var zero: Float = 0.0
+    return zero - largest
+}

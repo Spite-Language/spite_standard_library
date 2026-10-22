@@ -1,0 +1,66 @@
+var library = DynamicLibrary("ucrtbase.dll")
+var kernel = DynamicLibrary("kernel32.dll")
+
+func exists(): Boolean {
+    var attributes = kernel.GetFileAttributesA(path)
+    return attributes != -1 and attributes.bits_and(16) == 0
+}
+
+func remove(): Boolean {
+    var removed = library.remove(path)
+    return removed == 0
+}
+
+func rename_to(new_path: String): Boolean {
+    var copy_across_volumes = 2
+    var moved = kernel.MoveFileExA(path, new_path, copy_across_volumes)
+    return moved != 0
+}
+
+func _open_handle(mode: String): Long {
+    return library.fopen_as_long(path, mode)
+}
+
+func _close_handle(handle: Long): Integer {
+    return library.fclose(handle)
+}
+
+func _seek(handle: Long, offset: Long, origin: Integer): Integer {
+    return library._fseeki64(handle, offset, origin)
+}
+
+func _tell(handle: Long): Long {
+    return library._ftelli64_as_long(handle)
+}
+
+func _read_into(room: Buffer, bytes: Long, handle: Long): Long {
+    var one: Long = 1
+    return library.fread_as_long(room, one, bytes, handle)
+}
+
+func _write_from(room: Buffer, bytes: Long, handle: Long): Long {
+    var one: Long = 1
+    return library.fwrite_as_long(room, one, bytes, handle)
+}
+
+func _write_text(text: String, handle: Long): Long {
+    var one: Long = 1
+    var length: Long = text.length()
+    return library.fwrite_as_long(text, one, length, handle)
+}
+
+func _modified_nanoseconds_since_1970(): Long? {
+    var data = Buffer(40)
+    var index = 0
+    while index < 40 {
+        data.append(0)
+        index = index + 1
+    }
+    var standard_information = 0
+    var found = kernel.GetFileAttributesExA(path, standard_information, data)
+    assert found != 0
+    var written = data.read_long_little_endian_at(20)
+    assert written
+    var since_1970 = written - 116444736000000000
+    return since_1970 * 100
+}

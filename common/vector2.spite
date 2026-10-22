@@ -1,0 +1,122 @@
+generic $number_type: Number
+
+var x: $number_type = 0
+var y: $number_type = 0
+
+func Vector2(starting_x: $number_type, starting_y: $number_type) {
+    x = starting_x
+    y = starting_y
+}
+
+func sum(other: Vector2<$number_type>): Vector2<$number_type> {
+    var x_part = x + other.x
+    var y_part = y + other.y
+    return Vector2<$number_type>(x_part, y_part)
+}
+
+func subtract(other: Vector2<$number_type>): Vector2<$number_type> {
+    var x_part = x - other.x
+    var y_part = y - other.y
+    return Vector2<$number_type>(x_part, y_part)
+}
+
+func multiply(other: Vector2<$number_type>): Vector2<$number_type> {
+    var x_part = x * other.x
+    var y_part = y * other.y
+    return Vector2<$number_type>(x_part, y_part)
+}
+
+func divide(other: Vector2<$number_type>): Vector2<$number_type> {
+    var x_part = x / other.x
+    var y_part = y / other.y
+    return Vector2<$number_type>(x_part, y_part)
+}
+
+func negate(): Vector2<$number_type> {
+    var x_part = -x
+    var y_part = -y
+    return Vector2<$number_type>(x_part, y_part)
+}
+
+func equals(other: Vector2): Boolean {
+    return x == other.x and y == other.y
+}
+
+func scaled(factor: $number_type): Vector2<$number_type> {
+    var x_part = x * factor
+    var y_part = y * factor
+    return Vector2<$number_type>(x_part, y_part)
+}
+
+func dot(other: Vector2<$number_type>): $number_type {
+    return x * other.x + y * other.y
+}
+
+func length_squared(): $number_type {
+    return x * x + y * y
+}
+
+func length(): $number_type {
+    var squared = x * x + y * y
+    return _square_root(squared)
+}
+
+func normalized(): Vector2<$number_type> {
+    var squared = x * x + y * y
+    if squared == 0 {
+        return Vector2<$number_type>(0, 0)
+    }
+    var size = _square_root(squared)
+    var x_part = x / size
+    var y_part = y / size
+    return Vector2<$number_type>(x_part, y_part)
+}
+
+func distance_to(other: Vector2<$number_type>): $number_type {
+    var x_gap = other.x - x
+    var y_gap = other.y - y
+    var squared = x_gap * x_gap + y_gap * y_gap
+    return _square_root(squared)
+}
+
+func distance_squared_to(other: Vector2<$number_type>): $number_type {
+    var x_gap = other.x - x
+    var y_gap = other.y - y
+    return x_gap * x_gap + y_gap * y_gap
+}
+
+func linear_interpolate(target: Vector2<$number_type>, amount: $number_type): Vector2<$number_type> {
+    var x_part = x + (target.x - x) * amount
+    var y_part = y + (target.y - y) * amount
+    return Vector2<$number_type>(x_part, y_part)
+}
+
+func minimum(other: Vector2<$number_type>): Vector2<$number_type> {
+    var x_part = x.minimum(other.x)
+    var y_part = y.minimum(other.y)
+    return Vector2<$number_type>(x_part, y_part)
+}
+
+func maximum(other: Vector2<$number_type>): Vector2<$number_type> {
+    var x_part = x.maximum(other.x)
+    var y_part = y.maximum(other.y)
+    return Vector2<$number_type>(x_part, y_part)
+}
+
+func absolute(): Vector2<$number_type> {
+    var x_part = x.absolute()
+    var y_part = y.absolute()
+    return Vector2<$number_type>(x_part, y_part)
+}
+
+func _square_root(squared: $number_type): $number_type {
+    if $number_type == Float or $number_type == Double {
+        return squared.square_root()
+    }
+    var wide = squared.to_double()
+    return wide.square_root()
+}
+
+func to_string(): String {
+    return "({x}, {y})"
+}

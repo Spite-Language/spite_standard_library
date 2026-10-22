@@ -1,0 +1,211 @@
+enum Weekday {
+    'monday'
+    'tuesday'
+    'wednesday'
+    'thursday'
+    'friday'
+    'saturday'
+    'sunday'
+}
+
+var _time_text = TimeText()
+var _year = 1970
+var _month = 1
+var _day = 1
+
+func Date(year: Integer, month: Integer, day: Integer) {
+    crash month >= 1 and month <= 12
+    crash day >= 1 and day <= _days_in(year, month)
+    _year = year
+    _month = month
+    _day = day
+}
+
+func get_year(): Integer {
+    return _year
+}
+
+func get_month(): Integer {
+    return _month
+}
+
+func get_day(): Integer {
+    return _day
+}
+
+func get_is_leap_year(): Boolean {
+    return _is_leap(_year)
+}
+
+func get_days_in_month(): Integer {
+    return _days_in(_year, _month)
+}
+
+func get_days_in_year(): Integer {
+    if _is_leap(_year) {
+        return 366
+    }
+    return 365
+}
+
+func get_day_of_year(): Integer {
+    var first = Date(_year, 1, 1)
+    var first_day = first.days_since_1970
+    var this_day = get_days_since_1970()
+    var difference = this_day - first_day + 1
+    return difference.to_integer()
+}
+
+func get_weekday(): Weekday {
+    var days = get_days_since_1970()
+    var remainder = days % 7
+    var shifted = remainder.to_integer()
+    var index = (shifted + 10) % 7
+    switch index {
+        1: return 'tuesday'
+        2: return 'wednesday'
+        3: return 'thursday'
+        4: return 'friday'
+        5: return 'saturday'
+        6: return 'sunday'
+        _: return 'monday'
+    }
+}
+
+func get_days_since_1970(): Long {
+    var year: Long = _year
+    var month: Long = _month
+    var day: Long = _day
+    var shifted_month: Long = month - 3
+    if _month <= 2 {
+        year = year - 1
+        shifted_month = month + 9
+    }
+    var era = year / 400
+    if year < 0 {
+        era = (year - 399) / 400
+    }
+    var year_of_era = year - era * 400
+    var day_of_year = (153 * shifted_month + 2) / 5 + day - 1
+    var day_of_era = year_of_era * 365 + year_of_era / 4 - year_of_era / 100 + day_of_year
+    return era * 146097 + day_of_era - 719468
+}
+
+func sum(period: Period): Date {
+    var year: Long = _year
+    var month: Long = _month
+    var period_years: Long = period.years
+    var period_months: Long = period.months
+    var months = year * 12 + month - 1 + period_years * 12 + period_months
+    var month_index = months % 12
+    if month_index < 0 {
+        month_index = month_index + 12
+    }
+    var moved_year_long = (months - month_index) / 12
+    var moved_year = moved_year_long.to_integer()
+    var moved_month_long = month_index + 1
+    var moved_month = moved_month_long.to_integer()
+    var day = _day
+    var last_day = _days_in(moved_year, moved_month)
+    if day > last_day {
+        day = last_day
+    }
+    var moved = Date(moved_year, moved_month, day)
+    var days_since_1970 = moved.days_since_1970
+    var period_days: Long = period.days
+    return _from_days(days_since_1970 + period_days)
+}
+
+func days_until(other: Date): Long {
+    return other.days_since_1970 - get_days_since_1970()
+}
+
+func period_until(other: Date): Period {
+    var months: Long = other._year * 12 + other._month - _year * 12 - _month
+    var days: Long = other._day - _day
+    if months > 0 and days < 0 {
+        months = months - 1
+        var whole_months_count = months.to_integer()
+        var whole_months = Period(whole_months_count, 'months')
+        var moved = this + whole_months
+        days = moved.days_until(other)
+    } else if months < 0 and days > 0 {
+        months = months + 1
+        var other_days_in_month: Long = other.days_in_month
+        days = days - other_days_in_month
+    }
+    var years_long = months / 12
+    var years_count = years_long.to_integer()
+    var months_long = months % 12
+    var months_count = months_long.to_integer()
+    var days_count = days.to_integer()
+    var whole_years = Period(years_count, 'years')
+    var left_over_months = Period(months_count, 'months')
+    var whole_days = Period(days_count, 'days')
+    return whole_years + left_over_months + whole_days
+}
+
+func equals(other: Date): Boolean {
+    return _year == other._year and _month == other._month and _day == other._day
+}
+
+func less_than(other: Date): Boolean {
+    if _year != other._year {
+        return _year < other._year
+    }
+    if _month != other._month {
+        return _month < other._month
+    }
+    return _day < other._day
+}
+
+func greater_than(other: Date): Boolean {
+    return other < this
+}
+
+func to_string(): String {
+    var year = _time_text.write_year(_year)
+    var month = _time_text.write_digits(_month, 2)
+    var day = _time_text.write_digits(_day, 2)
+    return "{year}-{month}-{day}"
+}
+
+func _from_days(days_since_1970: Long): Date {
+    var shifted = days_since_1970 + 719468
+    var era = shifted / 146097
+    if shifted < 0 {
+        era = (shifted - 146096) / 146097
+    }
+    var day_of_era = shifted - era * 146097
+    var year_of_era = (day_of_era - day_of_era / 1460 + day_of_era / 36524 - day_of_era / 146096) / 365
+    var day_of_year = day_of_era - (year_of_era * 365 + year_of_era / 4 - year_of_era / 100)
+    var shifted_month = (day_of_year * 5 + 2) / 153
+    var day = day_of_year - (shifted_month * 153 + 2) / 5 + 1
+    var month = shifted_month + 3
+    var year = year_of_era + era * 400
+    if shifted_month >= 10 {
+        month = shifted_month - 9
+        year = year + 1
+    }
+    var year_count = year.to_integer()
+    var month_count = month.to_integer()
+    var day_count = day.to_integer()
+    return Date(year_count, month_count, day_count)
+}
+
+func _is_leap(year: Integer): Boolean {
+    return year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)
+}
+
+func _days_in(year: Integer, month: Integer): Integer {
+    if month == 2 and _is_leap(year) {
+        return 29
+    }
+    if month == 2 {
+        return 28
+    }
+    if month == 4 or month == 6 or month == 9 or month == 11 {
+        return 30
+    }
+    return 31
+}

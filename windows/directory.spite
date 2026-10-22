@@ -1,10 +1,4 @@
-var path = ""
-
 var kernel = DynamicLibrary("kernel32.dll")
-
-func Directory(directory_path: String) {
-    path = directory_path
-}
 
 func exists(): Boolean {
     var attributes = kernel.GetFileAttributesA(path)
@@ -12,9 +6,50 @@ func exists(): Boolean {
 }
 
 func create(): Boolean {
-    return kernel.CreateDirectoryA(path, 0) != 0 or exists()
+    var created = kernel.CreateDirectoryA(path, 0)
+    return created != 0 or exists()
 }
 
 func rename_to(new_path: String): Boolean {
-    return kernel.MoveFileExA(path, new_path, 0) != 0
+    var moved = kernel.MoveFileExA(path, new_path, 0)
+    return moved != 0
+}
+
+func entry_names(want_folders: Boolean): List<String> {
+    var names = List<String>()
+    var found = Buffer(600)
+    var pattern = "{path}/*"
+    var search = kernel.FindFirstFileA_as_long(pattern, found)
+    if search != -1 {
+        var more = true
+        while more {
+            found.take_written(600)
+            var attributes = found.read_integer_little_endian_at(0)
+            crash attributes
+            var is_folder = attributes.bits_and(16) != 0
+            var name = _name_in(found)
+            var listed = name != "." and name != ".."
+            if is_folder == want_folders and listed {
+                names.append(name)
+            }
+            var next = kernel.FindNextFileA(search, found)
+            more = next != 0
+        }
+        kernel.FindClose(search)
+    }
+    return names
+}
+
+func _name_in(found: Buffer): String {
+    var name = String()
+    var index = 44
+    var code = found.get_at(index)
+    crash code
+    while code != 0 and index < 304 {
+        name.append_code(code)
+        index = index + 1
+        code = found.get_at(index)
+        crash code
+    }
+    return name
 }

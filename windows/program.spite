@@ -7,11 +7,70 @@ func sleep(milliseconds: Integer) {
 func working_directory(): String {
     var room = Buffer(1024)
     var length = kernel.GetCurrentDirectoryA(1024, room)
-    return room.text(0, length)
+    crash length > 0 and length < 1024
+    room.take_written(length)
+    var text = room.text(0, length)
+    crash text
+    return text
 }
 
 func executable_path(): String {
     var room = Buffer(1024)
     var length = kernel.GetModuleFileNameA(0, room, 1024)
+    crash length > 0 and length < 1024
+    room.take_written(length)
+    var text = room.text(0, length)
+    crash text
+    return text
+}
+
+func environment(name: String): String? {
+    var room = Buffer(4096)
+    var length = kernel.GetEnvironmentVariableA(name, room, 4096)
+    assert length != 0
+    crash length < 4096
+    room.take_written(length)
     return room.text(0, length)
+}
+
+func command_line(): String {
+    var address = kernel.GetCommandLineA_as_long()
+    var length = kernel.lstrlenA(address)
+    var room = Buffer(length + 1)
+    kernel.lstrcpynA(room, address, length + 1)
+    room.take_written(length)
+    var text = room.text(0, length)
+    crash text
+    return text
+}
+
+func command_arguments(): List<String> {
+    var line = command_line()
+    var pieces = List<String>()
+    var piece = String()
+    var quoted = false
+    var started = false
+    var index = 0
+    while index < line.length() {
+        var code = line.code_at(index)
+        if code == 34 {
+            quoted = not quoted
+            started = true
+        } else if code == 32 and not quoted {
+            if started {
+                pieces.append(piece)
+            }
+            piece = String()
+            started = false
+        } else {
+            piece.append_code(code)
+            started = true
+        }
+        index = index + 1
+    }
+    if started {
+        pieces.append(piece)
+    }
+    pieces.remove_first()
+    return pieces
 }

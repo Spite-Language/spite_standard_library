@@ -1,0 +1,108 @@
+var icu = DynamicLibrary("icu.dll")
+var _name = ""
+var _handle: Long = 0
+var _status = Buffer(4)
+
+func ZoneCalendar(name: String) {
+    _status.append_integer_little_endian(0)
+    _name = name
+    if name.is_empty() {
+        _name = _default_name()
+    }
+    _handle = _opened()
+}
+
+func get_name(): String {
+    return _name
+}
+
+func get_is_open(): Boolean {
+    return _handle != 0
+}
+
+func offset_seconds_at(unix_seconds: Long): Integer {
+    crash _handle != 0
+    _clear_status()
+    var milliseconds: Double = unix_seconds * 1000
+    icu.ucal_setMillis(_handle, milliseconds, _status)
+    var zone = icu.ucal_get(_handle, 15, _status)
+    var daylight = icu.ucal_get(_handle, 16, _status)
+    var status = _status_value()
+    crash status <= 0
+    return (zone + daylight) / 1000
+}
+
+func drop() {
+    if _handle != 0 {
+        icu.ucal_close(_handle)
+    }
+}
+
+func _clear_status() {
+    _status.write_integer_little_endian_at(0, 0)
+}
+
+func _status_value(): Integer {
+    var held = _status.read_integer_little_endian_at(0)
+    crash held
+    return held
+}
+
+func _zeroed(size: Integer): Buffer {
+    var room = Buffer(size)
+    var index = 0
+    while index < size {
+        room.append(0)
+        index = index + 1
+    }
+    return room
+}
+
+func _opened(): Long {
+    var length = _name.length()
+    var characters = Buffer(length * 2 + 2)
+    var index = 0
+    while index < length {
+        var code = _name.code_at(index)
+        if code > 127 {
+            return 0
+        }
+        var unit = code.to_unsigned_short()
+        characters.append_unsigned_short_little_endian(unit)
+        index = index + 1
+    }
+    var is_system = _zeroed(4)
+    var canonical = _zeroed(512)
+    _clear_status()
+    icu.ucal_getCanonicalTimeZoneID(characters, length, canonical, 256, is_system, _status)
+    var canonical_status = _status_value()
+    var system_flag = is_system.get_at(0)
+    crash system_flag
+    var handle: Long = 0
+    if canonical_status <= 0 and system_flag != 0 {
+        handle = icu.ucal_open_as_long(characters, length, "", 1, _status)
+        var open_status = _status_value()
+        if open_status > 0 {
+            handle = 0
+        }
+    }
+    return handle
+}
+
+func _default_name(): String {
+    var characters = _zeroed(512)
+    _clear_status()
+    var length = icu.ucal_getDefaultTimeZone(characters, 256, _status)
+    var status = _status_value()
+    crash status <= 0 and length >= 0 and length <= 256
+    var name = String()
+    var index = 0
+    while index < length {
+        var held = characters.read_unsigned_short_little_endian_at(index * 2)
+        crash held
+        var code: Integer = held
+        name.append_code(code)
+        index = index + 1
+    }
+    return name
+}

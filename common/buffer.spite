@@ -56,6 +56,11 @@ func count(): Integer {
     return item_count
 }
 
+func take_written(written_count: Integer) {
+    crash written_count >= 0 and written_count <= capacity
+    item_count = written_count
+}
+
 func is_empty(): Boolean {
     return item_count == 0
 }

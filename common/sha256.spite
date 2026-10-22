@@ -1,0 +1,282 @@
+singleton
+
+var _round_constants: List<UnsignedInteger> = [
+    1116352408,
+    1899447441,
+    3049323471,
+    3921009573,
+    961987163,
+    1508970993,
+    2453635748,
+    2870763221,
+    3624381080,
+    310598401,
+    607225278,
+    1426881987,
+    1925078388,
+    2162078206,
+    2614888103,
+    3248222580,
+    3835390401,
+    4022224774,
+    264347078,
+    604807628,
+    770255983,
+    1249150122,
+    1555081692,
+    1996064986,
+    2554220882,
+    2821834349,
+    2952996808,
+    3210313671,
+    3336571891,
+    3584528711,
+    113926993,
+    338241895,
+    666307205,
+    773529912,
+    1294757372,
+    1396182291,
+    1695183700,
+    1986661051,
+    2177026350,
+    2456956037,
+    2730485921,
+    2820302411,
+    3259730800,
+    3345764771,
+    3516065817,
+    3600352804,
+    4094571909,
+    275423344,
+    430227734,
+    506948616,
+    659060556,
+    883997877,
+    958139571,
+    1322822218,
+    1537002063,
+    1747873779,
+    1955562222,
+    2024104815,
+    2227730452,
+    2361852424,
+    2428436474,
+    2756734187,
+    3204031479,
+    3329325298,
+]
+var _initial_state: List<UnsignedInteger> = [
+    1779033703,
+    3144134277,
+    1013904242,
+    2773480762,
+    1359893119,
+    2600822924,
+    528734635,
+    1541459225,
+]
+
+func hash(bytes: Buffer): Buffer {
+    var counted = bytes.count()
+    return _digest(bytes, counted)
+}
+
+func hmac(key: Buffer, message: Buffer): Buffer {
+    var key_count = key.count()
+    var block = Buffer(64)
+    if key_count > 64 {
+        var hashed_key = _digest(key, key_count)
+        block.append_bytes(hashed_key, 0, 32)
+    } else {
+        block.append_bytes(key, 0, key_count)
+    }
+    while block.count() < 64 {
+        block.append(0)
+    }
+    var message_count = message.count()
+    var inner_input = Buffer(message_count + 64)
+    var outer_input = Buffer(96)
+    var index = 0
+    while index < 64 {
+        var key_byte = _byte_at(block, index)
+        var inner_byte = key_byte.bits_exclusive_or(54)
+        var outer_byte = key_byte.bits_exclusive_or(92)
+        var inner_value = inner_byte.to_byte()
+        var outer_value = outer_byte.to_byte()
+        inner_input.append(inner_value)
+        outer_input.append(outer_value)
+        index = index + 1
+    }
+    inner_input.append_bytes(message, 0, message_count)
+    var inner_length = message_count + 64
+    var inner = _digest(inner_input, inner_length)
+    outer_input.append_bytes(inner, 0, 32)
+    return _digest(outer_input, 96)
+}
+
+func _zeroed(size: Integer): Buffer {
+    var room = Buffer(size)
+    var filled = 0
+    while filled < size {
+        room.append(0)
+        filled = filled + 1
+    }
+    return room
+}
+
+func _byte_at(room: Buffer, at: Integer): Integer {
+    var held = room.get_at(at)
+    crash held
+    return held
+}
+
+func _digest(source: Buffer, source_length: Integer): Buffer {
+    var state = _zeroed(32)
+    var schedule = _zeroed(256)
+    var tail = _zeroed(128)
+    var index = 0
+    while index < 8 {
+        var initial = _initial_state[index]
+        crash initial
+        state.write_unsigned_integer_little_endian_at(index * 4, initial)
+        index = index + 1
+    }
+    var offset = 0
+    while offset + 64 <= source_length {
+        _compress(state, source, offset, schedule)
+        offset = offset + 64
+    }
+    var rest = source_length - offset
+    var copied = 0
+    while copied < rest {
+        var held = source.get_at(offset + copied)
+        crash held
+        tail.set_at(copied, held)
+        copied = copied + 1
+    }
+    tail.set_at(rest, 128)
+    var tail_length = 64
+    if rest >= 56 {
+        tail_length = 128
+    }
+    var bits: Long = source_length
+    bits = bits * 8
+    tail.write_long_big_endian_at(tail_length - 8, bits)
+    _compress(state, tail, 0, schedule)
+    if tail_length == 128 {
+        _compress(state, tail, 64, schedule)
+    }
+    var digest = _zeroed(32)
+    var word_index = 0
+    while word_index < 8 {
+        var word = _state_word(state, word_index * 4)
+        digest.write_unsigned_integer_big_endian_at(word_index * 4, word)
+        word_index = word_index + 1
+    }
+    return digest
+}
+
+func _state_word(room: Buffer, at: Integer): UnsignedInteger {
+    var held = room.read_unsigned_integer_little_endian_at(at)
+    crash held
+    return held
+}
+
+func _compress(state: Buffer, source: Buffer, source_at: Integer, schedule: Buffer) {
+    var index = 0
+    while index < 16 {
+        var word = source.read_unsigned_integer_big_endian_at(source_at + index * 4)
+        crash word
+        schedule.write_unsigned_integer_little_endian_at(index * 4, word)
+        index = index + 1
+    }
+    while index < 64 {
+        var early = _state_word(schedule, index * 4 - 60)
+        var late = _state_word(schedule, index * 4 - 8)
+        var small_early = _small_sigma(early, 7, 18, 3)
+        var small_late = _small_sigma(late, 17, 19, 10)
+        var sixteen_back = _state_word(schedule, index * 4 - 64)
+        var seven_back = _state_word(schedule, index * 4 - 28)
+        var word = sixteen_back.wrapping_sum(small_early)
+        word = word.wrapping_sum(seven_back)
+        word = word.wrapping_sum(small_late)
+        schedule.write_unsigned_integer_little_endian_at(index * 4, word)
+        index = index + 1
+    }
+    var working_a = _state_word(state, 0)
+    var working_b = _state_word(state, 4)
+    var working_c = _state_word(state, 8)
+    var working_d = _state_word(state, 12)
+    var working_e = _state_word(state, 16)
+    var working_f = _state_word(state, 20)
+    var working_g = _state_word(state, 24)
+    var working_h = _state_word(state, 28)
+    var round = 0
+    while round < 64 {
+        var big_e = _big_sigma(working_e, 6, 11, 25)
+        var chosen = working_e.bits_and(working_f)
+        var inverted = working_e.bits_inverted()
+        var others = inverted.bits_and(working_g)
+        var choice = chosen.bits_exclusive_or(others)
+        var constant = _round_constants[round]
+        crash constant
+        var scheduled = _state_word(schedule, round * 4)
+        var first_sum = working_h.wrapping_sum(big_e)
+        first_sum = first_sum.wrapping_sum(choice)
+        first_sum = first_sum.wrapping_sum(constant)
+        first_sum = first_sum.wrapping_sum(scheduled)
+        var big_a = _big_sigma(working_a, 2, 13, 22)
+        var both_ab = working_a.bits_and(working_b)
+        var both_ac = working_a.bits_and(working_c)
+        var both_bc = working_b.bits_and(working_c)
+        var majority = both_ab.bits_exclusive_or(both_ac)
+        majority = majority.bits_exclusive_or(both_bc)
+        var second_sum = big_a.wrapping_sum(majority)
+        working_h = working_g
+        working_g = working_f
+        working_f = working_e
+        working_e = working_d.wrapping_sum(first_sum)
+        working_d = working_c
+        working_c = working_b
+        working_b = working_a
+        working_a = first_sum.wrapping_sum(second_sum)
+        round = round + 1
+    }
+    _add_to(state, 0, working_a)
+    _add_to(state, 4, working_b)
+    _add_to(state, 8, working_c)
+    _add_to(state, 12, working_d)
+    _add_to(state, 16, working_e)
+    _add_to(state, 20, working_f)
+    _add_to(state, 24, working_g)
+    _add_to(state, 28, working_h)
+}
+
+func _small_sigma(value: UnsignedInteger, first: Integer, second: Integer, shift: Integer): UnsignedInteger {
+    var one = _rotated(value, first)
+    var two = _rotated(value, second)
+    var three = value.shifted_right(shift)
+    var mixed = one.bits_exclusive_or(two)
+    return mixed.bits_exclusive_or(three)
+}
+
+func _big_sigma(value: UnsignedInteger, first: Integer, second: Integer, third: Integer): UnsignedInteger {
+    var one = _rotated(value, first)
+    var two = _rotated(value, second)
+    var three = _rotated(value, third)
+    var mixed = one.bits_exclusive_or(two)
+    return mixed.bits_exclusive_or(three)
+}
+
+func _add_to(state: Buffer, at: Integer, value: UnsignedInteger) {
+    var held = _state_word(state, at)
+    var sum = held.wrapping_sum(value)
+    state.write_unsigned_integer_little_endian_at(at, sum)
+}
+
+func _rotated(value: UnsignedInteger, count: Integer): UnsignedInteger {
+    var right = value.shifted_right(count)
+    var left = value.shifted_left(32 - count)
+    return right.bits_or(left)
+}

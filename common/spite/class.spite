@@ -64,6 +64,10 @@ func get_element_type(): Spite.Class? {
     return _element_type
 }
 
+func fits_vector(): Boolean {
+    return _is_fixed_size
+}
+
 func has_function(name: String): Boolean {
     var index = 0
     while index < _functions.count() {

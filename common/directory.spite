@@ -1,0 +1,92 @@
+union Entry {
+    Directory
+    File
+}
+
+var path = ""
+
+func Directory(starting_path: String) {
+    path = starting_path
+}
+
+func move_to(new_path: String): Boolean {
+    var file_there = File(new_path)
+    var folder_there = Directory(new_path)
+    var file_exists = file_there.exists()
+    var folder_exists = folder_there.exists()
+    if file_exists or folder_exists {
+        return false
+    }
+    var renamed = rename_to(new_path)
+    if renamed {
+        path = new_path
+    }
+    return renamed
+}
+
+func get_name(): String {
+    var end = path.length()
+    while end > 1 and path.code_at(end - 1) == 47 {
+        end = end - 1
+    }
+    var start = end
+    while start > 0 and path.code_at(start - 1) != 47 and path.code_at(start - 1) != 92 {
+        start = start - 1
+    }
+    return path.slice(start, end)
+}
+
+func to_string(): String {
+    return path
+}
+
+func entries(): List<Entry> {
+    var result = List<Entry>()
+    var folder_names = _sorted_names(true)
+    var index = 0
+    while index < folder_names.count() {
+        var folder_name = folder_names[index]
+        var folder_path = inside(folder_name)
+        var directory = Directory(folder_path)
+        result.append(directory)
+        index = index + 1
+    }
+    var file_names = _sorted_names(false)
+    index = 0
+    while index < file_names.count() {
+        var file_name = file_names[index]
+        var file_path = inside(file_name)
+        var file = File(file_path)
+        result.append(file)
+        index = index + 1
+    }
+    return result
+}
+
+func inside(name: String): String {
+    if path.ends_with("/") {
+        return "{path}{name}"
+    }
+    return "{path}/{name}"
+}
+
+func _sorted_names(want_folders: Boolean): List<String> {
+    var names = entry_names(want_folders)
+    var count = names.count()
+    var index = 1
+    while index < count {
+        var inner = index
+        while inner > 0 {
+            var before = names[inner - 1]
+            crash before
+            var here = names[inner]
+            crash here
+            if here < before {
+                names.swap(inner - 1, inner)
+            }
+            inner = inner - 1
+        }
+        index = index + 1
+    }
+    return names
+}

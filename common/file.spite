@@ -1,0 +1,183 @@
+var path = ""
+
+func File(starting_path: String) {
+    path = starting_path
+}
+
+func move_to(new_path: String): Boolean {
+    var file_there = File(new_path)
+    var folder_there = Directory(new_path)
+    var file_exists = file_there.exists()
+    var folder_exists = folder_there.exists()
+    if file_exists or folder_exists {
+        return false
+    }
+    var renamed = rename_to(new_path)
+    if renamed {
+        path = new_path
+    }
+    return renamed
+}
+
+func get_name(): String {
+    var end = path.length()
+    while end > 1 and path.code_at(end - 1) == 47 {
+        end = end - 1
+    }
+    var start = end
+    while start > 0 and path.code_at(start - 1) != 47 and path.code_at(start - 1) != 92 {
+        start = start - 1
+    }
+    return path.slice(start, end)
+}
+
+func to_string(): String {
+    return path
+}
+
+func read(): String? {
+    var bytes = read_bytes()
+    assert bytes
+    return _text_of(bytes)
+}
+
+func write(text: String): Boolean {
+    return _put(text, "wb")
+}
+
+func append(text: String): Boolean {
+    return _put(text, "ab")
+}
+
+func size(): Long? {
+    var handle = _open_handle("rb")
+    assert handle != 0
+    var sought = _seek(handle, 0, 2)
+    var bytes = _tell(handle)
+    var closed = _close_handle(handle)
+    assert sought == 0 and bytes >= 0 and closed == 0
+    return bytes
+}
+
+func modified(): Instant? {
+    var nanoseconds = _modified_nanoseconds_since_1970()
+    assert nanoseconds
+    var whole = Duration(nanoseconds / 1000000000, 'seconds')
+    var part = Duration(nanoseconds % 1000000000, 'nanoseconds')
+    var since_1970 = whole + part
+    return Instant(since_1970)
+}
+
+func read_bytes(): Buffer? {
+    var handle = _open_handle("rb")
+    assert handle != 0
+    var sought = _seek(handle, 0, 2)
+    var length = _tell(handle)
+    var rewound = _seek(handle, 0, 0)
+    if sought != 0 or rewound != 0 or length < 0 {
+        _close_handle(handle)
+        return null
+    }
+    var bytes = _read_into_buffer(handle, length)
+    var closed = _close_handle(handle)
+    assert closed == 0 and length == bytes.count()
+    return bytes
+}
+
+func read_bytes_at(position: Long, count: Integer): Buffer? {
+    crash position >= 0 and count >= 0
+    var handle = _open_handle("rb")
+    assert handle != 0
+    var sought_end = _seek(handle, 0, 2)
+    var end = _tell(handle)
+    var available = end - position
+    if available > count {
+        available = count
+    }
+    if available < 0 {
+        available = 0
+    }
+    var sought = _seek(handle, position, 0)
+    if sought_end != 0 or end < 0 or sought != 0 {
+        _close_handle(handle)
+        return null
+    }
+    var bytes = _read_into_buffer(handle, available)
+    var closed = _close_handle(handle)
+    var got_count: Long = bytes.count()
+    assert closed == 0 and got_count == available
+    return bytes
+}
+
+func write_bytes(bytes: Buffer): Boolean {
+    var handle = _open_handle("wb")
+    if handle == 0 {
+        return false
+    }
+    var written = _write_buffer(bytes, handle)
+    var closed = _close_handle(handle)
+    var counted: Long = bytes.count()
+    return written == counted and closed == 0
+}
+
+func append_bytes(bytes: Buffer): Long? {
+    var handle = _open_handle("ab")
+    assert handle != 0
+    var sought = _seek(handle, 0, 2)
+    var start = _tell(handle)
+    var written = _write_buffer(bytes, handle)
+    var closed = _close_handle(handle)
+    var counted: Long = bytes.count()
+    assert sought == 0 and start >= 0 and written == counted and closed == 0
+    return start
+}
+
+func map(): MappedFile? {
+    var bytes = read_bytes()
+    assert bytes
+    return MappedFile(bytes)
+}
+
+func _read_into_buffer(handle: Long, wanted: Long): Buffer {
+    var counted = wanted.to_integer()
+    var bytes = Buffer(counted)
+    if wanted > 0 {
+        var got = _read_into(bytes, wanted, handle)
+        crash got >= 0 and got <= wanted
+        var got_count = got.to_integer()
+        bytes.take_written(got_count)
+    }
+    return bytes
+}
+
+func _write_buffer(bytes: Buffer, handle: Long): Long {
+    var counted: Long = bytes.count()
+    if counted == 0 {
+        return 0
+    }
+    return _write_from(bytes, counted, handle)
+}
+
+func _put(text: String, mode: String): Boolean {
+    var handle = _open_handle(mode)
+    if handle == 0 {
+        return false
+    }
+    var written = _write_text(text, handle)
+    var closed = _close_handle(handle)
+    var length: Long = text.length()
+    return written == length and closed == 0
+}
+
+func _text_of(bytes: Buffer): String {
+    var text = String()
+    var count = bytes.count()
+    var index = 0
+    while index < count {
+        var held = bytes.get_at(index)
+        crash held
+        text.append_code(held)
+        index = index + 1
+    }
+    return text
+}

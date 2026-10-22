@@ -56,3 +56,19 @@ func keys(): List<$key_type> {
 func values(): List<$value_type> {
     return _values.copy()
 }
+
+func to_debug(): String {
+    var shown = List<String>()
+    var index = 0
+    while index < _keys.count() {
+        var key = _keys[index]
+        var value = _values[index]
+        crash value
+        var key_text = key.to_debug()
+        var value_text = value.to_debug()
+        shown.append("{key_text}: {value_text}")
+        index = index + 1
+    }
+    var joined = shown.join(", ")
+    return "\{{joined}}"
+}

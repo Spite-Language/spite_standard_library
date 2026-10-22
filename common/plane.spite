@@ -1,0 +1,43 @@
+var normal_x: Float = 0.0
+var normal_y: Float = 1.0
+var normal_z: Float = 0.0
+var distance: Float = 0.0
+
+func set_parts(starting_normal_x: Float, starting_normal_y: Float, starting_normal_z: Float, starting_distance: Float) {
+    normal_x = starting_normal_x
+    normal_y = starting_normal_y
+    normal_z = starting_normal_z
+    distance = starting_distance
+}
+
+func set_point_normal(point: Vector3<Float>, starting_normal: Vector3<Float>) {
+    var unit = starting_normal.normalized()
+    var along = unit.dot(point)
+    normal_x = unit.x
+    normal_y = unit.y
+    normal_z = unit.z
+    distance = 0.0 - along
+}
+
+func normal(): Vector3<Float> {
+    return Vector3<Float>(normal_x, normal_y, normal_z)
+}
+
+func signed_distance_to(point: Vector3<Float>): Float {
+    return normal_x * point.x + normal_y * point.y + normal_z * point.z + distance
+}
+
+func normalize() {
+    var squared = normal_x * normal_x + normal_y * normal_y + normal_z * normal_z
+    crash squared != 0.0
+    var length = squared.square_root()
+    var inverse_length = 1.0 / length
+    normal_x = normal_x * inverse_length
+    normal_y = normal_y * inverse_length
+    normal_z = normal_z * inverse_length
+    distance = distance * inverse_length
+}
+
+func to_string(): String {
+    return "({normal_x}, {normal_y}, {normal_z}; {distance})"
+}

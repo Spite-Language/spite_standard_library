@@ -1,0 +1,35 @@
+var _given = List<String>()
+
+func Arguments() {
+    var program = Program()
+    _given = program.command_arguments()
+}
+
+func count(): Integer {
+    return _given.count()
+}
+
+func get(index: Integer): String {
+    var given = _given[index]
+    crash given
+    return given
+}
+
+func named(flag: String): String? {
+    var written = "--{flag}"
+    var with_value = "{written}="
+    var index = 0
+    while index < _given.count() {
+        var argument = _given[index]
+        if argument.starts_with(with_value) {
+            var start = with_value.length()
+            var end = argument.length()
+            return argument.slice(start, end)
+        }
+        if argument == written {
+            return "true"
+        }
+        index = index + 1
+    }
+    return null
+}

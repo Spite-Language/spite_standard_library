@@ -1,0 +1,29 @@
+var kernel = DynamicLibrary("kernel32.dll")
+var _ticks_per_second: Long = 1
+var _reading = Buffer(8)
+
+func Clock() {
+    _reading.append_long_little_endian(0)
+    kernel.QueryPerformanceFrequency(_reading)
+    var frequency = _reading.read_long_little_endian_at(0)
+    crash frequency
+    crash frequency > 0
+    _ticks_per_second = frequency
+}
+
+func elapsed_nanoseconds(): Long {
+    kernel.QueryPerformanceCounter(_reading)
+    var ticks = _reading.read_long_little_endian_at(0)
+    crash ticks
+    return ticks / _ticks_per_second * 1000000000 + ticks % _ticks_per_second * 1000000000 / _ticks_per_second
+}
+
+func now(): Instant {
+    kernel.GetSystemTimeAsFileTime(_reading)
+    var hundreds_of_nanoseconds = _reading.read_long_little_endian_at(0)
+    crash hundreds_of_nanoseconds
+    var whole = Duration(hundreds_of_nanoseconds / 10000000 - 11644473600, 'seconds')
+    var part = Duration(hundreds_of_nanoseconds % 10000000 * 100, 'nanoseconds')
+    var since_1970 = whole + part
+    return Instant(since_1970)
+}

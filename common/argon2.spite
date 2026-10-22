@@ -1,0 +1,807 @@
+singleton
+
+var random = SecureRandom()
+var base64 = Base64()
+var _blake_initial: List<Long> = [
+    7640891576956012808,
+    -4942790177534073029,
+    4354685564936845355,
+    -6534734903238641935,
+    5840696475078001361,
+    -7276294671716946913,
+    2270897969802886507,
+    6620516959819538809
+]
+var _blake_order: List<Integer> = [
+    0
+    1
+    2
+    3
+    4
+    5
+    6
+    7
+    8
+    9
+    10
+    11
+    12
+    13
+    14
+    15
+    14
+    10
+    4
+    8
+    9
+    15
+    13
+    6
+    1
+    12
+    0
+    2
+    11
+    7
+    5
+    3
+    11
+    8
+    12
+    0
+    5
+    2
+    15
+    13
+    10
+    14
+    3
+    6
+    7
+    1
+    9
+    4
+    7
+    9
+    3
+    1
+    13
+    12
+    11
+    14
+    2
+    6
+    5
+    10
+    4
+    0
+    15
+    8
+    9
+    0
+    5
+    7
+    2
+    4
+    10
+    15
+    14
+    1
+    11
+    12
+    6
+    8
+    3
+    13
+    2
+    12
+    6
+    10
+    0
+    11
+    8
+    3
+    4
+    13
+    7
+    5
+    15
+    14
+    1
+    9
+    12
+    5
+    1
+    15
+    14
+    13
+    4
+    10
+    0
+    7
+    6
+    3
+    9
+    2
+    8
+    11
+    13
+    11
+    7
+    14
+    12
+    1
+    3
+    9
+    5
+    0
+    15
+    4
+    8
+    6
+    2
+    10
+    6
+    15
+    14
+    9
+    11
+    3
+    0
+    8
+    12
+    2
+    13
+    7
+    1
+    4
+    10
+    5
+    10
+    2
+    8
+    4
+    7
+    6
+    1
+    5
+    15
+    11
+    9
+    14
+    3
+    12
+    13
+    0
+]
+
+
+func hash(password: String): String {
+    var salt = random.bytes(16)
+    var secret = password.to_bytes()
+    var tag = derive(secret, salt, 3, 65536, 1, 32)
+    return _encoded(salt, tag, 3, 65536, 1)
+}
+
+func verify(password: String, encoded: String): Boolean? {
+    var fields = encoded.split("$")
+    assert fields.count() == 6
+    var empty_field = fields[0]
+    var version_field = fields[2]
+    var type_field = fields[1]
+    var costs_field = fields[3]
+    var salt_field = fields[4]
+    var tag_field = fields[5]
+    assert empty_field == "" and version_field == "v=19"
+    var variant = _type_named(type_field)
+    assert variant >= 0
+    var costs = costs_field.split(",")
+    assert costs.count() == 3
+    var memory_field = costs[0]
+    var time_field = costs[1]
+    var lanes_field = costs[2]
+    var found_memory_cost = _cost(memory_field, "m=")
+    var found_time_cost = _cost(time_field, "t=")
+    var found_lanes = _cost(lanes_field, "p=")
+    assert found_memory_cost and found_time_cost and found_lanes
+    var memory_cost: Integer = found_memory_cost
+    var time_cost: Integer = found_time_cost
+    var lanes: Integer = found_lanes
+    assert memory_cost > 0 and time_cost > 0 and lanes > 0
+    assert memory_cost <= 1048576 and time_cost <= 1000 and lanes <= 255
+    assert memory_cost >= 8 * lanes
+    var salt = _unpadded(salt_field)
+    var expected = _unpadded(tag_field)
+    assert salt and expected
+    assert expected.count() >= 4 and salt.count() >= 8
+    var secret = password.to_bytes()
+    var nothing = Buffer(0)
+    var tag_length = expected.count()
+    var tag = _derived(variant, secret, salt, nothing, nothing, time_cost, memory_cost, lanes, tag_length)
+    return _same_bytes(tag, expected)
+}
+
+func derive(
+    password: Buffer,
+    salt: Buffer,
+    time_cost: Integer,
+    memory_cost: Integer,
+    lanes: Integer,
+    tag_length: Integer,
+): Buffer {
+    var nothing = Buffer(0)
+    return _derived(2, password, salt, nothing, nothing, time_cost, memory_cost, lanes, tag_length)
+}
+
+func _type_named(name: String): Integer {
+    switch name {
+        "argon2d": return 0
+        "argon2i": return 1
+        "argon2id": return 2
+        _: return -1
+    }
+}
+
+func _cost(field: String, prefix: String): Integer? {
+    assert field.starts_with(prefix)
+    var field_length = field.length()
+    var digits = field.slice(2, field_length)
+    var parsed = digits.to_long()
+    assert parsed
+    assert parsed >= 0 and parsed <= 2147483647
+    var plain: Long = parsed
+    return plain.to_integer()
+}
+
+func _unpadded(text: String): Buffer? {
+    var padded = text
+    while padded.length() % 4 != 0 {
+        padded = "{padded}="
+    }
+    return base64.decode(padded)
+}
+
+func _encoded(salt: Buffer, tag: Buffer, time_cost: Integer, memory_cost: Integer, lanes: Integer): String {
+    var salt_text = base64.encode(salt)
+    var tag_text = base64.encode(tag)
+    var salt_bare = salt_text.replace("=", "")
+    var tag_bare = tag_text.replace("=", "")
+    return "$argon2id$v=19$m={memory_cost},t={time_cost},p={lanes}${salt_bare}${tag_bare}"
+}
+
+func _same_bytes(left: Buffer, right: Buffer): Boolean {
+    var left_count = left.count()
+    var right_count = right.count()
+    crash left_count == right_count
+    var difference = 0
+    var index = 0
+    while index < left_count {
+        var left_byte = _byte_at(left, index)
+        var right_byte = _byte_at(right, index)
+        var differing = left_byte.bits_exclusive_or(right_byte)
+        difference = difference.bits_or(differing)
+        index = index + 1
+    }
+    return difference == 0
+}
+
+func _derived(
+    variant: Integer,
+    password: Buffer,
+    salt: Buffer,
+    secret: Buffer,
+    associated: Buffer,
+    time_cost: Integer,
+    memory_cost: Integer,
+    lanes: Integer,
+    tag_length: Integer,
+): Buffer {
+    crash lanes >= 1 and time_cost >= 1 and tag_length >= 4
+    crash memory_cost >= 8 * lanes and memory_cost <= 2000000
+    var parameters = Buffer(64)
+    parameters.append_integer_little_endian(lanes)
+    parameters.append_integer_little_endian(tag_length)
+    parameters.append_integer_little_endian(memory_cost)
+    parameters.append_integer_little_endian(time_cost)
+    parameters.append_integer_little_endian(19)
+    parameters.append_integer_little_endian(variant)
+    _append_counted(parameters, password)
+    _append_counted(parameters, salt)
+    _append_counted(parameters, secret)
+    _append_counted(parameters, associated)
+    var seed = _zeroed(72)
+    var parameters_length = parameters.count()
+    _blake2b(parameters, 0, parameters_length, seed, 0, 64)
+    var segment_length = memory_cost / (4 * lanes)
+    var lane_length = segment_length * 4
+    var block_count = lane_length * lanes
+    var work_at = block_count * 1024
+    var memory = _zeroed(work_at + 5120)
+    var lane = 0
+    while lane < lanes {
+        seed.write_integer_little_endian_at(68, lane)
+        seed.write_integer_little_endian_at(64, 0)
+        var first_at = lane * lane_length * 1024
+        _long_hash(seed, 0, 72, memory, first_at, 1024)
+        seed.write_integer_little_endian_at(64, 1)
+        var second_at = first_at + 1024
+        _long_hash(seed, 0, 72, memory, second_at, 1024)
+        lane = lane + 1
+    }
+    var pass = 0
+    while pass < time_cost {
+        var slice = 0
+        while slice < 4 {
+            lane = 0
+            while lane < lanes {
+                _fill_segment(
+                    variant,
+                    memory,
+                    work_at,
+                    pass,
+                    slice,
+                    lane,
+                    lanes,
+                    lane_length,
+                    segment_length,
+                    time_cost,
+                    block_count,
+                )
+                lane = lane + 1
+            }
+            slice = slice + 1
+        }
+        pass = pass + 1
+    }
+    var last_at = (lane_length - 1) * 1024
+    _copy(memory, last_at, memory, work_at, 1024)
+    lane = 1
+    while lane < lanes {
+        var lane_last_at = (lane * lane_length + lane_length - 1) * 1024
+        _xor_into(memory, work_at, lane_last_at)
+        lane = lane + 1
+    }
+    var tag = Buffer(tag_length)
+    var tag_room = _zeroed(tag_length)
+    _long_hash(memory, work_at, 1024, tag_room, 0, tag_length)
+    tag.append_bytes(tag_room, 0, tag_length)
+    return tag
+}
+
+func _zeroed(size: Integer): Buffer {
+    var room = Buffer(size)
+    var filled = 0
+    while filled + 8 <= size {
+        room.append_long_little_endian(0)
+        filled = filled + 8
+    }
+    while filled < size {
+        room.append(0)
+        filled = filled + 1
+    }
+    return room
+}
+
+func _byte_at(room: Buffer, at: Integer): Integer {
+    var held = room.get_at(at)
+    crash held
+    return held
+}
+
+func _long_at(room: Buffer, at: Integer): Long {
+    var held = room.read_long_little_endian_at(at)
+    crash held
+    return held
+}
+
+func _unsigned_at(room: Buffer, at: Integer): UnsignedLong {
+    var held = _long_at(room, at)
+    return held.bits_as_unsigned()
+}
+
+func _put_unsigned(room: Buffer, at: Integer, value: UnsignedLong) {
+    var signed = value.bits_as_signed()
+    room.write_long_little_endian_at(at, signed)
+}
+
+func _copy(source: Buffer, source_at: Integer, target: Buffer, target_at: Integer, count: Integer) {
+    var index = 0
+    while index < count {
+        var held = source.get_at(source_at + index)
+        crash held
+        target.set_at(target_at + index, held)
+        index = index + 1
+    }
+}
+
+func _append_counted(bytes: Buffer, added: Buffer) {
+    var added_count = added.count()
+    bytes.append_integer_little_endian(added_count)
+    bytes.append_bytes(added, 0, added_count)
+}
+
+func _xor_into(memory: Buffer, target_at: Integer, source_at: Integer) {
+    var offset = 0
+    while offset < 1024 {
+        var held = _long_at(memory, target_at + offset)
+        var other = _long_at(memory, source_at + offset)
+        var mixed = held.bits_exclusive_or(other)
+        memory.write_long_little_endian_at(target_at + offset, mixed)
+        offset = offset + 8
+    }
+}
+
+func _fill_segment(
+    variant: Integer,
+    memory: Buffer,
+    work_at: Integer,
+    pass: Integer,
+    slice: Integer,
+    lane: Integer,
+    lanes: Integer,
+    lane_length: Integer,
+    segment_length: Integer,
+    time_cost: Integer,
+    block_count: Integer,
+) {
+    var independent = variant == 1 or variant == 2 and pass == 0 and slice < 2
+    var input_at = work_at
+    var zero_at = work_at + 1024
+    var address_at = work_at + 2048
+    var mixed_at = work_at + 3072
+    if independent {
+        _clear(memory, zero_at)
+        _clear(memory, input_at)
+        memory.write_long_little_endian_at(input_at, pass)
+        memory.write_long_little_endian_at(input_at + 8, lane)
+        memory.write_long_little_endian_at(input_at + 16, slice)
+        memory.write_long_little_endian_at(input_at + 24, block_count)
+        memory.write_long_little_endian_at(input_at + 32, time_cost)
+        memory.write_long_little_endian_at(input_at + 40, variant)
+    }
+    var index = 0
+    if pass == 0 and slice == 0 {
+        index = 2
+        if independent {
+            _next_addresses(memory, input_at, zero_at, address_at, mixed_at)
+        }
+    }
+    while index < segment_length {
+        var column = slice * segment_length + index
+        var current = lane * lane_length + column
+        var previous = current - 1
+        if column == 0 {
+            previous = current + lane_length - 1
+        }
+        var random_value: Long = 0
+        if independent {
+            if index % 128 == 0 {
+                _next_addresses(memory, input_at, zero_at, address_at, mixed_at)
+            }
+            var slot = index % 128
+            random_value = _long_at(memory, address_at + slot * 8)
+        } else {
+            random_value = _long_at(memory, previous * 1024)
+        }
+        var reference_lane = lane
+        var high = random_value.bits_as_unsigned()
+        if pass > 0 or slice > 0 {
+            var upper = high.shifted_right(32)
+            var wide_lanes: UnsignedLong = lanes
+            var picked = upper % wide_lanes
+            reference_lane = picked.to_integer()
+        }
+        var same_lane = reference_lane == lane
+        var area = _reference_area(pass, slice, index, same_lane, lane_length, segment_length)
+        var mask: UnsignedLong = 4294967295
+        var low = high.bits_and(mask)
+        var squared = low * low
+        squared = squared.shifted_right(32)
+        var wide_area: UnsignedLong = area
+        var scaled = wide_area * squared
+        scaled = scaled.shifted_right(32)
+        var scaled_count = scaled.to_integer()
+        var relative = area - 1 - scaled_count
+        var start: Long = 0
+        if pass > 0 and slice < 3 {
+            start = (slice + 1) * segment_length
+        }
+        var reference_column_long = (start + relative) % lane_length
+        var reference_column = reference_column_long.to_integer()
+        var reference = reference_lane * lane_length + reference_column
+        _compress(memory, previous * 1024, reference * 1024, current * 1024, pass > 0, mixed_at)
+        index = index + 1
+    }
+}
+
+func _reference_area(
+    pass: Integer,
+    slice: Integer,
+    index: Integer,
+    same_lane: Boolean,
+    lane_length: Integer,
+    segment_length: Integer,
+): Long {
+    var finished: Long = slice * segment_length
+    if pass > 0 {
+        finished = lane_length - segment_length
+    }
+    if pass == 0 and slice == 0 or same_lane {
+        return finished + index - 1
+    }
+    if index == 0 {
+        return finished - 1
+    }
+    return finished
+}
+
+func _clear(memory: Buffer, at: Integer) {
+    var offset = 0
+    while offset < 1024 {
+        memory.write_long_little_endian_at(at + offset, 0)
+        offset = offset + 8
+    }
+}
+
+func _next_addresses(memory: Buffer, input_at: Integer, zero_at: Integer, address_at: Integer, mixed_at: Integer) {
+    var counter = _long_at(memory, input_at + 48)
+    memory.write_long_little_endian_at(input_at + 48, counter + 1)
+    _compress(memory, zero_at, input_at, address_at, false, mixed_at)
+    _compress(memory, zero_at, address_at, address_at, false, mixed_at)
+}
+
+func _compress(
+    memory: Buffer,
+    previous_at: Integer,
+    reference_at: Integer,
+    target_at: Integer,
+    keep: Boolean,
+    mixed_at: Integer,
+) {
+    var saved_at = mixed_at + 1024
+    var offset = 0
+    while offset < 1024 {
+        var left = _long_at(memory, previous_at + offset)
+        var right = _long_at(memory, reference_at + offset)
+        var both = left.bits_exclusive_or(right)
+        memory.write_long_little_endian_at(mixed_at + offset, both)
+        if keep {
+            var old = _long_at(memory, target_at + offset)
+            both = both.bits_exclusive_or(old)
+        }
+        memory.write_long_little_endian_at(saved_at + offset, both)
+        offset = offset + 8
+    }
+    var row = 0
+    while row < 8 {
+        _permute(memory, mixed_at + row * 128, 16, 8)
+        row = row + 1
+    }
+    var column = 0
+    while column < 8 {
+        _permute(memory, mixed_at + column * 16, 128, 8)
+        column = column + 1
+    }
+    offset = 0
+    while offset < 1024 {
+        var kept = _long_at(memory, saved_at + offset)
+        var permuted = _long_at(memory, mixed_at + offset)
+        var result = kept.bits_exclusive_or(permuted)
+        memory.write_long_little_endian_at(target_at + offset, result)
+        offset = offset + 8
+    }
+}
+
+func _permute(memory: Buffer, start: Integer, pair_step: Integer, word_step: Integer) {
+    _mix(memory, start, 0, 4, 8, 12, pair_step, word_step)
+    _mix(memory, start, 1, 5, 9, 13, pair_step, word_step)
+    _mix(memory, start, 2, 6, 10, 14, pair_step, word_step)
+    _mix(memory, start, 3, 7, 11, 15, pair_step, word_step)
+    _mix(memory, start, 0, 5, 10, 15, pair_step, word_step)
+    _mix(memory, start, 1, 6, 11, 12, pair_step, word_step)
+    _mix(memory, start, 2, 7, 8, 13, pair_step, word_step)
+    _mix(memory, start, 3, 4, 9, 14, pair_step, word_step)
+}
+
+func _offset(word: Integer, pair_step: Integer, word_step: Integer): Integer {
+    return word / 2 * pair_step + word % 2 * word_step
+}
+
+func _mix(
+    memory: Buffer,
+    start: Integer,
+    first: Integer,
+    second: Integer,
+    third: Integer,
+    fourth: Integer,
+    pair_step: Integer,
+    word_step: Integer,
+) {
+    var offset_a = _offset(first, pair_step, word_step)
+    var offset_b = _offset(second, pair_step, word_step)
+    var offset_c = _offset(third, pair_step, word_step)
+    var offset_d = _offset(fourth, pair_step, word_step)
+    var at_a = start + offset_a
+    var at_b = start + offset_b
+    var at_c = start + offset_c
+    var at_d = start + offset_d
+    var word_a = _unsigned_at(memory, at_a)
+    var word_b = _unsigned_at(memory, at_b)
+    var word_c = _unsigned_at(memory, at_c)
+    var word_d = _unsigned_at(memory, at_d)
+    word_a = _multiplied_sum(word_a, word_b)
+    word_d = _rotated_exclusive_or(word_d, word_a, 32)
+    word_c = _multiplied_sum(word_c, word_d)
+    word_b = _rotated_exclusive_or(word_b, word_c, 24)
+    word_a = _multiplied_sum(word_a, word_b)
+    word_d = _rotated_exclusive_or(word_d, word_a, 16)
+    word_c = _multiplied_sum(word_c, word_d)
+    word_b = _rotated_exclusive_or(word_b, word_c, 63)
+    _put_unsigned(memory, at_a, word_a)
+    _put_unsigned(memory, at_b, word_b)
+    _put_unsigned(memory, at_c, word_c)
+    _put_unsigned(memory, at_d, word_d)
+}
+
+func _multiplied_sum(left: UnsignedLong, right: UnsignedLong): UnsignedLong {
+    var mask: UnsignedLong = 4294967295
+    var low_left = left.bits_and(mask)
+    var low_right = right.bits_and(mask)
+    var product = low_left * low_right
+    var total = left.wrapping_sum(right)
+    total = total.wrapping_sum(product)
+    return total.wrapping_sum(product)
+}
+
+func _rotated_exclusive_or(value: UnsignedLong, other: UnsignedLong, count: Integer): UnsignedLong {
+    var mixed = value.bits_exclusive_or(other)
+    var right = mixed.shifted_right(count)
+    var left = mixed.shifted_left(64 - count)
+    return right.bits_or(left)
+}
+
+func _long_hash(
+    source: Buffer,
+    source_at: Integer,
+    source_length: Integer,
+    target: Buffer,
+    target_at: Integer,
+    target_length: Integer,
+) {
+    var prefixed = _zeroed(source_length + 4)
+    prefixed.write_integer_little_endian_at(0, target_length)
+    _copy(source, source_at, prefixed, 4, source_length)
+    var prefixed_length = source_length + 4
+    if target_length <= 64 {
+        _blake2b(prefixed, 0, prefixed_length, target, target_at, target_length)
+        return
+    }
+    var chain = _zeroed(128)
+    _blake2b(prefixed, 0, prefixed_length, chain, 0, 64)
+    _copy(chain, 0, target, target_at, 32)
+    var written = 32
+    while target_length - written > 64 {
+        _blake2b(chain, 0, 64, chain, 64, 64)
+        _copy(chain, 64, chain, 0, 64)
+        _copy(chain, 0, target, target_at + written, 32)
+        written = written + 32
+    }
+    var rest = target_length - written
+    _blake2b(chain, 0, 64, target, target_at + written, rest)
+}
+
+func _blake2b(
+    source: Buffer,
+    source_at: Integer,
+    source_length: Integer,
+    target: Buffer,
+    target_at: Integer,
+    target_length: Integer,
+) {
+    var state = _zeroed(64)
+    var block = _zeroed(128)
+    var index = 0
+    while index < 8 {
+        var initial = _blake_initial[index]
+        crash initial
+        state.write_long_little_endian_at(index * 8, initial)
+        index = index + 1
+    }
+    var first = _long_at(state, 0)
+    var parameter: Long = target_length
+    parameter = parameter.bits_or(16842752)
+    first = first.bits_exclusive_or(parameter)
+    state.write_long_little_endian_at(0, first)
+    var offset = 0
+    while source_length - offset > 128 {
+        _copy(source, source_at + offset, block, 0, 128)
+        offset = offset + 128
+        _blake_compress(state, block, offset, false)
+    }
+    var remaining = source_length - offset
+    var cleared = 0
+    while cleared < 128 {
+        block.set_at(cleared, 0)
+        cleared = cleared + 1
+    }
+    _copy(source, source_at + offset, block, 0, remaining)
+    _blake_compress(state, block, source_length, true)
+    _copy(state, 0, target, target_at, target_length)
+}
+
+func _blake_compress(state: Buffer, block: Buffer, counter: Long, last: Boolean) {
+    var work = _zeroed(128)
+    _copy(state, 0, work, 0, 64)
+    var index = 0
+    while index < 8 {
+        var initial = _blake_initial[index]
+        crash initial
+        work.write_long_little_endian_at(64 + index * 8, initial)
+        index = index + 1
+    }
+    var twelfth = _long_at(work, 96)
+    twelfth = twelfth.bits_exclusive_or(counter)
+    work.write_long_little_endian_at(96, twelfth)
+    if last {
+        var fifteenth = _long_at(work, 112)
+        fifteenth = fifteenth.bits_inverted()
+        work.write_long_little_endian_at(112, fifteenth)
+    }
+    var round = 0
+    while round < 12 {
+        var order = round % 10 * 16
+        _blake_mix(work, block, 0, 4, 8, 12, order)
+        _blake_mix(work, block, 1, 5, 9, 13, order + 2)
+        _blake_mix(work, block, 2, 6, 10, 14, order + 4)
+        _blake_mix(work, block, 3, 7, 11, 15, order + 6)
+        _blake_mix(work, block, 0, 5, 10, 15, order + 8)
+        _blake_mix(work, block, 1, 6, 11, 12, order + 10)
+        _blake_mix(work, block, 2, 7, 8, 13, order + 12)
+        _blake_mix(work, block, 3, 4, 9, 14, order + 14)
+        round = round + 1
+    }
+    index = 0
+    while index < 8 {
+        var held = _long_at(state, index * 8)
+        var low = _long_at(work, index * 8)
+        var high = _long_at(work, 64 + index * 8)
+        var mixed = held.bits_exclusive_or(low)
+        mixed = mixed.bits_exclusive_or(high)
+        state.write_long_little_endian_at(index * 8, mixed)
+        index = index + 1
+    }
+}
+
+func _blake_mix(
+    work: Buffer,
+    block: Buffer,
+    first: Integer,
+    second: Integer,
+    third: Integer,
+    fourth: Integer,
+    order: Integer,
+) {
+    var x_index = _blake_order[order]
+    var y_index = _blake_order[order + 1]
+    crash x_index and y_index
+    var message_x = _unsigned_at(block, x_index * 8)
+    var message_y = _unsigned_at(block, y_index * 8)
+    var word_a = _unsigned_at(work, first * 8)
+    var word_b = _unsigned_at(work, second * 8)
+    var word_c = _unsigned_at(work, third * 8)
+    var word_d = _unsigned_at(work, fourth * 8)
+    word_a = word_a.wrapping_sum(word_b)
+    word_a = word_a.wrapping_sum(message_x)
+    word_d = _rotated_exclusive_or(word_d, word_a, 32)
+    word_c = word_c.wrapping_sum(word_d)
+    word_b = _rotated_exclusive_or(word_b, word_c, 24)
+    word_a = word_a.wrapping_sum(word_b)
+    word_a = word_a.wrapping_sum(message_y)
+    word_d = _rotated_exclusive_or(word_d, word_a, 16)
+    word_c = word_c.wrapping_sum(word_d)
+    word_b = _rotated_exclusive_or(word_b, word_c, 63)
+    _put_unsigned(work, first * 8, word_a)
+    _put_unsigned(work, second * 8, word_b)
+    _put_unsigned(work, third * 8, word_c)
+    _put_unsigned(work, fourth * 8, word_d)
+}

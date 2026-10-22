@@ -1,0 +1,944 @@
+var _window = 32768
+var _hash_size = 32768
+var _chain_limit = 24
+var _block_symbols = 65536
+var _length_bases: List<Integer> = [
+    3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258,
+]
+var _length_extra: List<Integer> = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0]
+var _distance_bases: List<Integer> = [
+    1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193, 257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145,
+    8193, 12289, 16385, 24577,
+]
+var _distance_extra: List<Integer> = [0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13]
+var _code_length_order: List<Integer> = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15]
+
+var _bit_buffer: Long = 0
+var _bit_count = 0
+
+var _source = Buffer(0)
+var _source_length = 0
+var _head = Buffer(0)
+var _previous = Buffer(0)
+var _literal_frequencies = Buffer(0)
+var _distance_frequencies = Buffer(0)
+var _literal_lengths = Buffer(0)
+var _literal_codes = Buffer(0)
+var _distance_lengths = Buffer(0)
+var _distance_codes = Buffer(0)
+var _run_frequencies = Buffer(0)
+var _run_lengths = Buffer(0)
+var _run_codes = Buffer(0)
+var _all_lengths = Buffer(0)
+var _runs = Buffer(0)
+var _run_extras = Buffer(0)
+var _run_count = 0
+var _symbols = List<Integer>()
+var _extras = List<Integer>()
+var _output = Buffer(0)
+
+var _input = Buffer(0)
+var _input_length = 0
+var _position = 0
+var _failed = false
+var _result = Buffer(0)
+var _literal_table = Buffer(0)
+var _distance_table = Buffer(0)
+var _length_table = Buffer(0)
+var _table_lengths = Buffer(0)
+var _literal_mask: Long = 0
+var _distance_mask: Long = 0
+var _length_mask: Long = 0
+
+func compress(bytes: Buffer): Buffer {
+    _source = bytes
+    _source_length = bytes.count()
+    _head = _integers(_hash_size)
+    _previous = _integers(_window)
+    _literal_frequencies = _integers(300)
+    _distance_frequencies = _integers(50)
+    _literal_lengths = _integers(300)
+    _literal_codes = _integers(300)
+    _distance_lengths = _integers(50)
+    _distance_codes = _integers(50)
+    _run_frequencies = _integers(25)
+    _run_lengths = _integers(25)
+    _run_codes = _integers(25)
+    _all_lengths = _integers(325)
+    _runs = _integers(325)
+    _run_extras = _integers(325)
+    _fill(_head, 0, _hash_size, -1)
+    _fill(_previous, 0, _window, -1)
+    var expected = _source_length / 2 + 64
+    _output = Buffer(expected)
+    _bit_buffer = 0
+    _bit_count = 0
+    _start_block()
+    var position = 0
+    while position < _source_length {
+        position = _step(position)
+        if _symbols.count() >= _block_symbols {
+            _add_symbol(256, 0)
+            _write_block(false)
+            _start_block()
+        }
+    }
+    _add_symbol(256, 0)
+    _write_block(true)
+    _flush()
+    var result = _output
+    _output = Buffer(0)
+    _source = Buffer(0)
+    _symbols = List<Integer>()
+    _extras = List<Integer>()
+    return result
+}
+
+func decompress(bytes: Buffer): Buffer? {
+    _input = bytes
+    _input_length = bytes.count()
+    _position = 0
+    _bit_buffer = 0
+    _bit_count = 0
+    _failed = false
+    var expected = _input_length * 2 + 64
+    _result = Buffer(expected)
+    _literal_table = _integers(32768)
+    _distance_table = _integers(32768)
+    _length_table = _integers(256)
+    _table_lengths = _integers(700)
+    _inflate_blocks()
+    _input = Buffer(0)
+    var result = _result
+    _result = Buffer(0)
+    assert not _failed
+    return result
+}
+
+func _integers(count: Integer): Buffer {
+    var room = Buffer(count * 4)
+    var index = 0
+    while index < count {
+        room.append_integer_little_endian(0)
+        index = index + 1
+    }
+    return room
+}
+
+func _get(room: Buffer, index: Integer): Integer {
+    var held = room.read_integer_little_endian_at(index * 4)
+    crash held
+    return held
+}
+
+func _put(room: Buffer, index: Integer, value: Integer) {
+    room.write_integer_little_endian_at(index * 4, value)
+}
+
+func _get_long(room: Buffer, index: Integer): Long {
+    var held = room.read_long_little_endian_at(index * 8)
+    crash held
+    return held
+}
+
+func _byte_of(room: Buffer, index: Integer): Integer {
+    var held = room.get_at(index)
+    crash held
+    return held
+}
+
+func _entry(table: List<Integer>, index: Integer): Integer {
+    var held = table[index]
+    crash held
+    return held
+}
+
+func _fill(room: Buffer, start: Integer, filled_count: Integer, value: Integer) {
+    var index = 0
+    while index < filled_count {
+        _put(room, start + index, value)
+        index = index + 1
+    }
+}
+
+func _increment(room: Buffer, index: Integer) {
+    var value = _get(room, index)
+    _put(room, index, value + 1)
+}
+
+func _start_block() {
+    _symbols.clear()
+    _extras.clear()
+    _fill(_literal_frequencies, 0, 286, 0)
+    _fill(_distance_frequencies, 0, 30, 0)
+}
+
+func _step(position: Integer): Integer {
+    var best_length = 0
+    var best_distance = 0
+    if position + 2 < _source_length {
+        var limit = _source_length - position
+        if limit > 258 {
+            limit = 258
+        }
+        var hash = _hash_at(position)
+        var candidate = _get(_head, hash)
+        var tries = 0
+        while candidate >= 0 and position - candidate <= _window and tries < _chain_limit and best_length < limit {
+            var matched = _match_length(candidate, position, limit)
+            if matched > best_length {
+                best_length = matched
+                best_distance = position - candidate
+            }
+            var slot = candidate.bits_and(_window - 1)
+            candidate = _get(_previous, slot)
+            tries = tries + 1
+        }
+        _insert(position, hash)
+    }
+    if best_length >= 3 {
+        _add_match(best_length, best_distance)
+        _insert_range(position + 1, position + best_length)
+        return position + best_length
+    }
+    var literal = _byte_of(_source, position)
+    _add_symbol(literal, 0)
+    return position + 1
+}
+
+func _hash_at(position: Integer): Integer {
+    var first = _byte_of(_source, position)
+    var second = _byte_of(_source, position + 1)
+    var third = _byte_of(_source, position + 2)
+    var middle = second.shifted_left(5)
+    var high = first.shifted_left(10)
+    var mixed = high.bits_exclusive_or(middle)
+    mixed = mixed.bits_exclusive_or(third)
+    return mixed.bits_and(_hash_size - 1)
+}
+
+func _insert(position: Integer, hash: Integer) {
+    var slot = position.bits_and(_window - 1)
+    var older = _get(_head, hash)
+    _put(_previous, slot, older)
+    _put(_head, hash, position)
+}
+
+func _insert_range(from: Integer, to: Integer) {
+    var position = from
+    while position < to and position + 2 < _source_length {
+        var hash = _hash_at(position)
+        _insert(position, hash)
+        position = position + 1
+    }
+}
+
+func _match_length(candidate: Integer, position: Integer, limit: Integer): Integer {
+    var matched = 0
+    var searching = true
+    while searching and matched < limit {
+        var earlier = _byte_of(_source, candidate + matched)
+        var later = _byte_of(_source, position + matched)
+        if earlier == later {
+            matched = matched + 1
+        } else {
+            searching = false
+        }
+    }
+    return matched
+}
+
+func _add_symbol(symbol: Integer, extra: Integer) {
+    _symbols.append(symbol)
+    _extras.append(extra)
+    _increment(_literal_frequencies, symbol)
+}
+
+func _add_match(match_length: Integer, distance: Integer) {
+    var length_code = _code_for(_length_bases, match_length)
+    var length_base = _entry(_length_bases, length_code)
+    var length_symbol = 257 + length_code
+    var length_more = match_length - length_base
+    _add_symbol(length_symbol, length_more)
+    var distance_code = _code_for(_distance_bases, distance)
+    var distance_base = _entry(_distance_bases, distance_code)
+    var distance_more = distance - distance_base
+    _symbols.append(distance_code)
+    _extras.append(distance_more)
+    _increment(_distance_frequencies, distance_code)
+}
+
+func _code_for(bases: List<Integer>, value: Integer): Integer {
+    var code = 0
+    var next = 1
+    var total = bases.count()
+    var searching = true
+    while searching and next < total {
+        var base = _entry(bases, next)
+        if value >= base {
+            code = next
+            next = next + 1
+        } else {
+            searching = false
+        }
+    }
+    return code
+}
+
+func _write_block(last: Boolean) {
+    _build_code(_literal_frequencies, 286, 15, _literal_lengths, _literal_codes)
+    if _get(_distance_frequencies, 0) == 0 {
+        _put(_distance_frequencies, 0, 1)
+    }
+    if _get(_distance_frequencies, 1) == 0 {
+        _put(_distance_frequencies, 1, 1)
+    }
+    _build_code(_distance_frequencies, 30, 15, _distance_lengths, _distance_codes)
+    var final_bit = 0
+    if last {
+        final_bit = 1
+    }
+    _write_bits(final_bit, 1)
+    _write_bits(2, 2)
+    _write_code_lengths()
+    _write_symbols()
+}
+
+func _write_symbols() {
+    var total = _symbols.count()
+    var index = 0
+    while index < total {
+        var symbol = _entry(_symbols, index)
+        _write_symbol_code(_literal_lengths, _literal_codes, symbol)
+        index = index + 1
+        if symbol > 256 {
+            var length_code = symbol - 257
+            var length_bits = _entry(_length_extra, length_code)
+            var length_more = _entry(_extras, index - 1)
+            _write_bits(length_more, length_bits)
+            var distance_code = _entry(_symbols, index)
+            _write_symbol_code(_distance_lengths, _distance_codes, distance_code)
+            var distance_bits = _entry(_distance_extra, distance_code)
+            var distance_more = _entry(_extras, index)
+            _write_bits(distance_more, distance_bits)
+            index = index + 1
+        }
+    }
+}
+
+func _write_symbol_code(lengths: Buffer, codes: Buffer, symbol: Integer) {
+    var code = _get(codes, symbol)
+    var bits = _get(lengths, symbol)
+    _write_code(code, bits)
+}
+
+func _write_code_lengths() {
+    var literal_count = _trimmed_count(_literal_lengths, 286, 257)
+    var distance_count = _trimmed_count(_distance_lengths, 30, 1)
+    var index = 0
+    while index < literal_count {
+        var value = _get(_literal_lengths, index)
+        _put(_all_lengths, index, value)
+        index = index + 1
+    }
+    index = 0
+    while index < distance_count {
+        var value = _get(_distance_lengths, index)
+        _put(_all_lengths, literal_count + index, value)
+        index = index + 1
+    }
+    _run_length(literal_count + distance_count)
+    _fill(_run_frequencies, 0, 19, 0)
+    index = 0
+    while index < _run_count {
+        var run = _get(_runs, index)
+        _increment(_run_frequencies, run)
+        index = index + 1
+    }
+    _build_code(_run_frequencies, 19, 7, _run_lengths, _run_codes)
+    var order_count = 19
+    while order_count > 4 and _order_length(order_count - 1) == 0 {
+        order_count = order_count - 1
+    }
+    _write_bits(literal_count - 257, 5)
+    _write_bits(distance_count - 1, 5)
+    _write_bits(order_count - 4, 4)
+    index = 0
+    while index < order_count {
+        var bits = _order_length(index)
+        _write_bits(bits, 3)
+        index = index + 1
+    }
+    index = 0
+    while index < _run_count {
+        var symbol = _get(_runs, index)
+        var extra = _get(_run_extras, index)
+        _write_symbol_code(_run_lengths, _run_codes, symbol)
+        if symbol == 16 {
+            _write_bits(extra, 2)
+        } else if symbol == 17 {
+            _write_bits(extra, 3)
+        } else if symbol == 18 {
+            _write_bits(extra, 7)
+        }
+        index = index + 1
+    }
+}
+
+func _order_length(position: Integer): Integer {
+    var symbol = _entry(_code_length_order, position)
+    return _get(_run_lengths, symbol)
+}
+
+func _trimmed_count(lengths: Buffer, total: Integer, minimum: Integer): Integer {
+    var kept = total
+    while kept > minimum and _get(lengths, kept - 1) == 0 {
+        kept = kept - 1
+    }
+    return kept
+}
+
+func _run_length(total: Integer) {
+    _run_count = 0
+    var index = 0
+    while index < total {
+        var value = _get(_all_lengths, index)
+        var repeat = 1
+        while index + repeat < total and _get(_all_lengths, index + repeat) == value {
+            repeat = repeat + 1
+        }
+        index = index + _emit_run(value, repeat)
+    }
+}
+
+func _add_run(symbol: Integer, extra: Integer) {
+    _put(_runs, _run_count, symbol)
+    _put(_run_extras, _run_count, extra)
+    _run_count = _run_count + 1
+}
+
+func _emit_run(value: Integer, repeat: Integer): Integer {
+    if value == 0 and repeat >= 11 {
+        var zeros = repeat.minimum(138)
+        _add_run(18, zeros - 11)
+        return zeros
+    } else if value == 0 and repeat >= 3 {
+        _add_run(17, repeat - 3)
+        return repeat
+    } else if repeat >= 4 {
+        _add_run(value, 0)
+        var repeated = repeat - 1
+        var copies = repeated.minimum(6)
+        _add_run(16, copies - 3)
+        return copies + 1
+    }
+    _add_run(value, 0)
+    return 1
+}
+
+func _build_code(frequencies: Buffer, symbol_count: Integer, limit: Integer, lengths: Buffer, codes: Buffer) {
+    _fill(lengths, 0, symbol_count, 0)
+    _fill(codes, 0, symbol_count, 0)
+    var used = List<Integer>()
+    var index = 0
+    while index < symbol_count {
+        if _get(frequencies, index) > 0 {
+            used.append(index)
+        }
+        index = index + 1
+    }
+    var used_count = used.count()
+    if used_count == 1 {
+        var only = _entry(used, 0)
+        _put(lengths, only, 1)
+        var partner = 0
+        if only == 0 {
+            partner = 1
+        }
+        _put(lengths, partner, 1)
+    } else if used_count > 1 {
+        _tree_lengths(frequencies, used, limit, lengths)
+    }
+    _assign_codes(lengths, symbol_count, limit, codes)
+}
+
+func _tree_lengths(frequencies: Buffer, used: List<Integer>, limit: Integer, lengths: Buffer) {
+    var leaves = used.count()
+    var nodes = leaves * 2
+    var weights = Buffer(nodes * 8)
+    var filled = 0
+    while filled < nodes {
+        weights.append_long_little_endian(0)
+        filled = filled + 1
+    }
+    var parents = _integers(nodes)
+    var alive = _integers(nodes)
+    var leaf = 0
+    while leaf < leaves {
+        var symbol = _entry(used, leaf)
+        var weight: Long = _get(frequencies, symbol)
+        weights.write_long_little_endian_at(leaf * 8, weight)
+        _put(parents, leaf, -1)
+        _put(alive, leaf, leaf)
+        leaf = leaf + 1
+    }
+    var alive_count = leaves
+    var node_count = leaves
+    while alive_count > 1 {
+        var first = _take_lightest(alive, alive_count, weights)
+        alive_count = alive_count - 1
+        var second = _take_lightest(alive, alive_count, weights)
+        alive_count = alive_count - 1
+        var first_weight = _get_long(weights, first)
+        var second_weight = _get_long(weights, second)
+        var combined = first_weight + second_weight
+        weights.write_long_little_endian_at(node_count * 8, combined)
+        _put(parents, node_count, -1)
+        _put(parents, first, node_count)
+        _put(parents, second, node_count)
+        _put(alive, alive_count, node_count)
+        alive_count = alive_count + 1
+        node_count = node_count + 1
+    }
+    leaf = 0
+    while leaf < leaves {
+        var depth = 0
+        var node = _get(parents, leaf)
+        while node >= 0 {
+            depth = depth + 1
+            node = _get(parents, node)
+        }
+        if depth > limit {
+            depth = limit
+        }
+        var symbol = _entry(used, leaf)
+        _put(lengths, symbol, depth)
+        leaf = leaf + 1
+    }
+    _fit_kraft(used, limit, lengths)
+}
+
+func _take_lightest(alive: Buffer, alive_count: Integer, weights: Buffer): Integer {
+    var best = 0
+    var first_node = _get(alive, 0)
+    var best_weight = _get_long(weights, first_node)
+    var position = 1
+    while position < alive_count {
+        var node = _get(alive, position)
+        var weight = _get_long(weights, node)
+        if weight < best_weight {
+            best = position
+            best_weight = weight
+        }
+        position = position + 1
+    }
+    var chosen = _get(alive, best)
+    var last = _get(alive, alive_count - 1)
+    _put(alive, best, last)
+    return chosen
+}
+
+func _fit_kraft(used: List<Integer>, limit: Integer, lengths: Buffer) {
+    var one: Long = 1
+    var capacity = one.shifted_left(limit)
+    var kraft: Long = 0
+    var leaves = used.count()
+    var leaf = 0
+    while leaf < leaves {
+        var symbol = _entry(used, leaf)
+        var depth = _get(lengths, symbol)
+        var unit = one.shifted_left(limit - depth)
+        kraft = kraft + unit
+        leaf = leaf + 1
+    }
+    while kraft > capacity {
+        var best = -1
+        var best_depth = 0
+        leaf = 0
+        while leaf < leaves {
+            var symbol = _entry(used, leaf)
+            var depth = _get(lengths, symbol)
+            if depth < limit and depth > best_depth {
+                best = symbol
+                best_depth = depth
+            }
+            leaf = leaf + 1
+        }
+        crash best >= 0
+        _put(lengths, best, best_depth + 1)
+        var released = one.shifted_left(limit - best_depth - 1)
+        kraft = kraft - released
+    }
+    while kraft < capacity {
+        var spare = capacity - kraft
+        var best = -1
+        var best_depth = 1
+        leaf = 0
+        while leaf < leaves {
+            var symbol = _entry(used, leaf)
+            var depth = _get(lengths, symbol)
+            var unit = one.shifted_left(limit - depth)
+            if depth > best_depth and unit <= spare {
+                best = symbol
+                best_depth = depth
+            }
+            leaf = leaf + 1
+        }
+        crash best >= 0
+        _put(lengths, best, best_depth - 1)
+        var added = one.shifted_left(limit - best_depth)
+        kraft = kraft + added
+    }
+}
+
+func _assign_codes(lengths: Buffer, symbol_count: Integer, limit: Integer, codes: Buffer) {
+    var counts = _integers(limit + 1)
+    var next = _integers(limit + 1)
+    var index = 0
+    while index < symbol_count {
+        var bits = _get(lengths, index)
+        _increment(counts, bits)
+        index = index + 1
+    }
+    _put(counts, 0, 0)
+    var code = 0
+    var bits = 1
+    while bits <= limit {
+        var shorter = _get(counts, bits - 1)
+        var counted_code = code + shorter
+        code = counted_code.shifted_left(1)
+        _put(next, bits, code)
+        bits = bits + 1
+    }
+    index = 0
+    while index < symbol_count {
+        var length = _get(lengths, index)
+        if length > 0 {
+            var assigned = _get(next, length)
+            _put(codes, index, assigned)
+            _put(next, length, assigned + 1)
+        }
+        index = index + 1
+    }
+}
+
+func _write_bits(value: Integer, bits: Integer) {
+    var wide: Long = value
+    var shifted = wide.shifted_left(_bit_count)
+    _bit_buffer = _bit_buffer.bits_or(shifted)
+    _bit_count = _bit_count + bits
+    while _bit_count >= 8 {
+        var low_bits = _bit_buffer.bits_and(255)
+        var low = low_bits.to_byte()
+        _output.append(low)
+        _bit_buffer = _bit_buffer.shifted_right(8)
+        _bit_count = _bit_count - 8
+    }
+}
+
+func _write_code(code: Integer, bits: Integer) {
+    var reversed = 0
+    var bit = 0
+    while bit < bits {
+        var moved = code.shifted_right(bits - 1 - bit)
+        var set = moved.bits_and(1)
+        var placed = set.shifted_left(bit)
+        reversed = reversed.bits_or(placed)
+        bit = bit + 1
+    }
+    _write_bits(reversed, bits)
+}
+
+func _flush() {
+    while _bit_count > 0 {
+        var low_bits = _bit_buffer.bits_and(255)
+        var low = low_bits.to_byte()
+        _output.append(low)
+        _bit_buffer = _bit_buffer.shifted_right(8)
+        _bit_count = _bit_count - 8
+    }
+    _bit_count = 0
+    _bit_buffer = 0
+}
+
+func _fail_when(condition: Boolean) {
+    if condition {
+        _failed = true
+    }
+}
+
+func _overrun(): Boolean {
+    var position: Long = _position
+    var limit: Long = _input_length
+    var count: Long = _bit_count
+    return position * 8 - count > limit * 8
+}
+
+func _refill() {
+    while _bit_count < 56 {
+        var next: Long = 0
+        if _position < _input_length {
+            next = _byte_of(_input, _position)
+        }
+        var placed = next.shifted_left(_bit_count)
+        _bit_buffer = _bit_buffer.bits_or(placed)
+        _bit_count = _bit_count + 8
+        _position = _position + 1
+    }
+}
+
+func _read_bits(bits: Integer): Integer {
+    _refill()
+    var one: Long = 1
+    var mask = one.shifted_left(bits) - 1
+    var masked = _bit_buffer.bits_and(mask)
+    var value = masked.to_integer()
+    _bit_buffer = _bit_buffer.shifted_right(bits)
+    _bit_count = _bit_count - bits
+    return value
+}
+
+func _decode_symbol(table: Buffer, mask: Long): Integer {
+    _refill()
+    var wide_index = _bit_buffer.bits_and(mask)
+    var index = wide_index.to_integer()
+    var entry = _get(table, index)
+    var bits = entry.bits_and(15)
+    if bits == 0 {
+        _failed = true
+        return 0
+    }
+    _bit_buffer = _bit_buffer.shifted_right(bits)
+    _bit_count = _bit_count - bits
+    return entry.shifted_right(4)
+}
+
+func _inflate_blocks() {
+    var last = 0
+    while last == 0 and not _failed {
+        last = _read_bits(1)
+        var kind = _read_bits(2)
+        if kind == 0 {
+            _copy_stored()
+        } else if kind == 1 {
+            _build_fixed_tables()
+            _decode_symbols()
+        } else if kind == 2 {
+            _read_dynamic_tables()
+            _decode_symbols()
+        } else {
+            _failed = true
+        }
+        var overrun = _overrun()
+        _fail_when(overrun)
+    }
+    assert not _failed
+    _rewind_to_byte()
+    _fail_when(_position != _input_length)
+}
+
+func _rewind_to_byte() {
+    var dropped = _bit_count.bits_and(7)
+    _bit_count = _bit_count - dropped
+    _position = _position - _bit_count / 8
+    _bit_count = 0
+    _bit_buffer = 0
+}
+
+func _copy_stored() {
+    _rewind_to_byte()
+    _fail_when(_position + 4 > _input_length)
+    assert not _failed
+    var low = _byte_of(_input, _position)
+    var high = _byte_of(_input, _position + 1)
+    var complement_low = _byte_of(_input, _position + 2)
+    var complement_high = _byte_of(_input, _position + 3)
+    var size = high * 256 + low
+    var complement = complement_high * 256 + complement_low
+    _position = _position + 4
+    _fail_when(size + complement != 65535 or _position + size > _input_length)
+    assert not _failed
+    _result.append_bytes(_input, _position, size)
+    _position = _position + size
+}
+
+func _decode_symbols() {
+    assert not _failed
+    var symbol = 0
+    while symbol != 256 and not _failed {
+        symbol = _decode_symbol(_literal_table, _literal_mask)
+        assert not _failed
+        if symbol < 256 {
+            var literal = symbol.to_byte()
+            _result.append(literal)
+        } else if symbol > 256 {
+            _copy_match(symbol)
+        }
+        var overrun = _overrun()
+        _fail_when(overrun)
+    }
+}
+
+func _copy_match(symbol: Integer) {
+    var index = symbol - 257
+    _fail_when(index >= 29)
+    assert not _failed
+    var length_bits = _entry(_length_extra, index)
+    var length_base = _entry(_length_bases, index)
+    var extra = _read_bits(length_bits)
+    var match_length = length_base + extra
+    var distance_symbol = _decode_symbol(_distance_table, _distance_mask)
+    _fail_when(distance_symbol >= 30)
+    assert not _failed
+    var distance_bits = _entry(_distance_extra, distance_symbol)
+    var distance_base = _entry(_distance_bases, distance_symbol)
+    var distance_more = _read_bits(distance_bits)
+    var distance = distance_base + distance_more
+    var at = _result.count()
+    _fail_when(distance > at)
+    assert not _failed
+    var from = at - distance
+    var copied = 0
+    while copied < match_length {
+        var value = _byte_of(_result, from + copied)
+        var held = value.to_byte()
+        _result.append(held)
+        copied = copied + 1
+    }
+}
+
+func _build_fixed_tables() {
+    var index = 0
+    while index < 320 {
+        var bits = 5
+        if index < 144 {
+            bits = 8
+        } else if index < 256 {
+            bits = 9
+        } else if index < 280 {
+            bits = 7
+        } else if index < 288 {
+            bits = 8
+        }
+        _put(_table_lengths, index, bits)
+        index = index + 1
+    }
+    _literal_mask = _build_table(_literal_table, 0, 288)
+    _distance_mask = _build_table(_distance_table, 288, 32)
+}
+
+func _read_dynamic_tables() {
+    var literal_bits = _read_bits(5)
+    var distance_bits = _read_bits(5)
+    var code_length_bits = _read_bits(4)
+    var literal_count = literal_bits + 257
+    var distance_count = distance_bits + 1
+    var code_length_count = code_length_bits + 4
+    _fail_when(literal_count > 286 or distance_count > 30)
+    _fill(_table_lengths, 0, 19, 0)
+    var index = 0
+    while index < code_length_count {
+        var slot = _entry(_code_length_order, index)
+        var bits = _read_bits(3)
+        _put(_table_lengths, slot, bits)
+        index = index + 1
+    }
+    _length_mask = _build_table(_length_table, 0, 19)
+    _fail_when(_length_mask < 0)
+    var total = literal_count + distance_count
+    var filled = 0
+    while filled < total and not _failed {
+        var symbol = _decode_symbol(_length_table, _length_mask)
+        var value = 0
+        var repeat = 1
+        if symbol < 16 {
+            value = symbol
+        } else if symbol == 16 {
+            _fail_when(filled == 0)
+            if filled > 0 {
+                value = _get(_table_lengths, 256 + filled - 1)
+            }
+            repeat = _read_bits(2) + 3
+        } else if symbol == 17 {
+            repeat = _read_bits(3) + 3
+        } else {
+            repeat = _read_bits(7) + 11
+        }
+        var overrun = _overrun()
+        _fail_when(filled + repeat > total or overrun)
+        if not _failed {
+            _fill(_table_lengths, 256 + filled, repeat, value)
+            filled = filled + repeat
+        }
+    }
+    assert not _failed
+    var end_bits = _get(_table_lengths, 256 + 256)
+    _fail_when(end_bits == 0)
+    _literal_mask = _build_table(_literal_table, 256, literal_count)
+    _distance_mask = _build_table(_distance_table, 256 + literal_count, distance_count)
+    _fail_when(_literal_mask < 0 or _distance_mask < 0)
+}
+
+func _build_table(table: Buffer, first: Integer, symbol_count: Integer): Long {
+    var counts = _integers(16)
+    var next = _integers(16)
+    var maximum = 1
+    var symbol = 0
+    while symbol < symbol_count {
+        var bits = _get(_table_lengths, first + symbol)
+        _increment(counts, bits)
+        if bits > maximum {
+            maximum = bits
+        }
+        symbol = symbol + 1
+    }
+    var code = 0
+    var available = 1
+    var bits = 1
+    while bits < 16 {
+        var counted = _get(counts, bits)
+        available = available * 2 - counted
+        if available < 0 {
+            return -1
+        }
+        _put(next, bits, code)
+        code = (code + counted) * 2
+        bits = bits + 1
+    }
+    var size = 1
+    size = size.shifted_left(maximum)
+    var slot = 0
+    while slot < size {
+        _put(table, slot, 0)
+        slot = slot + 1
+    }
+    symbol = 0
+    while symbol < symbol_count {
+        var length = _get(_table_lengths, first + symbol)
+        if length > 0 {
+            var assigned = _get(next, length)
+            _put(next, length, assigned + 1)
+            var reversed = 0
+            var step = 0
+            while step < length {
+                var moved = assigned.shifted_right(step)
+                var low = moved.bits_and(1)
+                var shifted = reversed.shifted_left(1)
+                reversed = shifted.bits_or(low)
+                step = step + 1
+            }
+            var entry_symbol = symbol.shifted_left(4)
+            var entry = entry_symbol.bits_or(length)
+            var stride = 1
+            stride = stride.shifted_left(length)
+            var place = reversed
+            while place < size {
+                _put(table, place, entry)
+                place = place + stride
+            }
+        }
+        symbol = symbol + 1
+    }
+    var last: Long = size
+    return last - 1
+}

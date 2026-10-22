@@ -1,0 +1,102 @@
+enum Ambiguity {
+    'compatible'
+    'earlier'
+    'later'
+}
+
+var _time_text = TimeText()
+var _name = ""
+var _rules = ZoneRules(0)
+
+func TimeZone(name: String, rules: ZoneRules) {
+    _name = name
+    _rules = rules
+}
+
+func get_name(): String {
+    return _name
+}
+
+func offset_at(instant: Instant): Duration {
+    var seconds = _offset_seconds_at(instant)
+    return Duration(seconds, 'seconds')
+}
+
+func to_local(instant: Instant): DateTime {
+    var offset = offset_at(instant)
+    var since_1970 = instant.since_1970
+    var wall = since_1970 + offset
+    var seconds = wall.total('seconds')
+    var nanosecond_long = wall.part('nanoseconds')
+    if nanosecond_long < 0 {
+        nanosecond_long = nanosecond_long + 1000000000
+        seconds = seconds - 1
+    }
+    var second_of_day = seconds % 86400
+    if second_of_day < 0 {
+        second_of_day = second_of_day + 86400
+    }
+    var first_day = Date(1970, 1, 1)
+    var days_long = (seconds - second_of_day) / 86400
+    var days = days_long.to_integer()
+    var date = first_day + Period(days, 'days')
+    var second_of_day_count = second_of_day.to_integer()
+    var nanosecond = nanosecond_long.to_integer()
+    var time = Time(second_of_day_count / 3600, second_of_day_count / 60 % 60, second_of_day_count % 60, nanosecond)
+    return DateTime(date, time)
+}
+
+func to_instant(local: DateTime, ambiguity: Ambiguity): Instant {
+    var date = local.date
+    var time = local.time
+    var second_of_day: Long = time.second_of_day
+    var wall = date.days_since_1970 * 86400 + second_of_day
+    var offset_before = _rules.offset_seconds_at(wall - 86400)
+    var offset_after = _rules.offset_seconds_at(wall + 86400)
+    var offset_before_long: Long = offset_before
+    var offset_after_long: Long = offset_after
+    var before = wall - offset_before_long
+    var after = wall - offset_after_long
+    var offset_at_before = _rules.offset_seconds_at(before)
+    var offset_at_after = _rules.offset_seconds_at(after)
+    var before_fits = offset_at_before == offset_before
+    var after_fits = offset_at_after == offset_after
+    var earliest = before
+    var latest = after
+    if after < before {
+        earliest = after
+        latest = before
+    }
+    var in_gap = not before_fits and not after_fits
+    var in_overlap = before_fits and after_fits and before != after
+    var chosen = before
+    if in_gap or in_overlap {
+        chosen = latest
+        if ambiguity == 'earlier' or ambiguity == 'compatible' and in_overlap {
+            chosen = earliest
+        }
+    } else if after_fits {
+        chosen = after
+    }
+    var whole = Duration(chosen, 'seconds')
+    var part = Duration(time.nanosecond, 'nanoseconds')
+    var since_1970 = whole + part
+    return Instant(since_1970)
+}
+
+func to_text(instant: Instant): String {
+    var local = to_local(instant)
+    var seconds = _offset_seconds_at(instant)
+    var offset = _time_text.write_offset(seconds)
+    return "{local}{offset}"
+}
+
+func _offset_seconds_at(instant: Instant): Integer {
+    var since_1970 = instant.since_1970
+    var seconds = since_1970.total('seconds')
+    var nanoseconds = since_1970.part('nanoseconds')
+    if nanoseconds < 0 {
+        seconds = seconds - 1
+    }
+    return _rules.offset_seconds_at(seconds)
+}

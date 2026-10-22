@@ -1,0 +1,16 @@
+generic $value_type
+
+var format = BinaryFormat<$value_type>()
+
+func write(value: $value_type): Buffer {
+    var bytes = Buffer(16)
+    append_to(value, bytes)
+    return bytes
+}
+
+func append_to(value: $value_type, bytes: Buffer) {
+    var cursor = BinaryWriterCursor(bytes)
+    format.write(value, cursor)
+}
+
+func schema(): Long

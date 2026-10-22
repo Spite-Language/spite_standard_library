@@ -46,6 +46,14 @@ func to_unsigned_long(): UnsignedLong {
     return _value()
 }
 
+func to_float(): Float {
+    return _value()
+}
+
+func to_double(): Double {
+    return _value()
+}
+
 func absolute(): UnsignedInteger {
     return _value()
 }
@@ -129,6 +137,20 @@ func _bits_as_signed(): Integer
 
 func bits_as_signed(): Integer {
     return _bits_as_signed()
+}
+
+func get_largest(): UnsignedInteger {
+    return 4294967295
+}
+
+func get_smallest(): UnsignedInteger {
+    return 0
+}
+
+func _bits_as_float(): Float
+
+func bits_as_float(): Float {
+    return _bits_as_float()
 }
 
 func sum(other: UnsignedInteger): UnsignedInteger {

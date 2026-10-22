@@ -424,3 +424,16 @@ func sort_by_member(member: Spite.AttributeDeclaration<$element_type>): List<$el
     }
     return sorted
 }
+
+func to_debug(): String {
+    var shown = List<String>()
+    var index = 0
+    while index < _length {
+        var held = _read_value(index)
+        var debugged = held.to_debug()
+        shown.append(debugged)
+        index = index + 1
+    }
+    var joined = shown.join(", ")
+    return "[{joined}]"
+}

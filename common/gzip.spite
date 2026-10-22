@@ -1,0 +1,123 @@
+singleton
+
+func compress(bytes: Buffer): Buffer {
+    var deflate = Deflate()
+    var body = deflate.compress(bytes)
+    var body_count = body.count()
+    var output = Buffer(body_count + 18)
+    output.append(31)
+    output.append(139)
+    output.append(8)
+    var index = 3
+    while index < 9 {
+        output.append(0)
+        index = index + 1
+    }
+    output.append(255)
+    output.append_bytes(body, 0, body_count)
+    var total = bytes.count()
+    var checksum = _crc32(bytes, 0, total)
+    output.append_unsigned_integer_little_endian(checksum)
+    var size: UnsignedInteger = total
+    output.append_unsigned_integer_little_endian(size)
+    return output
+}
+
+func decompress(bytes: Buffer): Buffer? {
+    var total = bytes.count()
+    assert total >= 18
+    var first = _byte_at(bytes, 0)
+    var second = _byte_at(bytes, 1)
+    var method = _byte_at(bytes, 2)
+    var flags = _byte_at(bytes, 3)
+    assert first == 31 and second == 139 and method == 8
+    assert flags.bits_and(224) == 0
+    var position = 10
+    if flags.bits_and(4) != 0 {
+        assert position + 2 <= total
+        var low = _byte_at(bytes, position)
+        var high = _byte_at(bytes, position + 1)
+        position = position + 2 + high * 256 + low
+    }
+    if flags.bits_and(8) != 0 {
+        position = _skip_text(bytes, position, total)
+    }
+    if flags.bits_and(16) != 0 {
+        position = _skip_text(bytes, position, total)
+    }
+    if flags.bits_and(2) != 0 {
+        assert position + 2 <= total
+        var header_crc = _crc32(bytes, 0, position)
+        var header_check = header_crc.bits_and(65535)
+        var stored_value = bytes.read_unsigned_short_little_endian_at(position)
+        assert stored_value
+        var stored: UnsignedInteger = stored_value
+        assert header_check == stored
+        position = position + 2
+    }
+    assert position + 8 <= total
+    var body_count = total - 8 - position
+    var body = bytes.read_bytes_at(position, body_count)
+    assert body
+    var deflate = Deflate()
+    var output = deflate.decompress(body)
+    assert output
+    var expected = bytes.read_unsigned_integer_little_endian_at(total - 8)
+    assert expected
+    var output_count = output.count()
+    var computed = _crc32(output, 0, output_count)
+    assert expected == computed
+    var expected_size = bytes.read_unsigned_integer_little_endian_at(total - 4)
+    assert expected_size
+    var size: UnsignedInteger = output_count
+    assert expected_size == size
+    return output
+}
+
+func _byte_at(room: Buffer, at: Integer): Integer {
+    var held = room.get_at(at)
+    crash held
+    return held
+}
+
+func _skip_text(bytes: Buffer, from: Integer, total: Integer): Integer {
+    var position = from
+    while position < total and _byte_at(bytes, position) != 0 {
+        position = position + 1
+    }
+    return position + 1
+}
+
+func _crc32(bytes: Buffer, from: Integer, total: Integer): UnsignedInteger {
+    var table = Buffer(1024)
+    var polynomial: UnsignedInteger = 3988292384
+    var entry = 0
+    while entry < 256 {
+        var value: UnsignedInteger = entry
+        var bit = 0
+        while bit < 8 {
+            var odd = value.bits_and(1) != 0
+            value = value.shifted_right(1)
+            if odd {
+                value = value.bits_exclusive_or(polynomial)
+            }
+            bit = bit + 1
+        }
+        table.append_unsigned_integer_little_endian(value)
+        entry = entry + 1
+    }
+    var crc: UnsignedInteger = 4294967295
+    var index = from
+    while index < total {
+        var byte_value: UnsignedInteger = _byte_at(bytes, index)
+        var mixed = crc.bits_exclusive_or(byte_value)
+        var slot_value = mixed.bits_and(255)
+        var slot = slot_value.to_integer()
+        var looked = table.read_unsigned_integer_little_endian_at(slot * 4)
+        crash looked
+        var shifted = crc.shifted_right(8)
+        crc = shifted.bits_exclusive_or(looked)
+        index = index + 1
+    }
+    return crc.bits_exclusive_or(4294967295)
+}

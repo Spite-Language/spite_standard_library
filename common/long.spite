@@ -46,6 +46,14 @@ func to_unsigned_long(): UnsignedLong {
     return _value()
 }
 
+func to_float(): Float {
+    return _value()
+}
+
+func to_double(): Double {
+    return _value()
+}
+
 func absolute(): Long {
     var value = _value()
     if value >= 0 {
@@ -134,6 +142,21 @@ func _bits_as_unsigned(): UnsignedLong
 
 func bits_as_unsigned(): UnsignedLong {
     return _bits_as_unsigned()
+}
+
+func get_largest(): Long {
+    return 9223372036854775807
+}
+
+func get_smallest(): Long {
+    var almost: Long = -9223372036854775807
+    return almost - 1
+}
+
+func _bits_as_double(): Double
+
+func bits_as_double(): Double {
+    return _bits_as_double()
 }
 
 func sum(other: Long): Long {

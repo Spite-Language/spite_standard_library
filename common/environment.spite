@@ -1,0 +1,45 @@
+singleton
+
+var _arguments = Arguments()
+
+func Environment() {
+    _arguments = Arguments()
+}
+
+func boolean_setting(name: String, declared: Boolean): Boolean {
+    var text = _setting(name)
+    if not text {
+        return declared
+    }
+    crash text == "true" or text == "false"
+    return text == "true"
+}
+
+func integer_setting(name: String, declared: Integer): Integer {
+    var text = _setting(name)
+    if not text {
+        return declared
+    }
+    var number = text.to_integer()
+    crash number
+    return number
+}
+
+func text_setting(name: String, declared: String): String {
+    var text = _setting(name)
+    if not text {
+        return declared
+    }
+    return text
+}
+
+func _setting(name: String): String? {
+    var flag = name.replace("_", "-")
+    var given = _arguments.named(flag)
+    if given {
+        return given
+    }
+    var program = Program()
+    var variable = name.upper_case()
+    return program.environment(variable)
+}

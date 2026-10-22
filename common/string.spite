@@ -215,6 +215,67 @@ func to_long(): Long? {
     return value
 }
 
+func to_double(): Double? {
+    var text = trim()
+    var valid = text._is_decimal()
+    assert valid
+    var library = DynamicLibrary("ucrtbase.dll")
+    var end: Long = 0
+    return library.strtod_as_double(text, end)
+}
+
+func to_float(): Float? {
+    var text = trim()
+    var valid = text._is_decimal()
+    assert valid
+    var library = DynamicLibrary("ucrtbase.dll")
+    var end: Long = 0
+    return library.strtof_as_float(text, end)
+}
+
+func _is_decimal(): Boolean {
+    var index = 0
+    if _length > 0 and _is_sign_at(0) {
+        index = 1
+    }
+    var whole_end = _digits_end(index)
+    var digits = whole_end - index
+    index = whole_end
+    if index < _length and code_at(index) == 46 {
+        var fraction_end = _digits_end(index + 1)
+        digits = digits + fraction_end - index - 1
+        index = fraction_end
+    }
+    if digits == 0 {
+        return false
+    }
+    if index < _length and (code_at(index) == 101 or code_at(index) == 69) {
+        index = index + 1
+        if index < _length and _is_sign_at(index) {
+            index = index + 1
+        }
+        var exponent_end = _digits_end(index)
+        if exponent_end == index {
+            return false
+        }
+        index = exponent_end
+    }
+    return index == _length
+}
+
+func _is_sign_at(index: Integer): Boolean {
+    var code = code_at(index)
+    return code == 45 or code == 43
+}
+
+func _digits_end(start: Integer): Integer {
+    var index = start
+    while index < _length and code_at(index) >= 48 and code_at(index) <= 57 {
+        index = index + 1
+    }
+    return index
+}
+
 func to_integer(): Integer? {
     var value = to_long()
     if value {
@@ -228,7 +289,24 @@ func to_string(): String {
 }
 
 func to_debug(): String {
-    return to_string()
+    var quoted = String()
+    quoted.append_code(34)
+    var index = 0
+    while index < _length {
+        var code = code_at(index)
+        if code == 34 or code == 92 {
+            quoted.append_code(92)
+            quoted.append_code(code)
+        } else if code == 10 {
+            quoted.append_code(92)
+            quoted.append_code(110)
+        } else {
+            quoted.append_code(code)
+        }
+        index = index + 1
+    }
+    quoted.append_code(34)
+    return quoted
 }
 
 func index_of(text: String): Integer? {

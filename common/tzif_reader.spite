@@ -1,0 +1,265 @@
+var _data = ""
+var _position: Long = 0
+var _failed = false
+
+func TzifReader(data: String) {
+    _data = data
+}
+
+func read_rules(): ZoneRules? {
+    assert _is_header_at(0)
+    var header: Long = 0
+    var time_bytes: Long = 4
+    var version = _byte_at(4)
+    if version != 0 {
+        var first_block = _block_bytes(0, 4)
+        header = first_block + 44
+        time_bytes = 8
+        assert _is_header_at(header)
+    }
+    var time_count = _unsigned_at(header + 32, 4)
+    var type_count = _unsigned_at(header + 36, 4)
+    var block = _block_bytes(header, time_bytes)
+    var block_end = block + header + 44
+    assert type_count > 0 and block_end <= _data.length()
+    var times = header + 44
+    var indices = time_count * time_bytes + times
+    var types = time_count + indices
+    var first_offset = _offset_of_type(types)
+    assert not _failed
+    var rules = ZoneRules(first_offset)
+    var index: Long = 0
+    while time_count > index {
+        var time = _signed_at(times + index * time_bytes, time_bytes)
+        var type_index = _byte_at(indices + index)
+        assert type_count > type_index
+        var type_start = types + type_index * 6
+        var offset = _offset_of_type(type_start)
+        assert not _failed
+        rules.append_transition(time, offset)
+        index = index + 1
+    }
+    if time_bytes == 4 {
+        return rules
+    }
+    assert _byte_at(block_end) == 10
+    var footer_end = block_end + 1
+    var length = _data.length()
+    while footer_end < length and _byte_at(footer_end) != 10 {
+        footer_end = footer_end + 1
+    }
+    assert not _failed
+    if footer_end == block_end + 1 {
+        return rules
+    }
+    var footer_first = block_end + 1
+    var footer_start = footer_first.to_integer()
+    var footer_stop = footer_end.to_integer()
+    var footer = _data.slice(footer_start, footer_stop)
+    var footer_reader = TzifReader(footer)
+    var yearly_rule = footer_reader.read_daylight_rule()
+    assert yearly_rule
+    rules.follow_yearly_rule(yearly_rule)
+    return rules
+}
+
+func read_daylight_rule(): DaylightRule? {
+    _position = 0
+    _skip_zone_name()
+    var standard_offset = -_read_offset()
+    var rule = DaylightRule(standard_offset)
+    assert not _failed
+    if _position == _data.length() {
+        return rule
+    }
+    _skip_zone_name()
+    var daylight_offset = standard_offset + 3600
+    var next = _peek()
+    if next == 43 or next == 45 or _is_digit(next) {
+        daylight_offset = -_read_offset()
+    }
+    assert not _failed
+    if _position == _data.length() {
+        return rule
+    }
+    _expect(44)
+    var start = _read_change()
+    _expect(44)
+    var end = _read_change()
+    assert not _failed and _position == _data.length()
+    rule.observe_daylight(daylight_offset, start, end)
+    return rule
+}
+
+func _is_header_at(position: Long): Boolean {
+    var length = _data.length()
+    if position + 44 > length {
+        return false
+    }
+    return _byte_at(position) == 84 and _byte_at(position + 1) == 90 and _byte_at(position + 2) == 105 and _byte_at(position + 3) == 102
+}
+
+func _block_bytes(header: Long, time_bytes: Long): Long {
+    var universal_count = _unsigned_at(header + 20, 4)
+    var standard_count = _unsigned_at(header + 24, 4)
+    var leap_count = _unsigned_at(header + 28, 4)
+    var time_count = _unsigned_at(header + 32, 4)
+    var type_count = _unsigned_at(header + 36, 4)
+    var character_count = _unsigned_at(header + 40, 4)
+    var transitions = time_count * (time_bytes + 1)
+    var leap_seconds = leap_count * (time_bytes + 4)
+    return transitions + type_count * 6 + character_count + leap_seconds + standard_count + universal_count
+}
+
+func _offset_of_type(type_start: Long): Integer {
+    var offset = _signed_at(type_start, 4)
+    if offset <= -100000 or offset >= 100000 {
+        _failed = true
+        return 0
+    }
+    return offset.to_integer()
+}
+
+func _byte_at(position: Long): Integer {
+    var length: Long = _data.length()
+    if position < 0 or position >= length {
+        _failed = true
+        return 0
+    }
+    var index = position.to_integer()
+    return _data.code_at(index)
+}
+
+func _peek(): Integer {
+    var length: Long = _data.length()
+    if _position >= length {
+        return 0
+    }
+    var index = _position.to_integer()
+    return _data.code_at(index)
+}
+
+func _unsigned_at(position: Long, bytes: Long): Long {
+    var value: Long = 0
+    var index: Long = 0
+    while index < bytes {
+        var byte: Long = _byte_at(position + index)
+        value = value.shifted_left(8)
+        value = value.bits_or(byte)
+        index = index + 1
+    }
+    return value
+}
+
+func _signed_at(position: Long, bytes: Long): Long {
+    var value = _unsigned_at(position, bytes)
+    if bytes == 4 and value >= 2147483648 {
+        return value - 4294967296
+    }
+    return value
+}
+
+func _skip_zone_name() {
+    var start = _position
+    if _peek() == 60 {
+        while _position < _data.length() and _peek() != 62 {
+            _position = _position + 1
+        }
+        _expect(62)
+        return
+    }
+    var code = _peek()
+    while _is_letter(code) {
+        _position = _position + 1
+        code = _peek()
+    }
+    if _position == start {
+        _failed = true
+    }
+}
+
+func _read_offset(): Integer {
+    var sign = 1
+    var first = _peek()
+    if first == 45 {
+        sign = -1
+    }
+    if first == 43 or sign == -1 {
+        _position = _position + 1
+    }
+    var seconds = _read_number() * 3600
+    if _peek() == 58 {
+        _position = _position + 1
+        seconds = seconds + _read_number() * 60
+    }
+    if _peek() == 58 {
+        _position = _position + 1
+        seconds = seconds + _read_number()
+    }
+    return sign * seconds
+}
+
+func _read_change(): DaylightChange {
+    var letter = _peek()
+    var kind: DaylightChange.Kind = 'day_of_year'
+    if letter == 77 or letter == 74 {
+        _position = _position + 1
+    }
+    if letter == 74 {
+        kind = 'day_of_year_without_leap_day'
+    }
+    var number = _read_number()
+    var week = 0
+    var weekday = 0
+    if letter == 77 {
+        _expect(46)
+        week = _read_number()
+        _expect(46)
+        weekday = _read_number()
+        _failed = _failed or number < 1 or number > 12 or week < 1 or week > 5 or weekday > 6
+    } else if letter == 74 {
+        _failed = _failed or number < 1 or number > 365
+    } else {
+        _failed = _failed or number > 365
+    }
+    var time_seconds = 7200
+    if _peek() == 47 {
+        _position = _position + 1
+        time_seconds = _read_offset()
+    }
+    var change = DaylightChange(kind, number, time_seconds)
+    if letter == 77 {
+        change.on_weekday_of_month(number, week, weekday)
+    }
+    return change
+}
+
+func _read_number(): Integer {
+    var start = _position
+    var value = 0
+    var code = _peek()
+    while _is_digit(code) and not _failed {
+        value = value * 10 + code - 48
+        _position = _position + 1
+        code = _peek()
+        _failed = _failed or _position - start > 6
+    }
+    _failed = _failed or _position == start
+    return value
+}
+
+func _expect(code: Integer) {
+    if _peek() == code {
+        _position = _position + 1
+    } else {
+        _failed = true
+    }
+}
+
+func _is_digit(code: Integer): Boolean {
+    return code >= 48 and code <= 57
+}
+
+func _is_letter(code: Integer): Boolean {
+    return code >= 65 and code <= 90 or code >= 97 and code <= 122
+}

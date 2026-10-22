@@ -1,0 +1,179 @@
+generic $value_type
+
+var _key = ""
+var _cursor: JsonCursor? = null
+
+func read(text: String): $value_type? {
+    var cursor = JsonCursor(text)
+    var parsed = parse(cursor)
+    cursor.finish()
+    assert not cursor.failed()
+    return parsed
+}
+
+func read_or_crash(text: String): $value_type {
+    var cursor = JsonCursor(text)
+    cursor.crashes = true
+    var parsed = parse(cursor)
+    cursor.finish()
+    return parsed
+}
+
+func parse(cursor: JsonCursor): $value_type {
+    if $value_type == String {
+        return cursor.read_text()
+    } else if $value_type == Boolean {
+        return cursor.read_boolean()
+    } else if $value_type == Number {
+        return parse_number(cursor)
+    } else if $value_type == Symbol {
+        return read_symbol(cursor)
+    } else if $value_type == Null {
+        return parse_present(cursor)
+    } else if $value_type == List {
+        return parse_list(cursor)
+    } else if $value_type == Dictionary {
+        return parse_dictionary(cursor)
+    } else {
+        return parse_object(cursor)
+    }
+}
+
+func parse_number(cursor: JsonCursor): $value_type {
+    var number_text = cursor.read_number()
+    var number: $value_type? = number_text
+    if not number {
+        cursor.fail("a number that fits")
+        return 0
+    }
+    return number
+}
+
+func parse_present(cursor: JsonCursor): $value_type {
+    var is_null = cursor.read_null()
+    if is_null {
+        return null
+    }
+    var inner = JsonReader<$value_type.value_type>()
+    return inner.parse(cursor)
+}
+
+func parse_list(cursor: JsonCursor): $value_type {
+    var list = $value_type()
+    var element_json = JsonReader<$value_type.element_type>()
+    cursor.expect("[")
+    var more = not cursor.consume("]")
+    while more and not cursor.failed() {
+        var element = element_json.parse(cursor)
+        list.append(element)
+        more = cursor.consume(",")
+        if not more {
+            cursor.expect("]")
+        }
+    }
+    return list
+}
+
+func parse_dictionary(cursor: JsonCursor): $value_type {
+    var dictionary = $value_type()
+    var entry_json = JsonReader<$value_type.value_type>()
+    cursor.expect("\{")
+    var more = not cursor.consume("}")
+    while more and not cursor.failed() {
+        var key_text = cursor.read_text()
+        var key: $value_type.key_type? = key_text
+        if not key {
+            cursor.fail("a key that fits the dictionary")
+            return dictionary
+        }
+        cursor.expect(":")
+        var entry = entry_json.parse(cursor)
+        dictionary[key] = entry
+        more = cursor.consume(",")
+        if not more {
+            cursor.expect("}")
+        }
+    }
+    return dictionary
+}
+
+func parse_object(cursor: JsonCursor): $value_type {
+    var created = $value_type()
+    cursor.expect("\{")
+    var more = not cursor.consume("}")
+    while more and not cursor.failed() {
+        var key = cursor.read_text()
+        cursor.expect(":")
+        cursor.matched = false
+        _key = key
+        _cursor = cursor
+        read_attributes(created)
+        if not cursor.matched {
+            read_camel_attributes(created)
+        }
+        _cursor = null
+        if not cursor.matched {
+            cursor.skip_value()
+        }
+        more = cursor.consume(",")
+        if not more {
+            cursor.expect("}")
+        }
+    }
+    return created
+}
+
+
+func read_attribute(attribute: Symbol<$value_type>, created: $value_type) {
+    var name = attribute.name
+    assert not name.starts_with("_")
+    assert not attribute.class.is_singleton
+    assert _key == name
+    var cursor = _cursor
+    crash cursor
+    var attribute_json = JsonReader<attribute.class>()
+    created.attributes[attribute] = attribute_json.parse(cursor)
+    cursor.matched = true
+}
+
+func read_camel_attribute(attribute: Symbol<$value_type>, created: $value_type) {
+    var name = attribute.name
+    assert not name.starts_with("_")
+    assert not attribute.class.is_singleton
+    assert _key == attribute.camel_case_name or _key == attribute.pascal_case_name
+    var cursor = _cursor
+    crash cursor
+    var attribute_json = JsonReader<attribute.class>()
+    created.attributes[attribute] = attribute_json.parse(cursor)
+    cursor.matched = true
+}
+
+
+func read_symbol(cursor: JsonCursor): $value_type {
+    if $value_type == Enum {
+        return read_enum(cursor)
+    } else {
+        return read_plain_symbol(cursor)
+    }
+}
+
+func read_enum(cursor: JsonCursor): $value_type {
+    var name = cursor.read_text()
+    var symbol: $value_type? = name
+    if symbol {
+        return symbol
+    }
+    var unnamed = $value_type()
+    cursor.fail("one of the names of {unnamed.class.name}")
+    return unnamed
+}
+
+func read_plain_symbol(cursor: JsonCursor): $value_type {
+    var name = cursor.read_text()
+    var found = Symbol(name)
+    if not found {
+        cursor.fail("a name the program already uses as a Symbol")
+        return cursor.class.name
+    }
+    return found
+}

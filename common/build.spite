@@ -1,0 +1,17 @@
+singleton
+
+var check = false
+var high_ir = false
+var low_ir = false
+var final_classes = ""
+var optimization_report = ""
+var optimized = false
+var development = false
+var repl = false
+var repl_port = 0
+var hot_reload = false
+var debug_memory = false
+var trace_asserts = false
+var operating_system = "windows"
+var target_operating_system = "windows"
+var program = ""

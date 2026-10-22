@@ -304,7 +304,7 @@ func _rounded_digits(digits: String, count: Long): String {
     }
     var codes = List<Integer>()
     codes.append(48)
-    var index = 0
+    var index: Long = 0
     while index < count {
         var code = digits.code_at(index)
         codes.append(code)
@@ -443,4 +443,183 @@ func _scientific_text(digits: String, exponent: Long): String {
         padding = "0"
     }
     return "{mantissa}e{sign}{padding}{magnitude}"
+}
+
+
+func sine(): Double {
+    var value = _value()
+    var library = DynamicLibrary("ucrtbase.dll")
+    return library.sin_as_double(value)
+}
+
+func cosine(): Double {
+    var value = _value()
+    var library = DynamicLibrary("ucrtbase.dll")
+    return library.cos_as_double(value)
+}
+
+func tangent(): Double {
+    var value = _value()
+    var library = DynamicLibrary("ucrtbase.dll")
+    return library.tan_as_double(value)
+}
+
+func arc_sine(): Double {
+    var value = _value()
+    var library = DynamicLibrary("ucrtbase.dll")
+    return library.asin_as_double(value)
+}
+
+func arc_cosine(): Double {
+    var value = _value()
+    var library = DynamicLibrary("ucrtbase.dll")
+    return library.acos_as_double(value)
+}
+
+func arc_tangent(): Double {
+    var value = _value()
+    var library = DynamicLibrary("ucrtbase.dll")
+    return library.atan_as_double(value)
+}
+
+func arc_tangent_over(run: Double): Double {
+    var rise = _value()
+    var across = run._value()
+    var library = DynamicLibrary("ucrtbase.dll")
+    return library.atan2_as_double(rise, across)
+}
+
+func power(exponent: Double): Double {
+    var base = _value()
+    var raised = exponent._value()
+    var library = DynamicLibrary("ucrtbase.dll")
+    return library.pow_as_double(base, raised)
+}
+
+func exponential(): Double {
+    var value = _value()
+    var library = DynamicLibrary("ucrtbase.dll")
+    return library.exp_as_double(value)
+}
+
+func logarithm(): Double {
+    var value = _value()
+    var library = DynamicLibrary("ucrtbase.dll")
+    return library.log_as_double(value)
+}
+
+func logarithm_base_2(): Double {
+    var value = _value()
+    var library = DynamicLibrary("ucrtbase.dll")
+    return library.log2_as_double(value)
+}
+
+func logarithm_base_10(): Double {
+    var value = _value()
+    var library = DynamicLibrary("ucrtbase.dll")
+    return library.log10_as_double(value)
+}
+
+func floor(): Double {
+    var value = _value()
+    var library = DynamicLibrary("ucrtbase.dll")
+    return library.floor_as_double(value)
+}
+
+func ceiling(): Double {
+    var value = _value()
+    var library = DynamicLibrary("ucrtbase.dll")
+    return library.ceil_as_double(value)
+}
+
+func truncate(): Double {
+    var value = _value()
+    var library = DynamicLibrary("ucrtbase.dll")
+    return library.trunc_as_double(value)
+}
+
+func round(): Double {
+    var value = _value()
+    var library = DynamicLibrary("ucrtbase.dll")
+    return library.round_as_double(value)
+}
+
+func clamp(low: Double, high: Double): Double {
+    var value = _value()
+    var lowest = low._value()
+    var highest = high._value()
+    if value != value {
+        return value
+    }
+    if lowest != lowest {
+        return lowest
+    }
+    if highest != highest {
+        return highest
+    }
+    var held = value
+    if held < lowest {
+        held = lowest
+    }
+    if held > highest {
+        held = highest
+    }
+    return held
+}
+
+func is_not_a_number(): Boolean {
+    var value = _value()
+    return value != value
+}
+
+func is_finite(): Boolean {
+    var value = _value()
+    var difference = value - value
+    return difference == 0.0
+}
+
+func is_infinite(): Boolean {
+    var value = _value()
+    var difference = value - value
+    return difference != 0.0 and value == value
+}
+
+func negate(): Double {
+    var value = _value()
+    var minus_one: Double = -1.0
+    return value * minus_one
+}
+
+func get_pi(): Double {
+    return 3.141592653589793
+}
+
+func get_tau(): Double {
+    return 6.283185307179586
+}
+
+func get_euler_number(): Double {
+    return 2.718281828459045
+}
+
+func get_infinity(): Double {
+    var one: Double = 1.0
+    var zero: Double = 0.0
+    return one / zero
+}
+
+func get_not_a_number(): Double {
+    var zero: Double = 0.0
+    return zero / zero
+}
+
+func get_largest(): Double {
+    var bits: Long = 9218868437227405311
+    return bits.bits_as_double()
+}
+
+func get_smallest(): Double {
+    var largest = get_largest()
+    var zero: Double = 0.0
+    return zero - largest
 }

@@ -1,0 +1,118 @@
+generic $number_type: Number
+
+var column_0_row_0: $number_type = 1.0
+var column_0_row_1: $number_type = 0.0
+var column_0_row_2: $number_type = 0.0
+var column_1_row_0: $number_type = 0.0
+var column_1_row_1: $number_type = 1.0
+var column_1_row_2: $number_type = 0.0
+var column_2_row_0: $number_type = 0.0
+var column_2_row_1: $number_type = 0.0
+var column_2_row_2: $number_type = 1.0
+
+func Matrix3() {
+    crash $number_type == Float or $number_type == Double
+}
+
+func set_identity() {
+    column_0_row_0 = 1.0
+    column_0_row_1 = 0.0
+    column_0_row_2 = 0.0
+    column_1_row_0 = 0.0
+    column_1_row_1 = 1.0
+    column_1_row_2 = 0.0
+    column_2_row_0 = 0.0
+    column_2_row_1 = 0.0
+    column_2_row_2 = 1.0
+}
+
+func multiply(other: Matrix3<$number_type>): Matrix3<$number_type> {
+    var product = Matrix3<$number_type>()
+    product.column_0_row_0 = column_0_row_0 * other.column_0_row_0 + column_1_row_0 * other.column_0_row_1 + column_2_row_0 * other.column_0_row_2
+    product.column_0_row_1 = column_0_row_1 * other.column_0_row_0 + column_1_row_1 * other.column_0_row_1 + column_2_row_1 * other.column_0_row_2
+    product.column_0_row_2 = column_0_row_2 * other.column_0_row_0 + column_1_row_2 * other.column_0_row_1 + column_2_row_2 * other.column_0_row_2
+    product.column_1_row_0 = column_0_row_0 * other.column_1_row_0 + column_1_row_0 * other.column_1_row_1 + column_2_row_0 * other.column_1_row_2
+    product.column_1_row_1 = column_0_row_1 * other.column_1_row_0 + column_1_row_1 * other.column_1_row_1 + column_2_row_1 * other.column_1_row_2
+    product.column_1_row_2 = column_0_row_2 * other.column_1_row_0 + column_1_row_2 * other.column_1_row_1 + column_2_row_2 * other.column_1_row_2
+    product.column_2_row_0 = column_0_row_0 * other.column_2_row_0 + column_1_row_0 * other.column_2_row_1 + column_2_row_0 * other.column_2_row_2
+    product.column_2_row_1 = column_0_row_1 * other.column_2_row_0 + column_1_row_1 * other.column_2_row_1 + column_2_row_1 * other.column_2_row_2
+    product.column_2_row_2 = column_0_row_2 * other.column_2_row_0 + column_1_row_2 * other.column_2_row_1 + column_2_row_2 * other.column_2_row_2
+    return product
+}
+
+func transform(vector: Vector3<$number_type>): Vector3<$number_type> {
+    var x_part = column_0_row_0 * vector.x + column_1_row_0 * vector.y + column_2_row_0 * vector.z
+    var y_part = column_0_row_1 * vector.x + column_1_row_1 * vector.y + column_2_row_1 * vector.z
+    var z_part = column_0_row_2 * vector.x + column_1_row_2 * vector.y + column_2_row_2 * vector.z
+    return Vector3<$number_type>(x_part, y_part, z_part)
+}
+
+func transposed(): Matrix3<$number_type> {
+    var flipped = Matrix3<$number_type>()
+    flipped.column_0_row_0 = column_0_row_0
+    flipped.column_0_row_1 = column_1_row_0
+    flipped.column_0_row_2 = column_2_row_0
+    flipped.column_1_row_0 = column_0_row_1
+    flipped.column_1_row_1 = column_1_row_1
+    flipped.column_1_row_2 = column_2_row_1
+    flipped.column_2_row_0 = column_0_row_2
+    flipped.column_2_row_1 = column_1_row_2
+    flipped.column_2_row_2 = column_2_row_2
+    return flipped
+}
+
+func equals(other: Matrix3): Boolean {
+    return column_0_row_0 == other.column_0_row_0 and column_0_row_1 == other.column_0_row_1 and column_0_row_2 == other.column_0_row_2 and column_1_row_0 == other.column_1_row_0 and column_1_row_1 == other.column_1_row_1 and column_1_row_2 == other.column_1_row_2 and column_2_row_0 == other.column_2_row_0 and column_2_row_1 == other.column_2_row_1 and column_2_row_2 == other.column_2_row_2
+}
+
+func to_string(): String {
+    return "[{column_0_row_0} {column_1_row_0} {column_2_row_0}; {column_0_row_1} {column_1_row_1} {column_2_row_1}; {column_0_row_2} {column_1_row_2} {column_2_row_2}]"
+}
+
+func determinant(): $number_type {
+    var first_minor = column_1_row_1 * column_2_row_2 - column_2_row_1 * column_1_row_2
+    var second_minor = column_0_row_1 * column_2_row_2 - column_2_row_1 * column_0_row_2
+    var third_minor = column_0_row_1 * column_1_row_2 - column_1_row_1 * column_0_row_2
+    return column_0_row_0 * first_minor - column_1_row_0 * second_minor + column_2_row_0 * third_minor
+}
+
+func inverse(): Matrix3<$number_type>? {
+    var one: $number_type = 1.0
+    var whole = determinant()
+    assert whole != 0.0
+    var scale = one / whole
+    var inverted = Matrix3<$number_type>()
+    inverted.column_0_row_0 = (column_1_row_1 * column_2_row_2 - column_2_row_1 * column_1_row_2) * scale
+    inverted.column_0_row_1 = (column_2_row_1 * column_0_row_2 - column_0_row_1 * column_2_row_2) * scale
+    inverted.column_0_row_2 = (column_0_row_1 * column_1_row_2 - column_1_row_1 * column_0_row_2) * scale
+    inverted.column_1_row_0 = (column_2_row_0 * column_1_row_2 - column_1_row_0 * column_2_row_2) * scale
+    inverted.column_1_row_1 = (column_0_row_0 * column_2_row_2 - column_2_row_0 * column_0_row_2) * scale
+    inverted.column_1_row_2 = (column_1_row_0 * column_0_row_2 - column_0_row_0 * column_1_row_2) * scale
+    inverted.column_2_row_0 = (column_1_row_0 * column_2_row_1 - column_2_row_0 * column_1_row_1) * scale
+    inverted.column_2_row_1 = (column_2_row_0 * column_0_row_1 - column_0_row_0 * column_2_row_1) * scale
+    inverted.column_2_row_2 = (column_0_row_0 * column_1_row_1 - column_1_row_0 * column_0_row_1) * scale
+    return inverted
+}
+
+func set_rotation(rotation: Quaternion<$number_type>) {
+    var one: $number_type = 1.0
+    var two: $number_type = 2.0
+    var x_x = rotation.x * rotation.x
+    var y_y = rotation.y * rotation.y
+    var z_z = rotation.z * rotation.z
+    var x_y = rotation.x * rotation.y
+    var x_z = rotation.x * rotation.z
+    var y_z = rotation.y * rotation.z
+    var w_x = rotation.w * rotation.x
+    var w_y = rotation.w * rotation.y
+    var w_z = rotation.w * rotation.z
+    column_0_row_0 = one - two * (y_y + z_z)
+    column_0_row_1 = two * (x_y + w_z)
+    column_0_row_2 = two * (x_z - w_y)
+    column_1_row_0 = two * (x_y - w_z)
+    column_1_row_1 = one - two * (x_x + z_z)
+    column_1_row_2 = two * (y_z + w_x)
+    column_2_row_0 = two * (x_z + w_y)
+    column_2_row_1 = two * (y_z - w_x)
+    column_2_row_2 = one - two * (x_x + y_y)
+}

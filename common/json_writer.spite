@@ -1,0 +1,161 @@
+generic $value_type
+
+var path = ""
+var _members: List<String>? = null
+
+func write(value: $value_type?): String {
+    if $value_type == Boolean {
+        return written_boolean(value)
+    } else if $value_type == Null {
+        return written_present(value)
+    }
+    if value {
+        return _written(value)
+    }
+    return "null"
+}
+
+func written_boolean(value: $value_type?): String {
+    if value == true {
+        return "true"
+    }
+    if value == false {
+        return "false"
+    }
+    return "null"
+}
+
+func written_present(value: $value_type?): String {
+    var inner = JsonWriter<$value_type.value_type>()
+    inner.path = path
+    return inner.write(value)
+}
+
+func _written(shown: $value_type): String {
+    if $value_type == String {
+        return quoted(shown)
+    } else if $value_type == Float or $value_type == Double {
+        return written_decimal(shown)
+    } else if $value_type == Number {
+        return shown.to_string()
+    } else if $value_type == Symbol {
+        var name: String = shown
+        return quoted(name)
+    } else if $value_type == List {
+        return written_list(shown)
+    } else if $value_type == Dictionary {
+        return written_dictionary(shown)
+    } else {
+        return written_object(shown)
+    }
+}
+
+func written_list(shown: $value_type): String {
+    var element_json = JsonWriter<$value_type.element_type>()
+    var elements = List<String>()
+    var count = shown.count()
+    var index = 0
+    while index < count {
+        element_json.path = "{path}[{index}]"
+        var element = shown[index]
+        var element_text = element_json.write(element)
+        elements.append(element_text)
+        index = index + 1
+    }
+    var joined_elements = elements.join(",")
+    return "[{joined_elements}]"
+}
+
+func written_dictionary(shown: $value_type): String {
+    var entry_json = JsonWriter<$value_type.value_type>()
+    var key_json = JsonWriter<$value_type.key_type>()
+    var keys = shown.keys()
+    var values = shown.values()
+    var entries = List<String>()
+    var count = keys.count()
+    var index = 0
+    while index < count {
+        var key = keys.get_at(index)
+        crash key
+        var quoted_key = key_json.key_text(key)
+        entry_json.path = "{path}[{quoted_key}]"
+        var entry = values.get_at(index)
+        crash entry
+        var entry_text = entry_json.write(entry)
+        entries.append("{quoted_key}:{entry_text}")
+        index = index + 1
+    }
+    var joined_entries = entries.join(",")
+    return "\{{joined_entries}}"
+}
+
+func written_object(shown: $value_type): String {
+    var members = List<String>()
+    _members = members
+    write_attributes(shown)
+    _members = null
+    var joined_members = members.join(",")
+    return "\{{joined_members}}"
+}
+
+func write_attribute(attribute: Symbol<$value_type>, shown: $value_type) {
+    var name = attribute.name
+    assert not name.starts_with("_")
+    assert not attribute.class.is_singleton
+    var attribute_json = JsonWriter<attribute.class>()
+    var class_name = $value_type.name
+    attribute_json.path = "{class_name}.{name}"
+    var attribute_text = attribute_json.write(shown.attributes[attribute])
+    var members = _members
+    crash members
+    members.append("\"{name}\":{attribute_text}")
+}
+
+func written_decimal(shown: $value_type): String {
+    crash shown - shown == 0
+    return shown.to_string()
+}
+
+func quoted(text: String): String {
+    var made = String()
+    var length = text.length()
+    var index = 0
+    while index < length {
+        var code = text.code_at(index)
+        var escape = escape_of(code)
+        if escape.is_empty() {
+            made.append_code(code)
+        } else {
+            made = made + escape
+        }
+        index = index + 1
+    }
+    return "\"{made}\""
+}
+
+func escape_of(code: Integer): String {
+    switch code {
+        34: return "\\\""
+        92: return "\\\\"
+        10: return "\\n"
+        13: return "\\r"
+        9: return "\\t"
+        _: {
+            if code >= 32 {
+                return ""
+            }
+            var digits = "0123456789abcdef"
+            var high = digits.character_at(code / 16)
+            var low = digits.character_at(code % 16)
+            return "\\u00{high}{low}"
+        }
+    }
+}
+
+func key_text(key: $value_type?): String {
+    crash key
+    if $value_type == String {
+        return quoted(key)
+    }
+    return "\"{key}\""
+}

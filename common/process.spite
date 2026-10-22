@@ -1,0 +1,77 @@
+var command = ""
+var arguments = List<String>()
+var working_directory = ""
+var environment_variables = Dictionary<String, String>()
+var last_output = ""
+
+func Process(starting_command: String, starting_arguments: List<String>) {
+    command = starting_command
+    arguments = starting_arguments
+}
+
+func run(): Integer {
+    var command_text = command_line()
+    var handle = open_process(command_text)
+    if handle == 0 {
+        last_output = ""
+        return -1
+    }
+    var output_text = String()
+    var chunk = Buffer(4096)
+    var got = read_into(chunk, 4096, handle)
+    while got > 0 {
+        var got_count = got.to_integer()
+        chunk.take_written(got_count)
+        var index = 0
+        while index < got_count {
+            var held = chunk.get_at(index)
+            crash held
+            output_text.append_code(held)
+            index = index + 1
+        }
+        got = read_into(chunk, 4096, handle)
+    }
+    last_output = output_text
+    return close_process(handle)
+}
+
+func output(): String {
+    return last_output
+}
+
+func command_line(): String {
+    var file = File(command)
+    var command_is_path = command.contains(" ") and file.exists()
+    var line = command
+    if command_is_path {
+        line = "\"{command}\""
+    }
+    var index = 0
+    while index < arguments.count() {
+        var argument = arguments[index]
+        var quoted = quoted_argument(argument)
+        line = "{line} {quoted}"
+        index = index + 1
+    }
+    var prefix = settings_prefix()
+    return shell_line("{prefix}{line}")
+}
+
+func settings_prefix(): String {
+    var prefix = ""
+    if not working_directory.is_empty() {
+        var changed = change_directory(working_directory)
+        prefix = "{changed} && "
+    }
+    var names = environment_variables.keys()
+    var index = 0
+    while index < names.count() {
+        var name = names[index]
+        var value = environment_variables[name]
+        crash value
+        var assigned = set_variable(name, value)
+        prefix = "{prefix}{assigned} && "
+        index = index + 1
+    }
+    return prefix
+}
