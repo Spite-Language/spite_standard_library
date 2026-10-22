@@ -1,7 +1,34 @@
 var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
 
 func sleep(milliseconds: Integer) {
-    kernel.Sleep(milliseconds)
+    if milliseconds <= 0 {
+        kernel.Sleep(milliseconds)
+        return
+    }
+    var no_value: Long = 0
+    var high_resolution = 2
+    var every_right = 2031619
+    var timer = kernel.CreateWaitableTimerExW_as_long(no_value, no_value, high_resolution, every_right)
+    if timer == 0 {
+        kernel.Sleep(milliseconds)
+        return
+    }
+    _wait_on_the_timer(timer, milliseconds)
+    kernel.CloseHandle(timer)
+}
+
+func _wait_on_the_timer(timer: Long, milliseconds: Integer) {
+    var no_value: Long = 0
+    var hundreds_of_nanoseconds: Long = milliseconds
+    var due = Buffer(8)
+    due.append_long_little_endian(hundreds_of_nanoseconds * -10000)
+    var set = kernel.SetWaitableTimer(timer, due, 0, no_value, no_value, 0)
+    if set == 0 {
+        kernel.Sleep(milliseconds)
+        return
+    }
+    var waited = kernel.WaitForSingleObject(timer, -1)
+    crash waited == 0
 }
 
 func working_directory(): String {

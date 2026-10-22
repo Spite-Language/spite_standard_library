@@ -171,13 +171,7 @@ func _put(text: String, mode: String): Boolean {
 
 func _text_of(bytes: Buffer): String {
     var text = String()
-    var count = bytes.count()
-    var index = 0
-    while index < count {
-        var held = bytes.get_at(index)
-        crash held
-        text.append_code(held)
-        index = index + 1
-    }
+    text._buffer = bytes
+    text._length = bytes.count()
     return text
 }
