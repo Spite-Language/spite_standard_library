@@ -1,0 +1,48 @@
+var _sockets = DynamicLibrary("ws2_32.dll", 'identity', "")
+
+func _open_handle(family: Integer): Long {
+    var opened = _sockets.socket_as_long(family, 2, 17)
+    if opened != -1 and family == _addresses.ipv6_family() {
+        _addresses.allow_ipv4_too(opened)
+    }
+    return opened
+}
+
+func _bind(address: Buffer): Boolean {
+    var length = _addresses.address_length(address)
+    return _sockets.bind(handle, address, length) == 0
+}
+
+func _send(address: Buffer, room: Buffer, count: Integer): Integer {
+    var length = _addresses.address_length(address)
+    return _sockets.sendto(handle, room, count, 0, address, length)
+}
+
+func _receive_from(room: Buffer, count: Integer, sender: Buffer): Integer {
+    var length_slot = Buffer(4)
+    length_slot.append_integer_little_endian(28)
+    return _sockets.recvfrom(handle, room, count, 0, sender, length_slot)
+}
+
+func _ready_now(): Boolean {
+    var watched = Buffer(16)
+    watched.append_long_little_endian(handle)
+    watched.append_short_little_endian(768)
+    watched.append_short_little_endian(0)
+    watched.append_integer_little_endian(0)
+    var ready = _sockets.WSAPoll(watched, 1, 0)
+    return ready > 0
+}
+
+func _close_handle() {
+    _sockets.closesocket(handle)
+}
+
+func _local_port(): Integer {
+    var address = _addresses.empty_address()
+    var length_slot = Buffer(4)
+    length_slot.append_integer_little_endian(28)
+    var asked = _sockets.getsockname(handle, address, length_slot)
+    crash asked == 0
+    return _addresses.read_port(address)
+}

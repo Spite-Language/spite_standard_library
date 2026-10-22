@@ -1,0 +1,144 @@
+var handle: Long = -1
+var _family = 0
+var _sender_host = ""
+var _sender_port = 0
+var _port = 0
+var _addresses = Socket()
+
+func open(): Boolean {
+    return open_everywhere(0)
+}
+
+func open_locally(port: Integer): Boolean {
+    var address = _addresses.local_address(port)
+    return _bound(address)
+}
+
+func open_everywhere(port: Integer): Boolean {
+    var address = _addresses.any_ipv6_address(port)
+    if _bound(address) {
+        return true
+    }
+    var fallback = _addresses.any_address(port)
+    return _bound(fallback)
+}
+
+func open_at(host: String, port: Integer): Boolean {
+    var addresses = _addresses.resolved_addresses(host, port, 2)
+    if addresses.is_empty() {
+        return false
+    }
+    var address = addresses[0]
+    crash address
+    return _bound(address)
+}
+
+func send_to(host: String, port: Integer, bytes: Buffer): Boolean {
+    crash handle != -1
+    var address = _destination(host, port)
+    if not address {
+        return false
+    }
+    var counted = bytes.count()
+    var sent = _send(address, bytes, counted)
+    return sent == counted
+}
+
+func receive(): Buffer? {
+    assert handle != -1
+    return _received()
+}
+
+func receive_now(): Buffer? {
+    assert handle != -1
+    assert _ready_now()
+    return _received()
+}
+
+func get_port(): Integer {
+    crash handle != -1
+    return _port
+}
+
+func sender_host(): String {
+    return _sender_host
+}
+
+func sender_port(): Integer {
+    return _sender_port
+}
+
+func close() {
+    if handle != -1 {
+        _close_handle()
+        handle = -1
+        _port = 0
+    }
+}
+
+func drop() {
+    close()
+}
+
+func _bound(address: Buffer): Boolean {
+    close()
+    _addresses.start_sockets()
+    _family = _addresses.read_family(address)
+    handle = _open_handle(_family)
+    var bound = handle != -1 and _bind(address)
+    if not bound {
+        close()
+        return false
+    }
+    _port = _local_port()
+    return true
+}
+
+func _destination(host: String, port: Integer): Buffer? {
+    var addresses = _addresses.resolved_addresses(host, port, 2)
+    var ipv4 = _addresses.ipv4_family()
+    var chosen: Buffer? = null
+    var index = 0
+    while index < addresses.count() {
+        var address = addresses[index]
+        crash address
+        var family = _addresses.read_family(address)
+        if not chosen and (family == ipv4 or _family != ipv4) {
+            chosen = address
+        }
+        index = index + 1
+    }
+    assert chosen
+    var destination = _addresses.empty_address()
+    if _family != ipv4 and _addresses.read_family(chosen) == ipv4 {
+        _addresses.write_family(destination, _family)
+        destination.set_at(18, 255)
+        destination.set_at(19, 255)
+        var offset = 0
+        while offset < 4 {
+            var code = _addresses._byte_in(chosen, 4 + offset)
+            destination.set_at(20 + offset, code)
+            offset = offset + 1
+        }
+    } else {
+        var offset = 0
+        while offset < 28 {
+            var code = _addresses._byte_in(chosen, offset)
+            destination.set_at(offset, code)
+            offset = offset + 1
+        }
+    }
+    _addresses.write_port(destination, port)
+    return destination
+}
+
+func _received(): Buffer? {
+    var room = Buffer(65536)
+    var sender = _addresses.empty_address()
+    var received = _receive_from(room, 65536, sender)
+    assert received >= 0
+    room.take_written(received)
+    _sender_host = _addresses.address_text(sender)
+    _sender_port = _addresses.read_port(sender)
+    return room.copy()
+}
