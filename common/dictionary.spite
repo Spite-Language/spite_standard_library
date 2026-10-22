@@ -18,10 +18,6 @@ func contains(key: $key_type): Boolean {
     return _keys.contains(key)
 }
 
-func has(key: $key_type): Boolean {
-    return _keys.contains(key)
-}
-
 func each(callback: Spite.Function<$value_type, Nothing>) {
     _values.each(callback)
 }
