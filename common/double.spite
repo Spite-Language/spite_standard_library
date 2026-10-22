@@ -94,7 +94,7 @@ func divide(other: Double): Double {
 func minimum(other: Double): Double {
     var left = _value()
     var right = other._value()
-    if right < left {
+    if right < left or right != right {
         return right
     }
     return left
@@ -103,7 +103,7 @@ func minimum(other: Double): Double {
 func maximum(other: Double): Double {
     var left = _value()
     var right = other._value()
-    if right > left {
+    if right > left or right != right {
         return right
     }
     return left
@@ -137,6 +137,9 @@ func to_debug(): String {
 }
 
 func _shortest_text(value: Double, significand_limit: Long, lowest_exponent: Long, most_digits: Long): String {
+    if value != value {
+        return "nan"
+    }
     var bit_pattern = value.bits()
     if bit_pattern < 0 {
         var zero: Double = 0.0

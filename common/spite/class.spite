@@ -3,6 +3,7 @@ var _name_with_namespaces = ""
 var _namespace: Spite.Namespace? = null
 var _is_singleton = false
 var _is_enum = false
+var _is_optional = false
 var _is_list = false
 var _is_dictionary = false
 var _is_stateful = false
@@ -12,6 +13,7 @@ var _attributes = List<Spite.AttributeDeclaration>()
 var _functions = List<Spite.Function>()
 var _values = List<String>()
 var _source_folder = ""
+var _source_files = List<File>()
 
 func Class(starting_name: String) {
     _name = starting_name
@@ -42,12 +44,20 @@ func get_is_singleton(): Boolean {
     return _is_singleton
 }
 
+func get_source_files(): List<File> {
+    return _source_files
+}
+
 func source_folder(): String {
     return _source_folder
 }
 
 func get_values(): List<String> {
     return _values
+}
+
+func get_is_optional(): Boolean {
+    return _is_optional
 }
 
 func get_is_enum(): Boolean {

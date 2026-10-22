@@ -74,7 +74,7 @@ func divide(other: Float): Float {
 func minimum(other: Float): Float {
     var left = _value()
     var right = other._value()
-    if right < left {
+    if right < left or right != right {
         return right
     }
     return left
@@ -83,7 +83,7 @@ func minimum(other: Float): Float {
 func maximum(other: Float): Float {
     var left = _value()
     var right = other._value()
-    if right > left {
+    if right > left or right != right {
         return right
     }
     return left
