@@ -1,0 +1,496 @@
+var handle: Long = -1
+var pending = ""
+var closed = false
+
+func listen_locally(port: Integer): Boolean {
+    var address = local_address(port)
+    return listen_on(address)
+}
+
+func listen_everywhere(port: Integer): Boolean {
+    var address = any_ipv6_address(port)
+    if listen_on(address) {
+        return true
+    }
+    var fallback = any_address(port)
+    return listen_on(fallback)
+}
+
+func listen_at(host: String, port: Integer): Boolean {
+    var addresses = resolved_addresses(host, port, 1)
+    if addresses.is_empty() {
+        return false
+    }
+    var address = addresses[0]
+    crash address
+    return listen_on(address)
+}
+
+func connect_locally(port: Integer): Boolean {
+    var address = local_address(port)
+    return connect_to(address)
+}
+
+func connect(host: String, port: Integer): Boolean {
+    var addresses = resolved_addresses(host, port, 1)
+    var connected = false
+    var index = 0
+    while not connected and index < addresses.count() {
+        var address = addresses[index]
+        crash address
+        connected = connect_to(address)
+        index = index + 1
+    }
+    return connected
+}
+
+func accept_client(): Socket? {
+    use_blocking_calls()
+    var accepted = accept_handle()
+    assert accepted != -1
+    var client = Socket()
+    client.handle = accepted
+    return client
+}
+
+func accept_client_now(): Socket? {
+    var accepted = accept_now()
+    assert accepted != -1
+    var client = Socket()
+    client.handle = accepted
+    return client
+}
+
+func read_line(): String? {
+    var newline = pending.index_of("\n")
+    if not newline and not closed {
+        use_blocking_calls()
+        var room = Buffer(4096)
+        while not newline and not closed {
+            var received = receive_into(room, 4096)
+            if received > 0 {
+                room.take_written(received)
+                var more = _text_of(room, received)
+                pending = "{pending}{more}"
+                newline = pending.index_of("\n")
+            } else {
+                closed = true
+            }
+        }
+    }
+    assert newline
+    return take_line(newline)
+}
+
+func read_line_now(): String? {
+    var newline = pending.index_of("\n")
+    if not newline and not closed {
+        var room = Buffer(4096)
+        var received = receive_now(room, 4096)
+        while not newline and received > 0 {
+            room.take_written(received)
+            var more = _text_of(room, received)
+            pending = "{pending}{more}"
+            newline = pending.index_of("\n")
+            if not newline {
+                received = receive_now(room, 4096)
+            }
+        }
+        if received < 0 {
+            closed = true
+        }
+    }
+    assert newline
+    return take_line(newline)
+}
+
+func read_bytes(): Buffer? {
+    var bytes = _chunk(true)
+    assert bytes.count() > 0
+    return bytes
+}
+
+func read_bytes_now(): Buffer {
+    return _chunk(false)
+}
+
+func write_line(text: String): Boolean {
+    use_blocking_calls()
+    var line = "{text}\n"
+    var line_length = line.length()
+    var written = 0
+    while written < line_length and not closed {
+        var rest = line.slice(written, line_length)
+        var sent = send_text(rest)
+        if sent > 0 {
+            written = written + sent
+        } else {
+            closed = true
+        }
+    }
+    return written == line_length
+}
+
+func write_bytes(bytes: Buffer): Boolean {
+    use_blocking_calls()
+    var counted = bytes.count()
+    var written = 0
+    while written < counted and not closed {
+        var rest = Buffer(counted - written)
+        rest.append_bytes(bytes, written, counted - written)
+        var sent = send_from(rest, counted - written)
+        if sent > 0 {
+            written = written + sent
+        } else {
+            closed = true
+        }
+    }
+    return written == counted
+}
+
+func write_bytes_now(bytes: Buffer): Integer {
+    var counted = bytes.count()
+    if closed or counted <= 0 {
+        return 0
+    }
+    var sent = send_now(bytes, counted)
+    if sent < 0 {
+        closed = true
+        return 0
+    }
+    return sent
+}
+
+func close() {
+    closed = true
+    if handle != -1 {
+        close_handle()
+        handle = -1
+    }
+}
+
+func drop() {
+    close()
+}
+
+func listen_on(address: Buffer): Boolean {
+    start_sockets()
+    var family = read_family(address)
+    handle = open_socket(family)
+    closed = false
+    var listening = handle != -1 and bind_address(address) and listen_for_clients()
+    if not listening {
+        close()
+    }
+    return listening
+}
+
+func connect_to(address: Buffer): Boolean {
+    start_sockets()
+    var family = read_family(address)
+    handle = open_socket(family)
+    closed = false
+    var connected = handle != -1 and connect_address(address)
+    if not connected {
+        close()
+    }
+    return connected
+}
+
+func take_line(newline: Integer): String {
+    var line = pending.slice(0, newline)
+    var pending_length = pending.length()
+    pending = pending.slice(newline + 1, pending_length)
+    if line.ends_with("\r") {
+        var line_length = line.length()
+        return line.slice(0, line_length - 1)
+    }
+    return line
+}
+
+func _text_of(room: Buffer, count: Integer): String {
+    var text = String()
+    var index = 0
+    while index < count {
+        var code = _byte_in(room, index)
+        text.append_code(code)
+        index = index + 1
+    }
+    return text
+}
+
+func _chunk(blocking: Boolean): Buffer {
+    var taken = take_pending(65536)
+    if taken.count() > 0 or closed {
+        return taken
+    }
+    var room = Buffer(65536)
+    var received = 0
+    if blocking {
+        use_blocking_calls()
+        received = receive_into(room, 65536)
+        if received <= 0 {
+            closed = true
+            return room
+        }
+    } else {
+        received = receive_now(room, 65536)
+        if received < 0 {
+            closed = true
+            return room
+        }
+    }
+    room.take_written(received)
+    return room.copy()
+}
+
+func take_pending(count: Integer): Buffer {
+    var pending_length = pending.length()
+    var taken = pending_length
+    if count < taken {
+        taken = count
+    }
+    var bytes = Buffer(0)
+    var index = 0
+    while index < taken {
+        var code = pending.code_at(index)
+        bytes.append(code)
+        index = index + 1
+    }
+    if taken > 0 {
+        pending = pending.slice(taken, pending_length)
+    }
+    return bytes
+}
+
+func _zeroed(bytes: Integer): Buffer {
+    var room = Buffer(bytes)
+    var index = 0
+    while index < bytes {
+        room.append(0)
+        index = index + 1
+    }
+    return room
+}
+
+func _byte_in(room: Buffer, at: Integer): Integer {
+    var read = room.get_at(at)
+    crash read
+    return read.to_integer()
+}
+
+func _integer_in(room: Buffer, at: Integer): Integer {
+    var read = room.read_integer_little_endian_at(at)
+    crash read
+    return read
+}
+
+func _long_in(room: Buffer, at: Integer): Long {
+    var read = room.read_long_little_endian_at(at)
+    crash read
+    return read
+}
+
+func _short_in(room: Buffer, at: Integer): Integer {
+    var read = room.read_unsigned_short_little_endian_at(at)
+    crash read
+    return read.to_integer()
+}
+
+func local_address(port: Integer): Buffer {
+    var address = any_address(port)
+    address.set_at(4, 127)
+    address.set_at(7, 1)
+    return address
+}
+
+func any_address(port: Integer): Buffer {
+    var address = empty_address()
+    var family = ipv4_family()
+    write_family(address, family)
+    write_port(address, port)
+    return address
+}
+
+func any_ipv6_address(port: Integer): Buffer {
+    var address = empty_address()
+    var family = ipv6_family()
+    write_family(address, family)
+    write_port(address, port)
+    return address
+}
+
+func empty_address(): Buffer {
+    return _zeroed(28)
+}
+
+func address_length(address: Buffer): Integer {
+    if read_family(address) == ipv6_family() {
+        return 28
+    }
+    return 16
+}
+
+func write_family(address: Buffer, family: Integer) {
+    var narrow = family.to_unsigned_short()
+    address.write_unsigned_short_little_endian_at(0, narrow)
+}
+
+func read_family(address: Buffer): Integer {
+    return _short_in(address, 0)
+}
+
+func write_port(address: Buffer, port: Integer) {
+    var narrow = port.to_unsigned_short()
+    address.write_unsigned_short_big_endian_at(2, narrow)
+}
+
+func read_port(address: Buffer): Integer {
+    var port = address.read_unsigned_short_big_endian_at(2)
+    crash port
+    return port.to_integer()
+}
+
+func resolved_addresses(host: String, port: Integer, kind: Integer): List<Buffer> {
+    start_sockets()
+    var addresses = List<Buffer>()
+    var hints = _zeroed(48)
+    hints.write_integer_little_endian_at(8, kind)
+    var found = _zeroed(8)
+    var failed = resolve_name(host, hints, found) != 0
+    var first = _long_in(found, 0)
+    if failed or first == 0 {
+        return addresses
+    }
+    var ipv4_count = 0
+    var entry_place = first
+    while entry_place != 0 {
+        var entry = read_foreign(entry_place, 48)
+        var family = _integer_in(entry, 4)
+        if family == ipv4_family() or family == ipv6_family() {
+            var resolved_length = _integer_in(entry, 16)
+            if resolved_length > 28 {
+                resolved_length = 28
+            }
+            var offset = resolved_address_offset()
+            var resolved_place = _long_in(entry, offset)
+            var resolved = read_foreign(resolved_place, resolved_length)
+            var address = empty_address()
+            var index = 0
+            while index < resolved_length {
+                var code = _byte_in(resolved, index)
+                address.set_at(index, code)
+                index = index + 1
+            }
+            write_port(address, port)
+            if family == ipv4_family() {
+                addresses.insert(ipv4_count, address)
+                ipv4_count = ipv4_count + 1
+            } else {
+                addresses.append(address)
+            }
+        }
+        var next_offset = next_entry_offset()
+        entry_place = _long_in(entry, next_offset)
+    }
+    free_resolved(first)
+    return addresses
+}
+
+func address_text(address: Buffer): String {
+    if read_family(address) != ipv6_family() {
+        return dotted_text(address, 4)
+    }
+    var mapped = true
+    var index = 8
+    while index < 20 {
+        var expected = 0
+        if index >= 18 {
+            expected = 255
+        }
+        var byte = _byte_in(address, index)
+        mapped = mapped and byte == expected
+        index = index + 1
+    }
+    if mapped {
+        return dotted_text(address, 20)
+    }
+    var groups = List<Integer>()
+    index = 0
+    while index < 8 {
+        var high_at = 8 + index * 2
+        var high = _byte_in(address, high_at)
+        var low = _byte_in(address, high_at + 1)
+        groups.append(high * 256 + low)
+        index = index + 1
+    }
+    var text = ipv6_groups_text(groups)
+    var scope = _integer_in(address, 24)
+    if scope != 0 {
+        return "{text}%{scope}"
+    }
+    return text
+}
+
+func dotted_text(address: Buffer, start: Integer): String {
+    var first = _byte_in(address, start)
+    var second = _byte_in(address, start + 1)
+    var third = _byte_in(address, start + 2)
+    var fourth = _byte_in(address, start + 3)
+    return "{first}.{second}.{third}.{fourth}"
+}
+
+func ipv6_groups_text(groups: List<Integer>): String {
+    var longest_start = -1
+    var longest_length = 1
+    var run_start = -1
+    var index = 0
+    while index <= 8 {
+        var zero = false
+        if index < 8 {
+            zero = groups[index] == 0
+        }
+        if zero and run_start < 0 {
+            run_start = index
+        }
+        if not zero and run_start >= 0 {
+            if index - run_start > longest_length {
+                longest_start = run_start
+                longest_length = index - run_start
+            }
+            run_start = -1
+        }
+        index = index + 1
+    }
+    var text = ""
+    index = 0
+    while index < 8 {
+        if index == longest_start {
+            text = "{text}::"
+            index = index + longest_length
+        } else {
+            if not text.is_empty() and not text.ends_with(":") {
+                text = "{text}:"
+            }
+            var group = groups[index]
+            crash group
+            var digits = hex_text(group)
+            text = "{text}{digits}"
+            index = index + 1
+        }
+    }
+    return text
+}
+
+func hex_text(value: Integer): String {
+    var digits = "0123456789abcdef"
+    var text = ""
+    var rest = value
+    while rest > 0 or text.is_empty() {
+        var digit = rest.bits_and(15)
+        var character = digits.slice(digit, digit + 1)
+        text = "{character}{text}"
+        rest = rest.shifted_right(4)
+    }
+    return text
+}
