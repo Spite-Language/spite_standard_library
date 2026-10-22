@@ -54,6 +54,36 @@ func to_double(): Double {
     return _value()
 }
 
+func half_precision_to_float(): Float {
+    var bits: Long = _value()
+    var sign: Long = bits / 32768
+    var exponent: Long = (bits / 1024) % 32
+    var mantissa: Long = bits % 1024
+    var result: Float = 0.0
+    if exponent == 31 {
+        result = _half_special(mantissa)
+    } else if exponent == 0 {
+        var scale: UnsignedInteger = 864026624
+        result = mantissa.to_float() * scale.bits_as_float()
+    } else {
+        var wide: Long = (exponent + 112) * 8388608 + mantissa * 8192
+        result = wide.to_unsigned_integer().bits_as_float()
+    }
+    if sign == 1 {
+        return result.negate()
+    }
+    return result
+}
+
+func _half_special(mantissa: Long): Float {
+    var infinity: UnsignedInteger = 2139095040
+    var not_a_number: UnsignedInteger = 2143289344
+    if mantissa == 0 {
+        return infinity.bits_as_float()
+    }
+    return not_a_number.bits_as_float()
+}
+
 func absolute(): UnsignedShort {
     return _value()
 }

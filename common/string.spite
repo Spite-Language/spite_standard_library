@@ -193,26 +193,28 @@ func _starts_the_separator_at(index: Integer, separator: String): Boolean {
 }
 
 func to_long(): Long? {
+    var text = trim()
+    var size = text._length
     var index = 0
     var negative = false
-    if _length > 0 and code_at(0) == 45 {
-        negative = true
+    if size > 0 and (text.code_at(0) == 45 or text.code_at(0) == 43) {
+        negative = text.code_at(0) == 45
         index = 1
     }
-    var digits = 0
+    var digits_start = index
     var value: Long = 0
-    while index < _length {
-        var code = code_at(index)
-        assert code >= 48 and code <= 57
-        value = value * 10 + (code - 48)
-        digits = digits + 1
+    while index < size and text.code_at(index) >= 48 and text.code_at(index) <= 57 {
+        var digit: Long = text.code_at(index) - 48
+        assert value >= (Long.smallest + digit) / 10
+        value = value * 10 - digit
         index = index + 1
     }
-    assert digits != 0
+    assert index > digits_start and index == size
     if negative {
-        return 0 - value
+        return value
     }
-    return value
+    assert value != Long.smallest
+    return 0 - value
 }
 
 func to_double(): Double? {
@@ -278,10 +280,57 @@ func _digits_end(start: Integer): Integer {
 
 func to_integer(): Integer? {
     var value = to_long()
-    if value {
-        return value
+    assert value and value >= Integer.smallest and value <= Integer.largest
+    return value
+}
+
+func to_tiny(): Tiny? {
+    var value = to_long()
+    assert value and value >= Tiny.smallest and value <= Tiny.largest
+    return value
+}
+
+func to_short(): Short? {
+    var value = to_long()
+    assert value and value >= Short.smallest and value <= Short.largest
+    return value
+}
+
+func to_byte(): Byte? {
+    var value = to_long()
+    assert value and value >= 0 and value <= Byte.largest
+    return value
+}
+
+func to_unsigned_short(): UnsignedShort? {
+    var value = to_long()
+    assert value and value >= 0 and value <= UnsignedShort.largest
+    return value
+}
+
+func to_unsigned_integer(): UnsignedInteger? {
+    var value = to_long()
+    assert value and value >= 0 and value <= UnsignedInteger.largest
+    return value
+}
+
+func to_unsigned_long(): UnsignedLong? {
+    var text = trim()
+    var size = text._length
+    var index = 0
+    if size > 0 and text.code_at(0) == 43 {
+        index = 1
     }
-    return null
+    var digits_start = index
+    var value: UnsignedLong = 0
+    while index < size and text.code_at(index) >= 48 and text.code_at(index) <= 57 {
+        var digit: UnsignedLong = text.code_at(index) - 48
+        assert value <= (UnsignedLong.largest - digit) / 10
+        value = value * 10 + digit
+        index = index + 1
+    }
+    assert index > digits_start and index == size
+    return value
 }
 
 func to_string(): String {

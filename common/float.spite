@@ -261,6 +261,57 @@ func negate(): Float {
     return value * minus_one
 }
 
+func to_half_precision(): UnsignedShort {
+    var bits: Long = bits().to_long()
+    var sign: Long = bits / 2147483648
+    var exponent: Long = (bits / 8388608) % 256
+    var mantissa: Long = bits % 8388608
+    var magnitude: Long = 31744
+    if exponent == 255 {
+        magnitude = _half_special(mantissa)
+    } else if exponent > 142 {
+        magnitude = 31744
+    } else if exponent >= 113 {
+        var half_mantissa = _rounded_to_even(mantissa, 8192)
+        magnitude = (exponent - 112) * 1024 + half_mantissa
+    } else if exponent == 0 {
+        magnitude = 0
+    } else {
+        magnitude = _half_subnormal(exponent, mantissa)
+    }
+    return sign * 32768 + magnitude
+}
+
+func _half_special(mantissa: Long): Long {
+    if mantissa != 0 {
+        return 32256
+    }
+    return 31744
+}
+
+func _half_subnormal(exponent: Long, mantissa: Long): Long {
+    var shift = 126 - exponent
+    if shift > 25 {
+        return 0
+    }
+    var one: Long = 1
+    var divisor = one.shifted_left(shift)
+    return _rounded_to_even(mantissa + 8388608, divisor)
+}
+
+func _rounded_to_even(numerator: Long, divisor: Long): Long {
+    var quotient: Long = numerator / divisor
+    var remainder: Long = numerator % divisor
+    var halfway: Long = divisor / 2
+    if remainder > halfway {
+        return quotient + 1
+    }
+    if remainder == halfway and quotient % 2 == 1 {
+        return quotient + 1
+    }
+    return quotient
+}
+
 func get_pi(): Float {
     return 3.1415927
 }
@@ -280,8 +331,8 @@ func get_infinity(): Float {
 }
 
 func get_not_a_number(): Float {
-    var zero: Float = 0.0
-    return zero / zero
+    var bits: UnsignedInteger = 2143289344
+    return bits.bits_as_float()
 }
 
 func get_largest(): Float {

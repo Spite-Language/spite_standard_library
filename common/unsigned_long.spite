@@ -139,6 +139,11 @@ func bits_as_signed(): Long {
     return _bits_as_signed()
 }
 
+func bits_as_double(): Double {
+    var signed = _bits_as_signed()
+    return signed.bits_as_double()
+}
+
 func get_largest(): UnsignedLong {
     var every_bit: Long = -1
     return every_bit.bits_as_unsigned()
