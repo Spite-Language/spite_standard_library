@@ -51,6 +51,11 @@ func write_long_big_endian_at(at: Integer, value: Long)
 A read answers `null` when the bytes are not all in the buffer, and a write stops. A byte and a tiny are
 one byte, and they have no order.
 
+Each `_big_endian` read and write is one load or one store too: the buffer declares a read and a write of
+each width with no body, `_read_integer_big_endian_at(at)` and `_write_integer_big_endian_at(at, value)`,
+and the compiler makes each one the load or the store of that width with the bytes swapped in the register,
+so a big-endian number costs what a little-endian one costs and nothing is copied to read it.
+
 ## The numbers
 
 A number is a room too, of the width the number takes, and it reads its value from the room once:
@@ -123,9 +128,22 @@ every item.
 
 ## The dictionary
 
-A dictionary is a list of keys and a list of values, and a key and its value are at the same place in
-the two. The key is looked up in the list of the keys, and the value is taken from the list of the
-values at the place the key was found.
+A dictionary is a list of keys and a list of values, in the order the keys were first set, and a key and
+its value are at the same place in the two. Over them is a table of slots, a `Buffer` with a power of two
+of them: each slot is eight bytes, the place of an entry plus one (zero for an empty slot) and then 32 bits
+of the key's hash. The table holds at most half as many entries as slots, and an empty dictionary has none.
+
+A key is hashed once for each lookup, set and removal. A whole number, a `Boolean`, an enum value and an
+object are hashed as their bits (an object's bits are its identity), through `_key_bits(key)`, which has
+no body: the compiler answers the key's own register. A `Float` or a `Double` is hashed as its bits once
+both zeros are one zero and every not-a-number is one value, and a `String` by its bytes, eight at a time.
+The bits are multiplied by a large odd number, and the top 32 bits of the product are the slot's hash; its
+top bits again are the slot the key starts at. A lookup walks the slots from there to the first empty one,
+compares a slot's hash bits before it reads the key, and reads the key from the list only when they match.
+
+Growing the table doubles it and moves each slot by the hash bits it keeps, so no key is hashed again.
+Removing a key empties its slot and moves back each entry after it that may move, then takes one from the
+place of every entry after the removed one: removing takes time in proportion to the table.
 
 The compiler turns an index into a call: `a[b]` is `a.get_at(b)`, and `a[b] = v` is `a.set_at(b, v)`,
 so a dictionary answers `get_at` and `set_at` with a key and a value.

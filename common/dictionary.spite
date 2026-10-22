@@ -5,6 +5,11 @@ generic $value_type
 
 var _keys = List<$key_type>()
 var _values = List<$value_type>()
+var _slots = Buffer(0)
+var _slot_count = 0
+var _shift = 32
+
+func _key_bits(key: $key_type): UnsignedLong
 
 func count(): Integer {
     return _keys.count()
@@ -15,7 +20,9 @@ func is_empty(): Boolean {
 }
 
 func contains(key: $key_type): Boolean {
-    return _keys.contains(key)
+    var tag = _tag_of(key)
+    var slot = _find_slot(key, tag)
+    return slot >= 0
 }
 
 func each(callback: Spite.Function<$value_type, Nothing>) {
@@ -27,47 +34,68 @@ func sum(measure: Spite.Function<$value_type, Integer>): Integer {
 }
 
 func get_at(key: $key_type): $value_type? {
-    var index = _keys.index_of(key)
-    if index {
-        return _values.get_at(index)
+    var tag = _tag_of(key)
+    var slot = _find_slot(key, tag)
+    if slot >= 0 {
+        var stored = _slots._read_integer_at(slot * 8)
+        return _values._read_value(stored - 1)
     }
     return null
 }
 
 func set_at(key: $key_type, value: $value_type) {
-    var index = _keys.index_of(key)
-    if index {
-        _values.set_at(index, value)
+    var tag = _tag_of(key)
+    var slot = _find_slot(key, tag)
+    if slot >= 0 {
+        var stored = _slots._read_integer_at(slot * 8)
+        _values._write_value(stored - 1, value)
         return
     }
+    var position = _keys.count()
+    if (position + 1) * 2 > _slot_count {
+        _grow()
+    }
+    _place(position + 1, tag)
     _keys.append(key)
     _values.append(value)
 }
 
 func remove_at(key: $key_type) {
-    var index = _keys.index_of(key)
-    if index {
-        _keys.remove_at(index)
-        _values.remove_at(index)
-    }
+    var tag = _tag_of(key)
+    var slot = _find_slot(key, tag)
+    assert slot >= 0
+    var stored = _slots._read_integer_at(slot * 8)
+    _close_slot(slot)
+    _renumber_after(stored)
+    _keys.remove_at(stored - 1)
+    _values.remove_at(stored - 1)
 }
 
 func clear() {
     _keys.clear()
     _values.clear()
+    _slots = Buffer(0)
+    _slot_count = 0
+    _shift = 32
 }
 
 func copy(): Dictionary<$key_type, $value_type> {
     var copied = Dictionary<$key_type, $value_type>()
     copied._keys = _keys.copy()
     copied._values = _values.copy()
+    copied._slots = _slots.copy()
+    copied._slot_count = _slot_count
+    copied._shift = _shift
     return copied
 }
 
 func deep_copy(): Dictionary<$key_type, $value_type> {
     var copied = Dictionary<$key_type, $value_type>()
-    copied._keys = _keys.deep_copy()
+    copied._keys = _keys.copy()
     copied._values = _values.deep_copy()
+    copied._slots = _slots.copy()
+    copied._slot_count = _slot_count
+    copied._shift = _shift
     return copied
 }
 
@@ -92,4 +120,194 @@ func to_debug(): String {
     }
     var joined = shown.join(", ")
     return "\{{joined}}"
+}
+
+func _tag_of(key: $key_type): UnsignedInteger {
+    var hashed: UnsignedLong = 0
+    if $key_type == String {
+        hashed = _text_hash(key)
+    } else if $key_type == Float or $key_type == Double {
+        var bits = _decimal_bits(key)
+        hashed = bits._wrapping_multiply(6364136223846793005)
+    } else {
+        var bits = _key_bits(key)
+        hashed = bits._wrapping_multiply(6364136223846793005)
+    }
+    return hashed._shifted_right(32)
+}
+
+func _decimal_bits(key: $key_type): UnsignedLong {
+    if key != key {
+        return 9221120237041090560
+    }
+    if key == 0.0 {
+        return 0
+    }
+    return _key_bits(key)
+}
+
+func _text_hash(text: String): UnsignedLong {
+    var length = text._length
+    var bytes = text._buffer
+    var hashed: UnsignedLong = 1469598103934665603
+    var at = 0
+    while at + 8 <= length {
+        var word = bytes._read_unsigned_long_at(at)
+        var mixed = hashed._bits_xor(word)
+        hashed = mixed._wrapping_multiply(6364136223846793005)
+        at = at + 8
+    }
+    while at < length {
+        var code = bytes._read_byte_at(at)
+        var wide: UnsignedLong = code
+        var mixed_code = hashed._bits_xor(wide)
+        hashed = mixed_code._wrapping_multiply(1099511628211)
+        at = at + 1
+    }
+    var folded = hashed._shifted_right(29)
+    var spread = hashed._bits_xor(folded)
+    return spread._wrapping_multiply(6364136223846793005)
+}
+
+func _same_text(left: String, right: String): Boolean {
+    var length = left._length
+    if length != right._length {
+        return false
+    }
+    var left_bytes = left._buffer
+    var right_bytes = right._buffer
+    var at = 0
+    while at + 8 <= length {
+        var left_word = left_bytes._read_unsigned_long_at(at)
+        var right_word = right_bytes._read_unsigned_long_at(at)
+        if left_word != right_word {
+            return false
+        }
+        at = at + 8
+    }
+    while at < length {
+        var left_code = left_bytes._read_byte_at(at)
+        var right_code = right_bytes._read_byte_at(at)
+        if left_code != right_code {
+            return false
+        }
+        at = at + 1
+    }
+    return true
+}
+
+func _home_of(tag: UnsignedInteger): Integer {
+    return tag._shifted_right(_shift)
+}
+
+func _find_slot(key: $key_type, tag: UnsignedInteger): Integer {
+    if _slot_count == 0 {
+        return -1
+    }
+    var last = _slot_count - 1
+    var slot = _home_of(tag)
+    var stored = _slots._read_integer_at(slot * 8)
+    while stored != 0 {
+        var stored_tag = _slots._read_unsigned_integer_at(slot * 8 + 4)
+        if stored_tag == tag {
+            var held = _keys._read_value(stored - 1)
+            if _same_key(held, key) {
+                return slot
+            }
+        }
+        var next = slot + 1
+        slot = next._bits_and(last)
+        stored = _slots._read_integer_at(slot * 8)
+    }
+    return -1
+}
+
+func _same_key(held: $key_type, key: $key_type): Boolean {
+    if $key_type == String {
+        return _same_text(held, key)
+    } else if $key_type == Float or $key_type == Double {
+        return held == key or (held != held and key != key)
+    }
+    return held == key
+}
+
+func _place(numbered: Integer, tag: UnsignedInteger) {
+    var last = _slot_count - 1
+    var slot = _home_of(tag)
+    var stored = _slots._read_integer_at(slot * 8)
+    while stored != 0 {
+        var next = slot + 1
+        slot = next._bits_and(last)
+        stored = _slots._read_integer_at(slot * 8)
+    }
+    _slots._write_integer_at(slot * 8, numbered)
+    _slots._write_unsigned_integer_at(slot * 8 + 4, tag)
+}
+
+func _grow() {
+    var old_slots = _slots
+    var old_count = _slot_count
+    var grown = 8
+    var shift = 29
+    if old_count > 0 {
+        grown = old_count * 2
+        shift = _shift - 1
+    }
+    crash shift > 0
+    var room = grown * 8
+    var fresh = Buffer(room)
+    fresh.take_written(room)
+    var at = 0
+    while at < room {
+        fresh._write_long_at(at, 0)
+        at = at + 8
+    }
+    _slots = fresh
+    _slot_count = grown
+    _shift = shift
+    var slot = 0
+    while slot < old_count {
+        var numbered = old_slots._read_integer_at(slot * 8)
+        if numbered != 0 {
+            var tag = old_slots._read_unsigned_integer_at(slot * 8 + 4)
+            _place(numbered, tag)
+        }
+        slot = slot + 1
+    }
+}
+
+func _close_slot(emptied: Integer) {
+    var last = _slot_count - 1
+    var hole = emptied
+    var after = hole + 1
+    var next = after._bits_and(last)
+    var numbered = _slots._read_integer_at(next * 8)
+    while numbered != 0 {
+        var tag = _slots._read_unsigned_integer_at(next * 8 + 4)
+        var home = _home_of(tag)
+        var from_home = next - home
+        var from_hole = next - hole
+        var home_distance = from_home._bits_and(last)
+        var hole_distance = from_hole._bits_and(last)
+        if home_distance >= hole_distance {
+            _slots._write_integer_at(hole * 8, numbered)
+            _slots._write_unsigned_integer_at(hole * 8 + 4, tag)
+            hole = next
+        }
+        after = next + 1
+        next = after._bits_and(last)
+        numbered = _slots._read_integer_at(next * 8)
+    }
+    _slots._write_long_at(hole * 8, 0)
+}
+
+func _renumber_after(removed: Integer) {
+    var slot = 0
+    while slot < _slot_count {
+        var numbered = _slots._read_integer_at(slot * 8)
+        if numbered > removed {
+            _slots._write_integer_at(slot * 8, numbered - 1)
+        }
+        slot = slot + 1
+    }
 }

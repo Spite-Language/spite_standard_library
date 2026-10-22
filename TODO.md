@@ -79,7 +79,8 @@ compiler is retired, because the old compiler's rules are written against the pa
 - [x] **`List` and `Dictionary`.** They hold their items in a `Buffer`, and an item is of any type: the
       two methods that read and write an item, `_read_value` and `_write_value`, have no body and the
       compiler writes them. What the compiler still owes: the memory of a value of any type, and the
-      monomorphisation of a generic class, so that the size of an item is known.
+      monomorphisation of a generic class, so that the size of an item is known. The dictionary is a hash table over its two
+      lists ([the dictionary](docs/memory.md#the-dictionary)).
 - [ ] **`Vector` and `Items`.** They hold their items in a `Buffer`, the way the list does.
 - [x] **The classes that reach the operating system.** `Console`, `Program` and `Directory` are written
       here, and they reach the C library through `DynamicLibrary`. The parts each system has are in the
