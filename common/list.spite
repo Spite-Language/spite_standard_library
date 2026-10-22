@@ -132,11 +132,15 @@ func join(separator: String): String {
     var index = 0
     while index < _length {
         if index > 0 {
-            joined = joined.sum(separator)
+            joined._append_text(separator)
         }
         var held = _read_value(index)
-        var written = held.to_string()
-        joined = joined.sum(written)
+        if $element_type == String {
+            joined._append_text(held)
+        } else {
+            var written = held.to_string()
+            joined._append_text(written)
+        }
         index = index + 1
     }
     return joined

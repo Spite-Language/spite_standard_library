@@ -89,13 +89,88 @@ func _ready_to_grow(): String {
 }
 
 func _append_text(other: String) {
-    var count = other.length()
-    var index = 0
-    while index < count {
-        var code = other.code_at(index)
-        append_code(code)
-        index = index + 1
+    var count = other._length
+    var wanted = _length + count
+    _buffer.reserve(wanted)
+    _buffer._copy_bytes(_length, other._buffer, 0, count)
+    _buffer.item_count = wanted
+    _length = wanted
+}
+
+func _append_bytes(source: Buffer, start: Integer, count: Integer) {
+    var wanted = _length + count
+    _buffer.reserve(wanted)
+    _buffer._copy_bytes(_length, source, start, count)
+    _buffer.item_count = wanted
+    _length = wanted
+}
+
+func _make_room(added: Integer) {
+    var wanted = _length + added
+    _buffer.reserve(wanted)
+}
+
+func _make_room_for(added: Long) {
+    var wanted: Long = _length
+    wanted = wanted + added
+    var room: Integer = wanted
+    _buffer.reserve(room)
+}
+
+func _append_whole(value: Long) {
+    var digits = 1
+    var left = value / 10
+    while left != 0 {
+        digits = digits + 1
+        left = left / 10
     }
+    var start = _length
+    if value < 0 {
+        digits = digits + 1
+    }
+    var wanted = start + digits
+    _buffer.reserve(wanted)
+    if value < 0 {
+        _buffer._write_byte_at(start, 45)
+    }
+    var position = wanted - 1
+    left = value
+    var more = true
+    while more {
+        var remainder: Integer = left % 10
+        if remainder < 0 {
+            remainder = 0 - remainder
+        }
+        _buffer._write_byte_at(position, remainder + 48)
+        position = position - 1
+        left = left / 10
+        more = left != 0
+    }
+    _buffer.item_count = wanted
+    _length = wanted
+}
+
+func _append_unsigned_whole(value: UnsignedLong) {
+    var digits = 1
+    var left = value / 10
+    while left != 0 {
+        digits = digits + 1
+        left = left / 10
+    }
+    var wanted = _length + digits
+    _buffer.reserve(wanted)
+    var position = wanted - 1
+    left = value
+    var more = true
+    while more {
+        var remainder: Integer = left % 10
+        _buffer._write_byte_at(position, remainder + 48)
+        position = position - 1
+        left = left / 10
+        more = left != 0
+    }
+    _buffer.item_count = wanted
+    _length = wanted
 }
 
 func character_at(index: Integer): String {
@@ -111,15 +186,9 @@ func character_at(index: Integer): String {
 func slice(start: Integer, end: Integer): String {
     var first = _clamped(start)
     var last = _clamped(end)
-    if last <= first {
-        return String()
-    }
     var sliced = String()
-    var index = first
-    while index < last {
-        var code = code_at(index)
-        sliced.append_code(code)
-        index = index + 1
+    if last > first {
+        sliced._append_bytes(_buffer, first, last - first)
     }
     return sliced
 }
@@ -136,33 +205,53 @@ func _clamped(position: Integer): Integer {
 
 func sum(other: String): String {
     var summed = String()
-    var index = 0
-    while index < _length {
-        var code = code_at(index)
-        summed.append_code(code)
-        index = index + 1
-    }
-    var other_index = 0
-    while other_index < other.length() {
-        var code = other.code_at(other_index)
-        summed.append_code(code)
-        other_index = other_index + 1
-    }
+    var total = _length + other._length
+    summed._make_room(total)
+    summed._append_text(this)
+    summed._append_text(other)
     return summed
 }
 
 func equals(other: String): Boolean {
-    if _length != other.length() {
+    if _length != other._length {
         return false
     }
+    return _matches_at(0, other)
+}
+
+func _matches_at(start: Integer, text: String): Boolean {
+    var count = text._length
     var index = 0
-    while index < _length {
-        if code_at(index) != other.code_at(index) {
+    while index + 8 <= count {
+        if _buffer._read_long_at(start + index) != text._buffer._read_long_at(index) {
+            return false
+        }
+        index = index + 8
+    }
+    while index < count {
+        if _buffer._read_byte_at(start + index) != text._buffer._read_byte_at(index) {
             return false
         }
         index = index + 1
     }
     return true
+}
+
+func _found_at(text: String, from: Integer): Integer {
+    var count = text._length
+    var last = _length - count
+    if count == 0 {
+        return from
+    }
+    var lead = text._buffer._read_byte_at(0)
+    var index = from
+    while index <= last {
+        if _buffer._read_byte_at(index) == lead and _matches_at(index, text) {
+            return index
+        }
+        index = index + 1
+    }
+    return -1
 }
 
 func less_than(other: String): Boolean {
@@ -192,59 +281,24 @@ func greater_than(other: String): Boolean {
 }
 
 func starts_with(text: String): Boolean {
-    if text.length() > _length {
+    if text._length > _length {
         return false
     }
-    var index = 0
-    while index < text.length() {
-        if code_at(index) != text.code_at(index) {
-            return false
-        }
-        index = index + 1
-    }
-    return true
+    return _matches_at(0, text)
 }
 
 func ends_with(text: String): Boolean {
-    if text.length() > _length {
+    if text._length > _length {
         return false
     }
-    var index = text.length()
-    while index > 0 {
-        var text_length = text.length()
-        var mine = code_at(_length - text_length + index - 1)
-        var theirs = text.code_at(index - 1)
-        if mine != theirs {
-            return false
-        }
-        index = index - 1
-    }
-    return true
+    return _matches_at(_length - text._length, text)
 }
 
 func contains(text: String): Boolean {
-    if text.length() > _length {
+    if text._length > _length {
         return false
     }
-    var start = 0
-    while start + text.length() <= _length {
-        if _starts_the_text_at(start, text) {
-            return true
-        }
-        start = start + 1
-    }
-    return false
-}
-
-func _starts_the_text_at(start: Integer, text: String): Boolean {
-    var index = 0
-    while index < text.length() {
-        if code_at(start + index) != text.code_at(index) {
-            return false
-        }
-        index = index + 1
-    }
-    return true
+    return _found_at(text, 0) >= 0
 }
 
 func split(separator: String): List<String> {
@@ -252,20 +306,16 @@ func split(separator: String): List<String> {
         return _characters()
     }
     var pieces = List<String>()
-    var piece = String()
-    var index = 0
-    while index < _length {
-        if _starts_the_separator_at(index, separator) {
-            pieces.append(piece)
-            piece = String()
-            index = index + separator.length()
-        } else {
-            var code = code_at(index)
-            piece.append_code(code)
-            index = index + 1
-        }
+    var start = 0
+    var found = _found_at(separator, 0)
+    while found >= 0 {
+        var piece = slice(start, found)
+        pieces.append(piece)
+        start = found + separator._length
+        found = _found_at(separator, start)
     }
-    pieces.append(piece)
+    var rest = slice(start, _length)
+    pieces.append(rest)
     return pieces
 }
 
@@ -282,12 +332,6 @@ func _characters(): List<String> {
     return characters
 }
 
-func _starts_the_separator_at(index: Integer, separator: String): Boolean {
-    if index + separator.length() > _length {
-        return false
-    }
-    return _starts_the_text_at(index, separator)
-}
 
 func to_long(): Long? {
     var text = trim()
@@ -456,30 +500,23 @@ func to_debug(): String {
 }
 
 func index_of(text: String): Integer? {
-    var index = 0
-    while index + text.length() <= _length {
-        if _starts_the_text_at(index, text) {
-            return index
-        }
-        index = index + 1
-    }
-    return null
+    var found = _found_at(text, 0)
+    assert found >= 0
+    return found
 }
 
 func replace(from: String, to: String): String {
     crash not from.is_empty()
     var replaced = String()
-    var index = 0
-    while index < _length {
-        if _starts_the_separator_at(index, from) {
-            replaced = replaced.sum(to)
-            index = index + from.length()
-        } else {
-            var code = code_at(index)
-            replaced.append_code(code)
-            index = index + 1
-        }
+    var start = 0
+    var found = _found_at(from, 0)
+    while found >= 0 {
+        replaced._append_bytes(_buffer, start, found - start)
+        replaced._append_text(to)
+        start = found + from._length
+        found = _found_at(from, start)
     }
+    replaced._append_bytes(_buffer, start, _length - start)
     return replaced
 }
 
@@ -525,13 +562,13 @@ func lower_case(): String {
 
 func _shifted_case(first: Integer, last: Integer, shift: Integer): String {
     var shifted = String()
+    shifted._append_bytes(_buffer, 0, _length)
     var index = 0
     while index < _length {
-        var code = code_at(index)
+        var code: Integer = _buffer._read_byte_at(index)
         if code >= first and code <= last {
-            code = code + shift
+            shifted._buffer._write_byte_at(index, code + shift)
         }
-        shifted.append_code(code)
         index = index + 1
     }
     return shifted
@@ -551,9 +588,11 @@ func _inflected(to_plural: Boolean): String {
     var head = slice(0, start)
     var word = slice(start, own_length)
     var lower = word.lower_case()
-    var changed = _singular_word(lower)
+    var changed = lower
     if to_plural {
         changed = _plural_word(lower)
+    } else {
+        changed = _singular_word(lower)
     }
     return head + _cased_like(word, changed)
 }
@@ -912,11 +951,6 @@ func _ending(word: String, count: Integer, ending: String): String {
 
 func to_bytes(): Buffer {
     var bytes = Buffer(_length)
-    var index = 0
-    while index < _length {
-        var code = _buffer._read_byte_at(index)
-        bytes.append(code)
-        index = index + 1
-    }
+    bytes.append_bytes(_buffer, 0, _length)
     return bytes
 }
