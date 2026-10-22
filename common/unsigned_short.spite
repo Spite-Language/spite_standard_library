@@ -50,6 +50,87 @@ func absolute(): UnsignedShort {
     return _value()
 }
 
+func _bits_and(other: UnsignedShort): UnsignedShort
+
+func _bits_or(other: UnsignedShort): UnsignedShort
+
+func _bits_xor(other: UnsignedShort): UnsignedShort
+
+func _bits_not(): UnsignedShort
+
+func _shifted_left(count: Integer): UnsignedShort
+
+func _shifted_right(count: Integer): UnsignedShort
+
+func _wrapping_sum(other: UnsignedShort): UnsignedShort
+
+func _wrapping_subtract(other: UnsignedShort): UnsignedShort
+
+func _wrapping_multiply(other: UnsignedShort): UnsignedShort
+
+func bits_and(other: UnsignedShort): UnsignedShort {
+    return _bits_and(other)
+}
+
+func bits_or(other: UnsignedShort): UnsignedShort {
+    return _bits_or(other)
+}
+
+func bits_exclusive_or(other: UnsignedShort): UnsignedShort {
+    return _bits_xor(other)
+}
+
+func bits_inverted(): UnsignedShort {
+    return _bits_not()
+}
+
+func shifted_left(count: Integer): UnsignedShort {
+    crash count >= 0
+    if count >= 16 {
+        return 0
+    }
+    return _shifted_left(count)
+}
+
+func shifted_right(count: Integer): UnsignedShort {
+    crash count >= 0
+    if count >= 16 {
+        var almost = _shifted_right(15)
+        return almost._shifted_right(1)
+    }
+    return _shifted_right(count)
+}
+
+func wrapping_sum(other: UnsignedShort): UnsignedShort {
+    return _wrapping_sum(other)
+}
+
+func wrapping_subtract(other: UnsignedShort): UnsignedShort {
+    return _wrapping_subtract(other)
+}
+
+func wrapping_multiply(other: UnsignedShort): UnsignedShort {
+    return _wrapping_multiply(other)
+}
+
+func clamp(lowest: UnsignedShort, highest: UnsignedShort): UnsignedShort {
+    crash lowest <= highest
+    var value = _value()
+    if value < lowest {
+        return lowest
+    }
+    if value > highest {
+        return highest
+    }
+    return value
+}
+
+func _bits_as_signed(): Short
+
+func bits_as_signed(): Short {
+    return _bits_as_signed()
+}
+
 func sum(other: UnsignedShort): UnsignedShort {
     var left = _value()
     var right = other._value()

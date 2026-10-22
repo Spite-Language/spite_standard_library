@@ -55,6 +55,87 @@ func absolute(): Short {
     return zero - value
 }
 
+func _bits_and(other: Short): Short
+
+func _bits_or(other: Short): Short
+
+func _bits_xor(other: Short): Short
+
+func _bits_not(): Short
+
+func _shifted_left(count: Integer): Short
+
+func _shifted_right(count: Integer): Short
+
+func _wrapping_sum(other: Short): Short
+
+func _wrapping_subtract(other: Short): Short
+
+func _wrapping_multiply(other: Short): Short
+
+func bits_and(other: Short): Short {
+    return _bits_and(other)
+}
+
+func bits_or(other: Short): Short {
+    return _bits_or(other)
+}
+
+func bits_exclusive_or(other: Short): Short {
+    return _bits_xor(other)
+}
+
+func bits_inverted(): Short {
+    return _bits_not()
+}
+
+func shifted_left(count: Integer): Short {
+    crash count >= 0
+    if count >= 16 {
+        return 0
+    }
+    return _shifted_left(count)
+}
+
+func shifted_right(count: Integer): Short {
+    crash count >= 0
+    if count >= 16 {
+        var almost = _shifted_right(15)
+        return almost._shifted_right(1)
+    }
+    return _shifted_right(count)
+}
+
+func wrapping_sum(other: Short): Short {
+    return _wrapping_sum(other)
+}
+
+func wrapping_subtract(other: Short): Short {
+    return _wrapping_subtract(other)
+}
+
+func wrapping_multiply(other: Short): Short {
+    return _wrapping_multiply(other)
+}
+
+func clamp(lowest: Short, highest: Short): Short {
+    crash lowest <= highest
+    var value = _value()
+    if value < lowest {
+        return lowest
+    }
+    if value > highest {
+        return highest
+    }
+    return value
+}
+
+func _bits_as_unsigned(): UnsignedShort
+
+func bits_as_unsigned(): UnsignedShort {
+    return _bits_as_unsigned()
+}
+
 func sum(other: Short): Short {
     var left = _value()
     var right = other._value()

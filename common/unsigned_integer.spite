@@ -50,6 +50,87 @@ func absolute(): UnsignedInteger {
     return _value()
 }
 
+func _bits_and(other: UnsignedInteger): UnsignedInteger
+
+func _bits_or(other: UnsignedInteger): UnsignedInteger
+
+func _bits_xor(other: UnsignedInteger): UnsignedInteger
+
+func _bits_not(): UnsignedInteger
+
+func _shifted_left(count: Integer): UnsignedInteger
+
+func _shifted_right(count: Integer): UnsignedInteger
+
+func _wrapping_sum(other: UnsignedInteger): UnsignedInteger
+
+func _wrapping_subtract(other: UnsignedInteger): UnsignedInteger
+
+func _wrapping_multiply(other: UnsignedInteger): UnsignedInteger
+
+func bits_and(other: UnsignedInteger): UnsignedInteger {
+    return _bits_and(other)
+}
+
+func bits_or(other: UnsignedInteger): UnsignedInteger {
+    return _bits_or(other)
+}
+
+func bits_exclusive_or(other: UnsignedInteger): UnsignedInteger {
+    return _bits_xor(other)
+}
+
+func bits_inverted(): UnsignedInteger {
+    return _bits_not()
+}
+
+func shifted_left(count: Integer): UnsignedInteger {
+    crash count >= 0
+    if count >= 32 {
+        return 0
+    }
+    return _shifted_left(count)
+}
+
+func shifted_right(count: Integer): UnsignedInteger {
+    crash count >= 0
+    if count >= 32 {
+        var almost = _shifted_right(31)
+        return almost._shifted_right(1)
+    }
+    return _shifted_right(count)
+}
+
+func wrapping_sum(other: UnsignedInteger): UnsignedInteger {
+    return _wrapping_sum(other)
+}
+
+func wrapping_subtract(other: UnsignedInteger): UnsignedInteger {
+    return _wrapping_subtract(other)
+}
+
+func wrapping_multiply(other: UnsignedInteger): UnsignedInteger {
+    return _wrapping_multiply(other)
+}
+
+func clamp(lowest: UnsignedInteger, highest: UnsignedInteger): UnsignedInteger {
+    crash lowest <= highest
+    var value = _value()
+    if value < lowest {
+        return lowest
+    }
+    if value > highest {
+        return highest
+    }
+    return value
+}
+
+func _bits_as_signed(): Integer
+
+func bits_as_signed(): Integer {
+    return _bits_as_signed()
+}
+
 func sum(other: UnsignedInteger): UnsignedInteger {
     var left = _value()
     var right = other._value()

@@ -50,6 +50,87 @@ func absolute(): UnsignedLong {
     return _value()
 }
 
+func _bits_and(other: UnsignedLong): UnsignedLong
+
+func _bits_or(other: UnsignedLong): UnsignedLong
+
+func _bits_xor(other: UnsignedLong): UnsignedLong
+
+func _bits_not(): UnsignedLong
+
+func _shifted_left(count: Integer): UnsignedLong
+
+func _shifted_right(count: Integer): UnsignedLong
+
+func _wrapping_sum(other: UnsignedLong): UnsignedLong
+
+func _wrapping_subtract(other: UnsignedLong): UnsignedLong
+
+func _wrapping_multiply(other: UnsignedLong): UnsignedLong
+
+func bits_and(other: UnsignedLong): UnsignedLong {
+    return _bits_and(other)
+}
+
+func bits_or(other: UnsignedLong): UnsignedLong {
+    return _bits_or(other)
+}
+
+func bits_exclusive_or(other: UnsignedLong): UnsignedLong {
+    return _bits_xor(other)
+}
+
+func bits_inverted(): UnsignedLong {
+    return _bits_not()
+}
+
+func shifted_left(count: Integer): UnsignedLong {
+    crash count >= 0
+    if count >= 64 {
+        return 0
+    }
+    return _shifted_left(count)
+}
+
+func shifted_right(count: Integer): UnsignedLong {
+    crash count >= 0
+    if count >= 64 {
+        var almost = _shifted_right(63)
+        return almost._shifted_right(1)
+    }
+    return _shifted_right(count)
+}
+
+func wrapping_sum(other: UnsignedLong): UnsignedLong {
+    return _wrapping_sum(other)
+}
+
+func wrapping_subtract(other: UnsignedLong): UnsignedLong {
+    return _wrapping_subtract(other)
+}
+
+func wrapping_multiply(other: UnsignedLong): UnsignedLong {
+    return _wrapping_multiply(other)
+}
+
+func clamp(lowest: UnsignedLong, highest: UnsignedLong): UnsignedLong {
+    crash lowest <= highest
+    var value = _value()
+    if value < lowest {
+        return lowest
+    }
+    if value > highest {
+        return highest
+    }
+    return value
+}
+
+func _bits_as_signed(): Long
+
+func bits_as_signed(): Long {
+    return _bits_as_signed()
+}
+
 func sum(other: UnsignedLong): UnsignedLong {
     var left = _value()
     var right = other._value()

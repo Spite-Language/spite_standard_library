@@ -44,6 +44,14 @@ func _read_unsigned_long_at(at: Integer): UnsignedLong
 
 func _write_unsigned_long_at(at: Integer, value: UnsignedLong)
 
+func _read_float_at(at: Integer): Float
+
+func _write_float_at(at: Integer, value: Float)
+
+func _read_double_at(at: Integer): Double
+
+func _write_double_at(at: Integer, value: Double)
+
 func count(): Integer {
     return item_count
 }
@@ -457,6 +465,102 @@ func append_unsigned_long_big_endian(value: UnsignedLong) {
 func write_unsigned_long_big_endian_at(at: Integer, value: UnsignedLong) {
     crash _inside(at, 8)
     _write_unsigned_long_at(at, value)
+    _reverse_in_place(at, 8)
+}
+
+func read_float_little_endian(): Float? {
+    assert _inside(position, 4)
+    var read = read_float_little_endian_at(position)
+    position = position + 4
+    return read
+}
+
+func read_float_little_endian_at(at: Integer): Float? {
+    assert _inside(at, 4)
+    return _read_float_at(at)
+}
+
+func append_float_little_endian(value: Float) {
+    reserve(item_count + 4)
+    item_count = item_count + 4
+    write_float_little_endian_at(item_count - 4, value)
+}
+
+func write_float_little_endian_at(at: Integer, value: Float) {
+    crash _inside(at, 4)
+    _write_float_at(at, value)
+}
+
+func read_float_big_endian(): Float? {
+    assert _inside(position, 4)
+    var read = read_float_big_endian_at(position)
+    position = position + 4
+    return read
+}
+
+func read_float_big_endian_at(at: Integer): Float? {
+    assert _inside(at, 4)
+    var reversed = _reversed(at, 4)
+    return reversed._read_float_at(0)
+}
+
+func append_float_big_endian(value: Float) {
+    reserve(item_count + 4)
+    item_count = item_count + 4
+    write_float_big_endian_at(item_count - 4, value)
+}
+
+func write_float_big_endian_at(at: Integer, value: Float) {
+    crash _inside(at, 4)
+    _write_float_at(at, value)
+    _reverse_in_place(at, 4)
+}
+
+func read_double_little_endian(): Double? {
+    assert _inside(position, 8)
+    var read = read_double_little_endian_at(position)
+    position = position + 8
+    return read
+}
+
+func read_double_little_endian_at(at: Integer): Double? {
+    assert _inside(at, 8)
+    return _read_double_at(at)
+}
+
+func append_double_little_endian(value: Double) {
+    reserve(item_count + 8)
+    item_count = item_count + 8
+    write_double_little_endian_at(item_count - 8, value)
+}
+
+func write_double_little_endian_at(at: Integer, value: Double) {
+    crash _inside(at, 8)
+    _write_double_at(at, value)
+}
+
+func read_double_big_endian(): Double? {
+    assert _inside(position, 8)
+    var read = read_double_big_endian_at(position)
+    position = position + 8
+    return read
+}
+
+func read_double_big_endian_at(at: Integer): Double? {
+    assert _inside(at, 8)
+    var reversed = _reversed(at, 8)
+    return reversed._read_double_at(0)
+}
+
+func append_double_big_endian(value: Double) {
+    reserve(item_count + 8)
+    item_count = item_count + 8
+    write_double_big_endian_at(item_count - 8, value)
+}
+
+func write_double_big_endian_at(at: Integer, value: Double) {
+    crash _inside(at, 8)
+    _write_double_at(at, value)
     _reverse_in_place(at, 8)
 }
 

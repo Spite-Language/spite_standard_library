@@ -2,6 +2,445 @@
 
 var _buffer = Buffer(8)
 
+func _value(): Double {
+    return _buffer._read_double_at(0)
+}
+
+func _bits(): Long
+
+func _square_root(): Double
+
+func bits(): Long {
+    return _bits()
+}
+
+func square_root(): Double {
+    return _square_root()
+}
+
 func to_buffer(): Buffer {
     return _buffer.copy_first_bytes(8)
+}
+
+func to_tiny(): Tiny {
+    return _value()
+}
+
+func to_short(): Short {
+    return _value()
+}
+
+func to_integer(): Integer {
+    return _value()
+}
+
+func to_long(): Long {
+    return _value()
+}
+
+func to_byte(): Byte {
+    return _value()
+}
+
+func to_unsigned_short(): UnsignedShort {
+    return _value()
+}
+
+func to_unsigned_integer(): UnsignedInteger {
+    return _value()
+}
+
+func to_float(): Float {
+    return _value()
+}
+
+func to_double(): Double {
+    return _value()
+}
+
+func absolute(): Double {
+    var value = _value()
+    if value < 0.0 {
+        var zero: Double = 0.0
+        return zero - value
+    }
+    return value
+}
+
+func sum(other: Double): Double {
+    var left = _value()
+    var right = other._value()
+    return left + right
+}
+
+func subtract(other: Double): Double {
+    var left = _value()
+    var right = other._value()
+    return left - right
+}
+
+func multiply(other: Double): Double {
+    var left = _value()
+    var right = other._value()
+    return left * right
+}
+
+func divide(other: Double): Double {
+    var left = _value()
+    var right = other._value()
+    return left / right
+}
+
+func minimum(other: Double): Double {
+    var left = _value()
+    var right = other._value()
+    if right < left {
+        return right
+    }
+    return left
+}
+
+func maximum(other: Double): Double {
+    var left = _value()
+    var right = other._value()
+    if right > left {
+        return right
+    }
+    return left
+}
+
+func equals(other: Double): Boolean {
+    var left = _value()
+    var right = other._value()
+    return left == right
+}
+
+func less_than(other: Double): Boolean {
+    var left = _value()
+    var right = other._value()
+    return left < right
+}
+
+func greater_than(other: Double): Boolean {
+    var left = _value()
+    var right = other._value()
+    return left > right
+}
+
+func to_string(): String {
+    var value = _value()
+    return _shortest_text(value, 9007199254740992, -1074, 17)
+}
+
+func to_debug(): String {
+    return to_string()
+}
+
+func _shortest_text(value: Double, significand_limit: Long, lowest_exponent: Long, most_digits: Long): String {
+    var bit_pattern = value.bits()
+    if bit_pattern < 0 {
+        var zero: Double = 0.0
+        var magnitude_value = zero - value
+        var magnitude = _shortest_text(magnitude_value, significand_limit, lowest_exponent, most_digits)
+        if magnitude == "nan" {
+            return magnitude
+        }
+        return "-{magnitude}"
+    }
+    var field = bit_pattern.shifted_right(52)
+    var significand = bit_pattern.bits_and(4503599627370495)
+    if field == 2047 and significand == 0 {
+        return "inf"
+    }
+    if field == 2047 {
+        return "nan"
+    }
+    if bit_pattern == 0 {
+        return "0"
+    }
+    var exponent: Long = -1074
+    if field > 0 {
+        significand = significand + 4503599627370496
+        exponent = field - 1075
+    }
+    while significand >= significand_limit or exponent < lowest_exponent {
+        significand = significand / 2
+        exponent = exponent + 1
+    }
+    var digits = _exact_digits(significand, exponent)
+    var digits_exponent = _decimal_exponent(digits, exponent)
+    var upper = _exact_digits(significand * 2 + 1, exponent - 1)
+    var upper_exponent = _decimal_exponent(upper, exponent - 1)
+    var lower = _exact_digits(significand * 2 - 1, exponent - 1)
+    var lower_exponent = _decimal_exponent(lower, exponent - 1)
+    if significand * 2 == significand_limit and exponent > lowest_exponent {
+        lower = _exact_digits(significand * 4 - 1, exponent - 2)
+        lower_exponent = _decimal_exponent(lower, exponent - 2)
+    }
+    var even = significand % 2 == 0
+    var precision: Long = 1
+    while precision <= most_digits {
+        var candidate = _rounded_digits(digits, precision)
+        var candidate_exponent = digits_exponent + candidate.length() - precision
+        if precision < candidate.length() {
+            candidate = candidate.slice(0, precision)
+        }
+        candidate = _without_trailing_zeros(candidate)
+        var fixed = _is_fixed(candidate_exponent, precision)
+        var above_lower = _compared(candidate, candidate_exponent, lower, lower_exponent)
+        var below_upper = _compared(upper, upper_exponent, candidate, candidate_exponent)
+        var clears_lower = above_lower > 0 or above_lower == 0 and even
+        var clears_upper = below_upper > 0 or below_upper == 0 and even
+        if fixed and clears_lower and clears_upper {
+            return _fixed_text(candidate, candidate_exponent)
+        }
+        precision = precision + 1
+    }
+    var fallback = _rounded_digits(digits, most_digits)
+    var fallback_exponent = digits_exponent + fallback.length() - most_digits
+    if most_digits < fallback.length() {
+        fallback = fallback.slice(0, most_digits)
+    }
+    fallback = _without_trailing_zeros(fallback)
+    if _is_fixed(fallback_exponent, most_digits) {
+        return _fixed_text(fallback, fallback_exponent)
+    }
+    return _scientific_text(fallback, fallback_exponent)
+}
+
+func _exact_digits(multiplier: Long, exponent: Long): String {
+    var twos: Long = 0
+    var fives: Long = 0
+    var zero: Long = 0
+    if exponent > 0 {
+        twos = exponent
+    } else {
+        fives = zero - exponent
+    }
+    var limbs = List<Long>()
+    var rest = multiplier
+    while rest > 0 {
+        limbs.append(rest % 1000000000)
+        rest = rest / 1000000000
+    }
+    while twos > 0 {
+        var step = twos
+        if step > 30 {
+            step = 30
+        }
+        var power_of_two = _power(2, step)
+        _multiply_limbs(limbs, power_of_two)
+        twos = twos - step
+    }
+    while fives > 0 {
+        var step = fives
+        if step > 13 {
+            step = 13
+        }
+        var power_of_five = _power(5, step)
+        _multiply_limbs(limbs, power_of_five)
+        fives = fives - step
+    }
+    var digits = String()
+    var limb_index = limbs.count() - 1
+    while limb_index >= 0 {
+        var limb = limbs[limb_index]
+        crash limb
+        var divisor: Long = 100000000
+        while divisor > 0 {
+            var digit = limb / divisor % 10
+            var started = not digits.is_empty() or digit != 0
+            if started {
+                var code: Integer = digit + 48
+                digits.append_code(code)
+            }
+            divisor = divisor / 10
+        }
+        limb_index = limb_index - 1
+    }
+    if digits.is_empty() {
+        return "0"
+    }
+    return digits
+}
+
+func _multiply_limbs(limbs: List<Long>, factor: Long) {
+    var carry: Long = 0
+    var index = 0
+    while index < limbs.count() {
+        var limb = limbs[index]
+        var product = limb * factor + carry
+        limbs[index] = product % 1000000000
+        carry = product / 1000000000
+        index = index + 1
+    }
+    while carry > 0 {
+        limbs.append(carry % 1000000000)
+        carry = carry / 1000000000
+    }
+}
+
+func _power(base: Long, times: Long): Long {
+    var result: Long = 1
+    var remaining = times
+    while remaining > 0 {
+        result = result * base
+        remaining = remaining - 1
+    }
+    return result
+}
+
+func _decimal_exponent(digits: String, exponent: Long): Long {
+    var length: Long = digits.length()
+    if exponent > 0 {
+        return length - 1
+    }
+    return exponent + length - 1
+}
+
+func _rounded_digits(digits: String, count: Long): String {
+    if count >= digits.length() {
+        return digits
+    }
+    var codes = List<Integer>()
+    codes.append(48)
+    var index = 0
+    while index < count {
+        var code = digits.code_at(index)
+        codes.append(code)
+        index = index + 1
+    }
+    if _rounds_up(digits, count) {
+        var position: Integer = count
+        while _code_in(codes, position) == 57 {
+            codes[position] = 48
+            position = position - 1
+        }
+        var raised = _code_in(codes, position)
+        codes[position] = raised + 1
+    }
+    var rounded = String()
+    var start = 1
+    var first = codes[0]
+    crash first
+    if first != 48 {
+        start = 0
+    }
+    index = start
+    while index < codes.count() {
+        var kept = codes[index]
+        rounded.append_code(kept)
+        index = index + 1
+    }
+    return rounded
+}
+
+func _code_in(codes: List<Integer>, position: Integer): Integer {
+    var code = codes[position]
+    crash code
+    return code
+}
+
+func _rounds_up(digits: String, count: Long): Boolean {
+    var next = digits.code_at(count)
+    if next != 53 {
+        return next > 53
+    }
+    var index = count + 1
+    while index < digits.length() {
+        if digits.code_at(index) != 48 {
+            return true
+        }
+        index = index + 1
+    }
+    var last = digits.code_at(count - 1)
+    return last % 2 == 1
+}
+
+func _without_trailing_zeros(digits: String): String {
+    var end = digits.length()
+    while end > 1 and digits.code_at(end - 1) == 48 {
+        end = end - 1
+    }
+    return digits.slice(0, end)
+}
+
+func _is_fixed(exponent: Long, precision: Long): Boolean {
+    return exponent >= -4 and exponent < precision
+}
+
+func _compared(left: String, left_exponent: Long, right: String, right_exponent: Long): Long {
+    if left_exponent > right_exponent {
+        return 1
+    }
+    if left_exponent < right_exponent {
+        return -1
+    }
+    var index = 0
+    while index < left.length() or index < right.length() {
+        var left_code = _digit_code(left, index)
+        var right_code = _digit_code(right, index)
+        if left_code > right_code {
+            return 1
+        }
+        if left_code < right_code {
+            return -1
+        }
+        index = index + 1
+    }
+    return 0
+}
+
+func _digit_code(digits: String, index: Integer): Integer {
+    if index < digits.length() {
+        return digits.code_at(index)
+    }
+    return 48
+}
+
+func _zeros(count: Long): String {
+    var text = String()
+    var index: Long = 0
+    while index < count {
+        text.append_code(48)
+        index = index + 1
+    }
+    return text
+}
+
+func _fixed_text(digits: String, exponent: Long): String {
+    var length: Long = digits.length()
+    if exponent < 0 {
+        var zero: Long = 0
+        var leading = _zeros(zero - exponent - 1)
+        return "0.{leading}{digits}"
+    }
+    if exponent + 1 >= length {
+        var trailing = _zeros(exponent + 1 - length)
+        return "{digits}{trailing}"
+    }
+    var whole = digits.slice(0, exponent + 1)
+    var fraction = digits.slice(exponent + 1, length)
+    return "{whole}.{fraction}"
+}
+
+func _scientific_text(digits: String, exponent: Long): String {
+    var mantissa = digits.slice(0, 1)
+    if digits.length() > 1 {
+        var length = digits.length()
+        var rest = digits.slice(1, length)
+        mantissa = "{mantissa}.{rest}"
+    }
+    var sign = "+"
+    var magnitude = exponent
+    if exponent < 0 {
+        sign = "-"
+        var zero: Long = 0
+        magnitude = zero - exponent
+    }
+    var padding = ""
+    if magnitude < 10 {
+        padding = "0"
+    }
+    return "{mantissa}e{sign}{padding}{magnitude}"
 }

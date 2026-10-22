@@ -31,7 +31,6 @@ func debug(...values: List<Debuggable>) {
             _write_to(" ", 1)
         }
         var value = values[index]
-        crash value
         var text = value.to_debug()
         _write_to(text, 1)
         index = index + 1
@@ -46,7 +45,6 @@ func _write_values(values: List<Printable>, stream: Integer) {
             _write_to(" ", stream)
         }
         var value = values[index]
-        crash value
         var text = value.to_string()
         _write_to(text, stream)
         index = index + 1

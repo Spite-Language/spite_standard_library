@@ -50,6 +50,87 @@ func absolute(): Byte {
     return _value()
 }
 
+func _bits_and(other: Byte): Byte
+
+func _bits_or(other: Byte): Byte
+
+func _bits_xor(other: Byte): Byte
+
+func _bits_not(): Byte
+
+func _shifted_left(count: Integer): Byte
+
+func _shifted_right(count: Integer): Byte
+
+func _wrapping_sum(other: Byte): Byte
+
+func _wrapping_subtract(other: Byte): Byte
+
+func _wrapping_multiply(other: Byte): Byte
+
+func bits_and(other: Byte): Byte {
+    return _bits_and(other)
+}
+
+func bits_or(other: Byte): Byte {
+    return _bits_or(other)
+}
+
+func bits_exclusive_or(other: Byte): Byte {
+    return _bits_xor(other)
+}
+
+func bits_inverted(): Byte {
+    return _bits_not()
+}
+
+func shifted_left(count: Integer): Byte {
+    crash count >= 0
+    if count >= 8 {
+        return 0
+    }
+    return _shifted_left(count)
+}
+
+func shifted_right(count: Integer): Byte {
+    crash count >= 0
+    if count >= 8 {
+        var almost = _shifted_right(7)
+        return almost._shifted_right(1)
+    }
+    return _shifted_right(count)
+}
+
+func wrapping_sum(other: Byte): Byte {
+    return _wrapping_sum(other)
+}
+
+func wrapping_subtract(other: Byte): Byte {
+    return _wrapping_subtract(other)
+}
+
+func wrapping_multiply(other: Byte): Byte {
+    return _wrapping_multiply(other)
+}
+
+func clamp(lowest: Byte, highest: Byte): Byte {
+    crash lowest <= highest
+    var value = _value()
+    if value < lowest {
+        return lowest
+    }
+    if value > highest {
+        return highest
+    }
+    return value
+}
+
+func _bits_as_signed(): Tiny
+
+func bits_as_signed(): Tiny {
+    return _bits_as_signed()
+}
+
 func sum(other: Byte): Byte {
     var left = _value()
     var right = other._value()

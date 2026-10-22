@@ -230,3 +230,96 @@ func to_string(): String {
 func to_debug(): String {
     return to_string()
 }
+
+func index_of(text: String): Integer? {
+    var index = 0
+    while index + text.length() <= _length {
+        if _starts_the_text_at(index, text) {
+            return index
+        }
+        index = index + 1
+    }
+    return null
+}
+
+func replace(from: String, to: String): String {
+    crash not from.is_empty()
+    var replaced = String()
+    var index = 0
+    while index < _length {
+        if _starts_the_separator_at(index, from) {
+            replaced = replaced.sum(to)
+            index = index + from.length()
+        } else {
+            var code = code_at(index)
+            replaced.append_code(code)
+            index = index + 1
+        }
+    }
+    return replaced
+}
+
+func lines(): List<String> {
+    var pieces = split("\n")
+    var index = 0
+    while index < pieces.count() {
+        var piece = pieces[index]
+        if piece.ends_with("\r") {
+            var piece_length = piece.length()
+            var kept = piece.slice(0, piece_length - 1)
+            pieces[index] = kept
+        }
+        index = index + 1
+    }
+    return pieces
+}
+
+func _is_space_at(index: Integer): Boolean {
+    var code = code_at(index)
+    return code == 32 or code == 9 or code == 10 or code == 13
+}
+
+func trim(): String {
+    var start = 0
+    while start < _length and _is_space_at(start) {
+        start = start + 1
+    }
+    var end = _length
+    while end > start and _is_space_at(end - 1) {
+        end = end - 1
+    }
+    return slice(start, end)
+}
+
+func upper_case(): String {
+    return _shifted_case(97, 122, -32)
+}
+
+func lower_case(): String {
+    return _shifted_case(65, 90, 32)
+}
+
+func _shifted_case(first: Integer, last: Integer, shift: Integer): String {
+    var shifted = String()
+    var index = 0
+    while index < _length {
+        var code = code_at(index)
+        if code >= first and code <= last {
+            code = code + shift
+        }
+        shifted.append_code(code)
+        index = index + 1
+    }
+    return shifted
+}
+
+func to_bytes(): Buffer {
+    var bytes = Buffer(_length)
+    var index = 0
+    while index < _length {
+        var code = _buffer._read_byte_at(index)
+        bytes.append(code)
+        index = index + 1
+    }
+    return bytes
+}

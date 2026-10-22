@@ -2,6 +2,116 @@
 
 var _buffer = Buffer(4)
 
+func _value(): Float {
+    return _buffer._read_float_at(0)
+}
+
+func _bits(): UnsignedInteger
+
+func _square_root(): Float
+
+func bits(): UnsignedInteger {
+    return _bits()
+}
+
+func square_root(): Float {
+    return _square_root()
+}
+
 func to_buffer(): Buffer {
     return _buffer.copy_first_bytes(4)
+}
+
+func to_integer(): Integer {
+    return _value()
+}
+
+func to_long(): Long {
+    return _value()
+}
+
+func to_float(): Float {
+    return _value()
+}
+
+func to_double(): Double {
+    return _value()
+}
+
+func absolute(): Float {
+    var value = _value()
+    if value < 0.0 {
+        var zero: Float = 0.0
+        return zero - value
+    }
+    return value
+}
+
+func sum(other: Float): Float {
+    var left = _value()
+    var right = other._value()
+    return left + right
+}
+
+func subtract(other: Float): Float {
+    var left = _value()
+    var right = other._value()
+    return left - right
+}
+
+func multiply(other: Float): Float {
+    var left = _value()
+    var right = other._value()
+    return left * right
+}
+
+func divide(other: Float): Float {
+    var left = _value()
+    var right = other._value()
+    return left / right
+}
+
+func minimum(other: Float): Float {
+    var left = _value()
+    var right = other._value()
+    if right < left {
+        return right
+    }
+    return left
+}
+
+func maximum(other: Float): Float {
+    var left = _value()
+    var right = other._value()
+    if right > left {
+        return right
+    }
+    return left
+}
+
+func equals(other: Float): Boolean {
+    var left = _value()
+    var right = other._value()
+    return left == right
+}
+
+func less_than(other: Float): Boolean {
+    var left = _value()
+    var right = other._value()
+    return left < right
+}
+
+func greater_than(other: Float): Boolean {
+    var left = _value()
+    var right = other._value()
+    return left > right
+}
+
+func to_string(): String {
+    var wide: Double = _value()
+    return wide._shortest_text(wide, 16777216, -149, 9)
+}
+
+func to_debug(): String {
+    return to_string()
 }
