@@ -12,6 +12,8 @@ func Buffer(size: Integer) {
 
 func _resize_room(size: Integer)
 
+func _copy_bytes(at: Integer, source: Buffer, source_at: Integer, wanted: Integer)
+
 func _read_byte_at(at: Integer): Byte
 
 func _write_byte_at(at: Integer, value: Byte)
@@ -597,14 +599,10 @@ func read_bytes_at(at: Integer, wanted: Integer): Buffer? {
 
 func append_bytes(other: Buffer, start: Integer, wanted: Integer) {
     crash start >= 0 and wanted >= 0 and start <= other.item_count - wanted
-    reserve(item_count + wanted)
-    var index = 0
-    while index < wanted {
-        var read = other._read_byte_at(start + index)
-        _write_byte_at(item_count, read)
-        item_count = item_count + 1
-        index = index + 1
-    }
+    var kept = item_count
+    reserve(kept + wanted)
+    _copy_bytes(kept, other, start, wanted)
+    item_count = kept + wanted
 }
 
 func to_utf8_text(): String? {
@@ -620,13 +618,8 @@ func text(at: Integer, wanted: Integer): String? {
         assert sequence_length != 0
         index = index + sequence_length
     }
-    var made = ""
-    index = at
-    while index < end {
-        var read = _read_byte_at(index)
-        made.append_code(read)
-        index = index + 1
-    }
+    var made = String()
+    made._append_bytes(this, at, wanted)
     return made
 }
 

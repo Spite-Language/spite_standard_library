@@ -243,24 +243,9 @@ func greater_than(other: UnsignedShort): Boolean {
 }
 
 func to_string(): String {
-    var value = _value()
-    if value == 0 {
-        return "0"
-    }
-    var digits = Buffer(20)
-    while value != 0 {
-        var left_over = value % 10
-        var code: Integer = left_over
-        digits.append(code + 48)
-        value = value / 10
-    }
-    var made = ""
-    var index = digits.count() - 1
-    while index >= 0 {
-        var digit = digits._read_byte_at(index)
-        made.append_code(digit)
-        index = index - 1
-    }
+    var value: Long = _value()
+    var made = String()
+    made._append_whole(value)
     return made
 }
 
