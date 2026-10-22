@@ -1,6 +1,8 @@
 var _name = ""
 var _arguments = List<Spite.Argument>()
 var _returns: Spite.Class? = null
+var _is_resumable = false
+var _returned_literal: String? = null
 
 func Function(starting_name: String) {
     _name = starting_name
@@ -16,6 +18,15 @@ func get_arguments(): List<Spite.Argument> {
 
 func get_returns(): Spite.Class? {
     return _returns
+}
+
+func get_is_resumable(): Boolean {
+    return _is_resumable
+}
+
+func get_returned_literal(): String {
+    crash _returned_literal
+    return _returned_literal
 }
 
 func argument_count(): Integer {

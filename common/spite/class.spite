@@ -5,6 +5,8 @@ var _is_singleton = false
 var _is_enum = false
 var _is_list = false
 var _is_dictionary = false
+var _is_stateful = false
+var _is_fixed_size = false
 var _element_type: Spite.Class? = null
 var _attributes = List<Spite.AttributeDeclaration>()
 var _functions = List<Spite.Function>()
@@ -40,6 +42,14 @@ func get_is_singleton(): Boolean {
 
 func get_is_enum(): Boolean {
     return _is_enum
+}
+
+func get_is_stateful(): Boolean {
+    return _is_stateful
+}
+
+func get_is_fixed_size(): Boolean {
+    return _is_fixed_size
 }
 
 func get_is_list(): Boolean {
