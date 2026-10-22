@@ -3,6 +3,7 @@ var _name_with_namespaces = ""
 var _parent: Spite.Namespace? = null
 var _classes = List<Spite.Class>()
 var _namespaces = List<Spite.Namespace>()
+var _enums = List<Spite.Class>()
 
 func Namespace(starting_name: String, starting_name_with_namespaces: String) {
     _name = starting_name
@@ -23,6 +24,10 @@ func get_parent(): Spite.Namespace? {
 
 func get_classes(): List<Spite.Class> {
     return _classes
+}
+
+func get_enums(): List<Spite.Class> {
+    return _enums
 }
 
 func get_namespaces(): List<Spite.Namespace> {

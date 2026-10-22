@@ -10,6 +10,8 @@ var _is_fixed_size = false
 var _element_type: Spite.Class? = null
 var _attributes = List<Spite.AttributeDeclaration>()
 var _functions = List<Spite.Function>()
+var _values = List<String>()
+var _source_folder = ""
 
 func Class(starting_name: String) {
     _name = starting_name
@@ -38,6 +40,14 @@ func get_functions(): List<Spite.Function> {
 
 func get_is_singleton(): Boolean {
     return _is_singleton
+}
+
+func source_folder(): String {
+    return _source_folder
+}
+
+func get_values(): List<String> {
+    return _values
 }
 
 func get_is_enum(): Boolean {
