@@ -103,7 +103,7 @@ func has_function(name: String): Boolean {
 }
 
 func argument_count(name: String): Integer {
-    crash not _has_no_stand_in
+    crash has_function(name)
     var index = 0
     while index < _functions.count() {
         var function = _functions[index]
@@ -112,7 +112,7 @@ func argument_count(name: String): Integer {
         }
         index = index + 1
     }
-    return 0
+    crash
 }
 
 func function_waits(name: String): Boolean {
