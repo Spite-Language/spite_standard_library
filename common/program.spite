@@ -1,6 +1,6 @@
 singleton
 
-var library = DynamicLibrary("ucrtbase.dll")
+var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
 
 func exit(code: Integer) {
     library.exit(code)

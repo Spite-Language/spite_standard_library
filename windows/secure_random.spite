@@ -1,4 +1,4 @@
-var _crypt = DynamicLibrary("bcrypt.dll")
+var _crypt = DynamicLibrary("bcrypt.dll", 'identity', "")
 
 func _fill(room: Buffer, count: Integer) {
     var no_algorithm: Long = 0

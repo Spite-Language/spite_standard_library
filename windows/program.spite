@@ -1,4 +1,4 @@
-var kernel = DynamicLibrary("kernel32.dll")
+var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
 
 func sleep(milliseconds: Integer) {
     kernel.Sleep(milliseconds)

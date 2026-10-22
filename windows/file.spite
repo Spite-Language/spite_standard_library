@@ -1,5 +1,5 @@
-var library = DynamicLibrary("ucrtbase.dll")
-var kernel = DynamicLibrary("kernel32.dll")
+var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
+var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
 
 func exists(): Boolean {
     var attributes = kernel.GetFileAttributesA(path)

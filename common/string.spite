@@ -221,7 +221,7 @@ func to_double(): Double? {
     var text = trim()
     var valid = text._is_decimal()
     assert valid
-    var library = DynamicLibrary("ucrtbase.dll")
+    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
     var end: Long = 0
     return library.strtod_as_double(text, end)
 }
@@ -230,7 +230,7 @@ func to_float(): Float? {
     var text = trim()
     var valid = text._is_decimal()
     assert valid
-    var library = DynamicLibrary("ucrtbase.dll")
+    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
     var end: Long = 0
     return library.strtof_as_float(text, end)
 }

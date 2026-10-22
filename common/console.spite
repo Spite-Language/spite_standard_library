@@ -8,7 +8,7 @@ type Debuggable {
     to_debug(): String
 }
 
-var library = DynamicLibrary("ucrtbase.dll")
+var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
 
 func print(...values: List<Printable>) {
     _write_values(values, 1)

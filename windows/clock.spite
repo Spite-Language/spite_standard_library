@@ -1,4 +1,4 @@
-var kernel = DynamicLibrary("kernel32.dll")
+var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
 var _ticks_per_second: Long = 1
 var _reading = Buffer(8)
 
