@@ -130,3 +130,20 @@ values at the place the key was found.
 The compiler turns an index into a call: `a[b]` is `a.get_at(b)`, and `a[b] = v` is `a.set_at(b, v)`,
 so a dictionary answers `get_at` and `set_at` with a key and a value.
 
+
+## The weak reference
+
+A `Weak<T>` holds an object without counting it, so it never keeps the object alive. `Weak(object)`
+makes one, `Weak<T>(null)` an empty one, and `get()` answers the object while something else keeps it,
+and `null` once it is gone. The weak reference holds a small box the compiler makes for the object,
+and the compiler empties the box when the object is freed:
+
+```spite
+func _box_of(object: $object_type?): Spite.Internal.WeakBox?
+
+func _object_in(box: Spite.Internal.WeakBox?): $object_type?
+```
+
+A deep copy of a weak reference holds the copy of its object when the same copy made one, and the
+object itself otherwise: `_deep_copy_in` makes the copy and lets the copy table settle it once every
+object is copied.

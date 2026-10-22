@@ -1,0 +1,16 @@
+# ../docs/foreign_libraries.md#calling-back-into-spite
+
+var address: Long = 0
+var context: Long = 0
+var _function: Spite.Function? = null
+var _cell: Long = 0
+
+func ForeignCallback(function: Spite.Function, _where_context: Symbol) {
+    _function = function
+}
+
+func drop() {
+    _let_go(_cell)
+}
+
+func _let_go(cell: Long)

@@ -1,0 +1,42 @@
+# ../docs/memory.md#the-weak-reference
+
+generic $object_type
+
+var _box: Spite.Internal.WeakBox? = null
+
+func Weak(object: $object_type?) {
+    _box = _box_of(object)
+}
+
+func get(): $object_type? {
+    return _object_in(_box)
+}
+
+func deep_copy(): Weak<$object_type> {
+    var held = get()
+    return Weak<$object_type>(held)
+}
+
+func _deep_copy_in(table: Spite.Internal.CopyTable): Weak<$object_type> {
+    var held = get()
+    var copied = Weak<$object_type>(held)
+    table.later(copied._settle_in)
+    return copied
+}
+
+func _settle_in(table: Spite.Internal.CopyTable) {
+    var held = get()
+    var address = _address_of(held)
+    var copied_address = table.copy_at(address)
+    assert copied_address
+    var copied = _object_at(copied_address)
+    _box = _box_of(copied)
+}
+
+func _box_of(object: $object_type?): Spite.Internal.WeakBox?
+
+func _object_in(box: Spite.Internal.WeakBox?): $object_type?
+
+func _address_of(object: $object_type?): Long
+
+func _object_at(address: Long): $object_type?
