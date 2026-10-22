@@ -2,9 +2,11 @@
 
 generic $element_type
 
-var _buffer = Buffer(1024)
+var _buffer = Buffer(0)
 var _length = 0
-var _capacity = 1024
+var _capacity = 0
+
+func _item_size(): Integer
 
 func _read_value(index: Integer): $element_type
 
@@ -29,16 +31,10 @@ func prepend(value: $element_type) {
 }
 
 func insert(index: Integer, value: $element_type) {
-    var position = index
-    if position < 0 {
-        position = 0
-    }
-    if position > _length {
-        position = _length
-    }
+    crash index >= 0 and index <= _length
     make_room()
-    _move_values(position + 1, position, _length - position)
-    _write_value(position, value)
+    _move_values_up(index, _length - index)
+    _write_value(index, value)
     _length = _length + 1
 }
 
@@ -156,14 +152,29 @@ func each(callback: Spite.Function<$element_type>) {
 }
 
 func make_room() {
-    if _length == _capacity {
-        reserve(_length + 1)
-    }
+    reserve(_length + 1)
 }
 
 func reserve(wanted: Integer) {
-    if wanted > _capacity {
-        crash wanted <= _capacity
+    assert wanted > _capacity
+    var grown = _capacity * 2
+    if grown < wanted {
+        grown = wanted
+    }
+    if grown < 4 {
+        grown = 4
+    }
+    var size = _item_size()
+    _buffer.reserve(grown * size)
+    _capacity = grown
+}
+
+func _move_values_up(from: Integer, wanted: Integer) {
+    var index = wanted - 1
+    while index >= 0 {
+        var held = _read_value(from + index)
+        _write_value(from + index + 1, held)
+        index = index - 1
     }
 }
 

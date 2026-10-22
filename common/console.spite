@@ -1,53 +1,59 @@
 singleton
 
+type Printable {
+    to_string(): String
+}
+
+type Debuggable {
+    to_debug(): String
+}
+
 var library = DynamicLibrary("ucrtbase.dll")
-var output = 0
-var error_output = 0
 
-func print(text: String) {
-    write(text)
-    write("\n")
-    flush()
+func print(...values: List<Printable>) {
+    _write_values(values, 1)
+    _write_to("\n", 1)
 }
 
-func write(text: String) {
-    var stream = _the_output()
-    _write_to(text, stream)
+func write(...values: List<Printable>) {
+    _write_values(values, 1)
 }
 
-func error(text: String) {
-    flush()
-    var stream = _the_error_output()
-    _write_to(text, stream)
-    _write_to("\n", stream)
-    flush()
+func error(...values: List<Printable>) {
+    _write_values(values, 2)
+    _write_to("\n", 2)
 }
 
-func debug(text: String) {
-    write(text)
-    write("\n")
-    flush()
-}
-
-func flush() {
-    library.fflush(0)
-}
-
-func _the_output(): Long {
-    if output == 0 {
-        output = library._fdopen_as_long(1, "w")
+func debug(...values: List<Debuggable>) {
+    var index = 0
+    while index < values.count() {
+        if index > 0 {
+            _write_to(" ", 1)
+        }
+        var value = values[index]
+        crash value
+        var text = value.to_debug()
+        _write_to(text, 1)
+        index = index + 1
     }
-    return output
+    _write_to("\n", 1)
 }
 
-func _the_error_output(): Long {
-    if error_output == 0 {
-        error_output = library._fdopen_as_long(2, "w")
+func _write_values(values: List<Printable>, stream: Integer) {
+    var index = 0
+    while index < values.count() {
+        if index > 0 {
+            _write_to(" ", stream)
+        }
+        var value = values[index]
+        crash value
+        var text = value.to_string()
+        _write_to(text, stream)
+        index = index + 1
     }
-    return error_output
 }
 
-func _write_to(text: String, stream: Long) {
+func _write_to(text: String, stream: Integer) {
     var length = text.length()
-    library.fwrite(text, 1, length, stream)
+    library._write(stream, text, length)
 }
