@@ -2,7 +2,12 @@ var _name = ""
 var _arguments = List<Spite.Argument>()
 var _returns: Spite.Class? = null
 var _is_resumable = false
+var _has_facts = false
+var _has_accesses = false
 var _returned_literal: String? = null
+var _called: Spite.Function<Nothing>? = null
+var _accesses = List<Spite.Access>()
+var _accessed_names = List<String>()
 
 func Function(starting_name: String) {
     _name = starting_name
@@ -21,12 +26,35 @@ func get_returns(): Spite.Class? {
 }
 
 func get_is_resumable(): Boolean {
+    crash _has_facts
     return _is_resumable
 }
 
 func get_returned_literal(): String {
     crash _returned_literal
     return _returned_literal
+}
+
+func get_accesses(): Dictionary<String, Spite.Access> {
+    crash _has_accesses
+    var accesses = Dictionary<String, Spite.Access>()
+    var index = 0
+    while index < _accesses.count() {
+        var access = _accesses[index]
+        var name = _accessed_names[index]
+        crash name
+        if access.is_read or access.is_written {
+            accesses[name] = access
+        }
+        index = index + 1
+    }
+    return accesses
+}
+
+func call_function() {
+    crash _called
+    var called = _called
+    called()
 }
 
 func argument_count(): Integer {
