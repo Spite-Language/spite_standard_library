@@ -1,0 +1,28 @@
+var _name = ""
+var _class: Spite.Class? = null
+var _index = 0
+
+func Argument(starting_name: String, starting_index: Integer) {
+    _name = starting_name
+    _index = starting_index
+}
+
+func get_name(): String {
+    return _name
+}
+
+func get_class(): Spite.Class? {
+    return _class
+}
+
+func get_index(): Integer {
+    return _index
+}
+
+func to_string(): String {
+    return _name
+}
+
+func to_debug(): String {
+    return _name
+}

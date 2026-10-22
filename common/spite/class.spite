@@ -1,0 +1,91 @@
+var _name = ""
+var _name_with_namespaces = ""
+var _namespace: Spite.Namespace? = null
+var _is_singleton = false
+var _is_enum = false
+var _is_list = false
+var _is_dictionary = false
+var _element_type: Spite.Class? = null
+var _attributes = List<Spite.AttributeDeclaration>()
+var _functions = List<Spite.Function>()
+
+func Class(starting_name: String) {
+    _name = starting_name
+    _name_with_namespaces = starting_name
+}
+
+func get_name(): String {
+    return _name
+}
+
+func get_name_with_namespaces(): String {
+    return _name_with_namespaces
+}
+
+func get_namespace(): Spite.Namespace? {
+    return _namespace
+}
+
+func get_attributes(): List<Spite.AttributeDeclaration> {
+    return _attributes
+}
+
+func get_functions(): List<Spite.Function> {
+    return _functions
+}
+
+func get_is_singleton(): Boolean {
+    return _is_singleton
+}
+
+func get_is_enum(): Boolean {
+    return _is_enum
+}
+
+func get_is_list(): Boolean {
+    return _is_list
+}
+
+func get_is_dictionary(): Boolean {
+    return _is_dictionary
+}
+
+func get_element_type(): Spite.Class? {
+    return _element_type
+}
+
+func has_function(name: String): Boolean {
+    var index = 0
+    while index < _functions.count() {
+        var function = _functions[index]
+        if function.name_fits(name) {
+            return true
+        }
+        index = index + 1
+    }
+    return false
+}
+
+func argument_count(name: String): Integer {
+    var index = 0
+    while index < _functions.count() {
+        var function = _functions[index]
+        if function.name_fits(name) {
+            return function.argument_count()
+        }
+        index = index + 1
+    }
+    crash
+}
+
+func equals(other: Class): Boolean {
+    return _name_with_namespaces == other._name_with_namespaces
+}
+
+func to_string(): String {
+    return _name
+}
+
+func to_debug(): String {
+    return _name
+}

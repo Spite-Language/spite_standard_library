@@ -1,0 +1,54 @@
+var _name = ""
+var _arguments = List<Spite.Argument>()
+var _returns: Spite.Class? = null
+
+func Function(starting_name: String) {
+    _name = starting_name
+}
+
+func get_name(): String {
+    return _name
+}
+
+func get_arguments(): List<Spite.Argument> {
+    return _arguments
+}
+
+func get_returns(): Spite.Class? {
+    return _returns
+}
+
+func argument_count(): Integer {
+    return _arguments.count()
+}
+
+func name_fits(pattern: String): Boolean {
+    var opening = pattern.index_of("<")
+    var closing = pattern.index_of(">")
+    if opening and closing {
+        return _fits_around(pattern, opening, closing)
+    }
+    return _name == pattern
+}
+
+func _fits_around(pattern: String, opening: Integer, closing: Integer): Boolean {
+    if closing < opening {
+        return _name == pattern
+    }
+    var pattern_length = pattern.length()
+    var prefix = pattern.slice(0, opening)
+    var suffix = pattern.slice(closing + 1, pattern_length)
+    var prefix_length = prefix.length()
+    var suffix_length = suffix.length()
+    var name_length = _name.length()
+    var long_enough = name_length > prefix_length + suffix_length
+    return long_enough and _name.starts_with(prefix) and _name.ends_with(suffix)
+}
+
+func to_string(): String {
+    return _name
+}
+
+func to_debug(): String {
+    return _name
+}

@@ -1,0 +1,42 @@
+var _name = ""
+var _name_with_namespaces = ""
+var _parent: Spite.Namespace? = null
+var _classes = List<Spite.Class>()
+var _namespaces = List<Spite.Namespace>()
+
+func Namespace(starting_name: String, starting_name_with_namespaces: String) {
+    _name = starting_name
+    _name_with_namespaces = starting_name_with_namespaces
+}
+
+func get_name(): String {
+    return _name
+}
+
+func get_name_with_namespaces(): String {
+    return _name_with_namespaces
+}
+
+func get_parent(): Spite.Namespace? {
+    return _parent
+}
+
+func get_classes(): List<Spite.Class> {
+    return _classes
+}
+
+func get_namespaces(): List<Spite.Namespace> {
+    return _namespaces
+}
+
+func equals(other: Namespace): Boolean {
+    return _name_with_namespaces == other._name_with_namespaces
+}
+
+func to_string(): String {
+    return _name_with_namespaces
+}
+
+func to_debug(): String {
+    return _name_with_namespaces
+}
