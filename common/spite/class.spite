@@ -112,7 +112,7 @@ func argument_count(name: String): Integer {
         }
         index = index + 1
     }
-    crash
+    return 0
 }
 
 func function_waits(name: String): Boolean {

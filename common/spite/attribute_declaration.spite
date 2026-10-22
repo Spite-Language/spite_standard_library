@@ -19,6 +19,13 @@ func get_index(): Integer {
     return _index
 }
 
+func get_is_singleton(): Boolean {
+    if _class {
+        return _class.is_singleton
+    }
+    return false
+}
+
 func to_string(): String {
     return _name
 }
