@@ -1,6 +1,8 @@
 var _name = ""
-var _class: Spite.Class? = null
+var _class = Spite.Class("Nothing")
 var _index = 0
+var _is_mutated = false
+var _has_facts = false
 
 func Argument(starting_name: String, starting_index: Integer) {
     _name = starting_name
@@ -11,12 +13,17 @@ func get_name(): String {
     return _name
 }
 
-func get_class(): Spite.Class? {
+func get_class(): Spite.Class {
     return _class
 }
 
 func get_index(): Integer {
     return _index
+}
+
+func get_is_mutated(): Boolean {
+    crash _has_facts
+    return _is_mutated
 }
 
 func to_string(): String {
