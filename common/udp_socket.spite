@@ -112,19 +112,19 @@ func _destination(host: String, port: Integer): Buffer? {
     var destination = _addresses.empty_address()
     if _family != ipv4 and _addresses.read_family(chosen) == ipv4 {
         _addresses.write_family(destination, _family)
-        destination.set_at(18, 255)
-        destination.set_at(19, 255)
+        destination[18] = 255
+        destination[19] = 255
         var offset = 0
         while offset < 4 {
             var code = _addresses._byte_in(chosen, 4 + offset)
-            destination.set_at(20 + offset, code)
+            destination[20 + offset] = code
             offset = offset + 1
         }
     } else {
         var offset = 0
         while offset < 28 {
             var code = _addresses._byte_in(chosen, offset)
-            destination.set_at(offset, code)
+            destination[offset] = code
             offset = offset + 1
         }
     }

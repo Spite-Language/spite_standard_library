@@ -43,12 +43,12 @@ func entry_names(want_folders: Boolean): List<String> {
 func _name_in(found: Buffer): String {
     var name = String()
     var index = 44
-    var code = found.get_at(index)
+    var code = found[index]
     crash code
     while code != 0 and index < 304 {
         name.append_code(code)
         index = index + 1
-        code = found.get_at(index)
+        code = found[index]
         crash code
     }
     return name

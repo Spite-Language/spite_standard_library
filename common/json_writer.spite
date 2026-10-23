@@ -70,11 +70,11 @@ func written_dictionary(shown: $value_type): String {
     var count = keys.count()
     var index = 0
     while index < count {
-        var key = keys.get_at(index)
+        var key = keys[index]
         crash key
         var quoted_key = key_json.key_text(key)
         entry_json.path = "{path}[{quoted_key}]"
-        var entry = values.get_at(index)
+        var entry = values[index]
         crash entry
         var entry_text = entry_json.write(entry)
         entries.append("{quoted_key}:{entry_text}")

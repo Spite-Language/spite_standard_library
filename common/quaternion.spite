@@ -182,9 +182,9 @@ func normalized(): Quaternion<$number_type> {
 
 func conjugate(): Quaternion<$number_type> {
     var flipped = Quaternion<$number_type>()
-    var flipped_x = x.negate()
-    var flipped_y = y.negate()
-    var flipped_z = z.negate()
+    var flipped_x = -x
+    var flipped_y = -y
+    var flipped_z = -z
     flipped.set_parts(flipped_x, flipped_y, flipped_z, w)
     return flipped
 }
@@ -195,9 +195,9 @@ func inverse(): Quaternion<$number_type>? {
     assert squared != 0.0
     var scale = one / squared
     var inverted = Quaternion<$number_type>()
-    var inverted_x = x.negate() * scale
-    var inverted_y = y.negate() * scale
-    var inverted_z = z.negate() * scale
+    var inverted_x = -x * scale
+    var inverted_y = -y * scale
+    var inverted_z = -z * scale
     inverted.set_parts(inverted_x, inverted_y, inverted_z, w * scale)
     return inverted
 }

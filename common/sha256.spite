@@ -126,7 +126,7 @@ func _zeroed(size: Integer): Buffer {
 }
 
 func _byte_at(room: Buffer, at: Integer): Integer {
-    var held = room.get_at(at)
+    var held = room[at]
     crash held
     return held
 }
@@ -150,12 +150,12 @@ func _digest(source: Buffer, source_length: Integer): Buffer {
     var rest = source_length - offset
     var copied = 0
     while copied < rest {
-        var held = source.get_at(offset + copied)
+        var held = source[offset + copied]
         crash held
-        tail.set_at(copied, held)
+        tail[copied] = held
         copied = copied + 1
     }
-    tail.set_at(rest, 128)
+    tail[rest] = 128
     var tail_length = 64
     if rest >= 56 {
         tail_length = 128

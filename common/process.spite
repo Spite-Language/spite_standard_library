@@ -24,7 +24,7 @@ func run(): Integer {
         chunk.take_written(got_count)
         var index = 0
         while index < got_count {
-            var held = chunk.get_at(index)
+            var held = chunk[index]
             crash held
             output_text.append_code(held)
             index = index + 1

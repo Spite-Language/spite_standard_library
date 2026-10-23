@@ -85,7 +85,7 @@ func to_string(): String {
     var size = this
     if get_is_negative() {
         sign = "-"
-        size = negate()
+        size = -this
     }
     var hours = size.part('hours')
     var minutes = size.part('minutes')

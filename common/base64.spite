@@ -54,7 +54,7 @@ func _encoded(bytes: Buffer, alphabet: String, padded: Boolean): String {
 }
 
 func _byte_at(bytes: Buffer, index: Integer): Integer {
-    var held = bytes.get_at(index)
+    var held = bytes[index]
     crash held
     return held
 }

@@ -76,7 +76,7 @@ func _opened(): Long {
     _clear_status()
     icu.ucal_getCanonicalTimeZoneID(characters, length, canonical, 256, is_system, _status)
     var canonical_status = _status_value()
-    var system_flag = is_system.get_at(0)
+    var system_flag = is_system[0]
     crash system_flag
     var handle: Long = 0
     if canonical_status <= 0 and system_flag != 0 {

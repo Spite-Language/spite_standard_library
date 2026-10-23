@@ -70,7 +70,7 @@ func half_precision_to_float(): Float {
         result = wide.to_unsigned_integer().bits_as_float()
     }
     if sign == 1 {
-        return result.negate()
+        return -result
     }
     return result
 }

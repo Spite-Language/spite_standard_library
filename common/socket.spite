@@ -297,7 +297,7 @@ func _zeroed(bytes: Integer): Buffer {
 }
 
 func _byte_in(room: Buffer, at: Integer): Integer {
-    var read = room.get_at(at)
+    var read = room[at]
     crash read
     return read.to_integer()
 }
@@ -322,8 +322,8 @@ func _short_in(room: Buffer, at: Integer): Integer {
 
 func local_address(port: Integer): Buffer {
     var address = any_address(port)
-    address.set_at(4, 127)
-    address.set_at(7, 1)
+    address[4] = 127
+    address[7] = 1
     return address
 }
 
@@ -402,7 +402,7 @@ func resolved_addresses(host: String, port: Integer, kind: Integer): List<Buffer
             var index = 0
             while index < resolved_length {
                 var code = _byte_in(resolved, index)
-                address.set_at(index, code)
+                address[index] = code
                 index = index + 1
             }
             write_port(address, port)

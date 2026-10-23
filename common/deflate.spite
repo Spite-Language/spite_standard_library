@@ -142,7 +142,7 @@ func _get_long(room: Buffer, index: Integer): Long {
 }
 
 func _byte_of(room: Buffer, index: Integer): Integer {
-    var held = room.get_at(index)
+    var held = room[index]
     crash held
     return held
 }

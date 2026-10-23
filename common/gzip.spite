@@ -75,7 +75,7 @@ func decompress(bytes: Buffer): Buffer? {
 }
 
 func _byte_at(room: Buffer, at: Integer): Integer {
-    var held = room.get_at(at)
+    var held = room[at]
     crash held
     return held
 }

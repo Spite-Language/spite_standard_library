@@ -11,7 +11,7 @@ func size(): Long {
 func get_at(position: Long): Byte? {
     assert _holds(position, 1)
     var index = position.to_integer()
-    return _bytes.get_at(index)
+    return _bytes[index]
 }
 
 func read_short_little_endian_at(position: Long): Short? {

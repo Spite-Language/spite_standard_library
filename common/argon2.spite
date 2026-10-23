@@ -383,7 +383,7 @@ func _zeroed(size: Integer): Buffer {
 }
 
 func _byte_at(room: Buffer, at: Integer): Integer {
-    var held = room.get_at(at)
+    var held = room[at]
     crash held
     return held
 }
@@ -407,9 +407,9 @@ func _put_unsigned(room: Buffer, at: Integer, value: UnsignedLong) {
 func _copy(source: Buffer, source_at: Integer, target: Buffer, target_at: Integer, count: Integer) {
     var index = 0
     while index < count {
-        var held = source.get_at(source_at + index)
+        var held = source[source_at + index]
         crash held
-        target.set_at(target_at + index, held)
+        target[target_at + index] = held
         index = index + 1
     }
 }
@@ -721,7 +721,7 @@ func _blake2b(
     var remaining = source_length - offset
     var cleared = 0
     while cleared < 128 {
-        block.set_at(cleared, 0)
+        block[cleared] = 0
         cleared = cleared + 1
     }
     _copy(source, source_at + offset, block, 0, remaining)

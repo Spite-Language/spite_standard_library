@@ -134,7 +134,7 @@ func _holds(wanted: Integer): Boolean {
 func _read_byte(): Integer {
     var at = position
     var held = _buffer()
-    var read = held.get_at(at)
+    var read = held[at]
     crash read
     position = at + 1
     return read

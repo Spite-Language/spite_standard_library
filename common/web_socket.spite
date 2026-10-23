@@ -299,7 +299,7 @@ func _write_text(text: String): Boolean {
 }
 
 func _byte_of(room: Buffer, at: Integer): Integer {
-    var held = room.get_at(at)
+    var held = room[at]
     crash held
     return held.to_integer()
 }
@@ -423,7 +423,7 @@ func _read_frame(already: Integer): Buffer? {
             var key = _byte_of(mask, index % 4)
             var value = _byte_of(payload, index)
             var unmasked = value.bits_exclusive_or(key)
-            payload.set_at(index, unmasked)
+            payload[index] = unmasked
             index = index + 1
         }
     }
@@ -546,10 +546,10 @@ func _sha1(source: Buffer): Buffer {
     var copied = 0
     while copied < length {
         var held = _byte_of(source, copied)
-        block.set_at(copied, held)
+        block[copied] = held
         copied = copied + 1
     }
-    block.set_at(length, 128)
+    block[length] = 128
     var bits: Long = length
     bits = bits * 8
     block.write_long_big_endian_at(padded - 8, bits)
