@@ -42,10 +42,10 @@ func prepend(value: $element_type) {
 }
 
 func insert(index: Integer, value: $element_type) {
-    crash index >= 0 and index <= _length
+    var at = index.clamp(0, _length)
     make_room()
-    _move_values_up(index, _length - index)
-    _write_value(index, value)
+    _move_values_up(at, _length - at)
+    _write_value(at, value)
     _length = _length + 1
 }
 
@@ -407,8 +407,7 @@ func swap(first_index: Integer, second_index: Integer) {
 }
 
 func truncate(kept_count: Integer) {
-    crash kept_count >= 0
-    if kept_count < _length {
+    if kept_count >= 0 and kept_count < _length {
         _shrink_to(kept_count)
     }
 }

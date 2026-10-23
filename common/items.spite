@@ -61,8 +61,7 @@ func remove_swapping(index: Integer) {
 }
 
 func truncate(kept_count: Integer) {
-    crash kept_count >= 0
-    if kept_count < _length {
+    if kept_count >= 0 and kept_count < _length {
         _shrink_to(kept_count)
     }
 }
