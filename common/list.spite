@@ -14,6 +14,10 @@ func _write_value(index: Integer, value: $element_type)
 
 func _forget_value(index: Integer)
 
+func _item_held_once(index: Integer): Boolean
+
+func _processor_count(): Integer
+
 func _shrink_to(kept_count: Integer) {
     var index = kept_count
     while index < _length {
@@ -542,6 +546,53 @@ func _each_range_member(member: Spite.AttributeDeclaration, start: Integer, end:
         index = index + 1
     }
     return end - start
+}
+
+func _each_in_bands_member(member: Spite.AttributeDeclaration, least: Integer) {
+    var band_count = _processor_count()
+    if band_count > 64 {
+        band_count = 64
+    }
+    if band_count > _length {
+        band_count = _length
+    }
+    if _length < least or band_count < 2 or not _items_held_once() {
+        _each_range_member(member, 0, _length)
+        return
+    }
+    var length: Long = _length
+    var runs = List<Parallel<Integer>>()
+    var band = 1
+    while band < band_count {
+        var start_at: Long = length * band / band_count
+        var end_at: Long = length * (band + 1) / band_count
+        var start: Integer = start_at
+        var end: Integer = end_at
+        var run = Parallel(_each_range_member(member, start, end))
+        runs.append(run)
+        band = band + 1
+    }
+    var first_end_at: Long = length / band_count
+    var first_end: Integer = first_end_at
+    var walked = _each_range_member(member, 0, first_end)
+    var index = 0
+    while index < runs.count() {
+        var piece: Integer = runs[index]
+        walked = walked + piece
+        index = index + 1
+    }
+    crash walked == _length
+}
+
+func _items_held_once(): Boolean {
+    var index = 0
+    while index < _length {
+        if not _item_held_once(index) {
+            return false
+        }
+        index = index + 1
+    }
+    return true
 }
 
 func map_members(member: Spite.AttributeDeclaration): List<member.class> {
