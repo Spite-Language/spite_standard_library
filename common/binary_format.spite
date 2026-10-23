@@ -46,20 +46,16 @@ func write(value: $value_type, output: BinaryWriterCursor) {
 
 func write_symbol(shown: $value_type, output: BinaryWriterCursor) {
     if $value_type == Enum {
-        output.walked = 0
-        find_values(shown, output)
+        var values = $value_type.values
+        var place = values.index_of(shown)
+        crash place
+        output.walked = values.count()
+        output.found = place
         output.write_index()
         return
     }
     var name: String = shown
     output.write_text(name)
-}
-
-func find_value(value: Symbol<$value_type>, shown: $value_type, output: BinaryWriterCursor) {
-    if value.value == shown {
-        output.found = output.walked
-    }
-    output.walked = output.walked + 1
 }
 
 func write_list(value: $value_type, output: BinaryWriterCursor) {
@@ -91,12 +87,12 @@ func write_dictionary(value: $value_type, output: BinaryWriterCursor) {
     }
 }
 
-func write_attribute(attribute: Symbol<$value_type>, value: $value_type, output: BinaryWriterCursor) {
+func write_attribute(attribute: Spite.AttributeDeclaration, value: $value_type, output: BinaryWriterCursor) {
     var name = attribute.name
     assert not name.starts_with("_")
     assert not attribute.class.is_singleton
     var format = BinaryFormat<attribute.class>()
-    format.write(value.attributes[attribute], output)
+    format.write(value[attribute], output)
 }
 
 func write_present(value: $value_type, output: BinaryWriterCursor) {
@@ -176,13 +172,11 @@ func read_present(input: BinaryCursor): $value_type {
 
 func read_symbol(input: BinaryCursor): $value_type {
     if $value_type == Enum {
-        input.walked = 0
-        count_values(input)
+        var values = $value_type.values
+        input.walked = values.count()
         input.read_index()
-        input.walked = 0
-        name_values(input)
-        var chosen: $value_type? = input.found_name
-        if chosen {
+        var chosen = values[input.found]
+        if chosen and not input.failed {
             return chosen
         }
         input.fail()
@@ -195,18 +189,6 @@ func read_symbol(input: BinaryCursor): $value_type {
         return input.class.name
     }
     return found
-}
-
-func count_value(value: Symbol<$value_type>, input: BinaryCursor) {
-    input.last_name = value.name
-    input.walked = input.walked + 1
-}
-
-func name_value(value: Symbol<$value_type>, input: BinaryCursor) {
-    if input.walked == input.found {
-        input.found_name = value.name
-    }
-    input.walked = input.walked + 1
 }
 
 func read_list(input: BinaryCursor): $value_type {
@@ -237,12 +219,12 @@ func read_dictionary(input: BinaryCursor): $value_type {
     return dictionary
 }
 
-func read_attribute(attribute: Symbol<$value_type>, created: $value_type, input: BinaryCursor) {
+func read_attribute(attribute: Spite.AttributeDeclaration, created: $value_type, input: BinaryCursor) {
     var name = attribute.name
     assert not name.starts_with("_")
     assert not attribute.class.is_singleton
     var format = BinaryFormat<attribute.class>()
-    created.attributes[attribute] = format.read(input)
+    created[attribute] = format.read(input)
 }
 
 func made(): $value_type {

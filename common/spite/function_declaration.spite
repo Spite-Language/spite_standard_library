@@ -1,0 +1,29 @@
+var _name = ""
+var _hole = ""
+var _index = 0
+
+func FunctionDeclaration(starting_name: String, starting_hole: String, starting_index: Integer) {
+    _name = starting_name
+    _hole = starting_hole
+    _index = starting_index
+}
+
+func get_name(): Symbol {
+    return _name
+}
+
+func get_hole(): Symbol {
+    return _hole
+}
+
+func get_index(): Integer {
+    return _index
+}
+
+func to_string(): String {
+    return _name
+}
+
+func to_debug(): String {
+    return _name
+}

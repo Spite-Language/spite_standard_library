@@ -138,12 +138,12 @@ func _move_values(from: Integer, to: Integer, wanted: Integer) {
     }
 }
 
-func filter_member(member: Spite.AttributeDeclaration<$element_type>): Items<$element_type> {
+func filter_member(member: Spite.AttributeDeclaration): Items<$element_type> {
     var filtered = Items<$element_type>()
     var index = 0
     while index < _length {
         var item = _read_value(index)
-        if item.attributes[member] {
+        if item[member] {
             filtered.append(item)
         }
         index = index + 1
@@ -151,12 +151,12 @@ func filter_member(member: Spite.AttributeDeclaration<$element_type>): Items<$el
     return filtered
 }
 
-func remove_where_member(member: Spite.AttributeDeclaration<$element_type>) {
+func remove_where_member(member: Spite.AttributeDeclaration) {
     var kept = 0
     var index = 0
     while index < _length {
         var item = _read_value(index)
-        if not item.attributes[member] {
+        if not item[member] {
             _write_value(kept, item)
             kept = kept + 1
         }
@@ -165,12 +165,12 @@ func remove_where_member(member: Spite.AttributeDeclaration<$element_type>) {
     _shrink_to(kept)
 }
 
-func count_member(member: Spite.AttributeDeclaration<$element_type>): Integer {
+func count_member(member: Spite.AttributeDeclaration): Integer {
     var counted = 0
     var index = 0
     while index < _length {
         var item = _read_value(index)
-        if item.attributes[member] {
+        if item[member] {
             counted = counted + 1
         }
         index = index + 1
@@ -178,11 +178,11 @@ func count_member(member: Spite.AttributeDeclaration<$element_type>): Integer {
     return counted
 }
 
-func any_member(member: Spite.AttributeDeclaration<$element_type>): Boolean {
+func any_member(member: Spite.AttributeDeclaration): Boolean {
     var index = 0
     while index < _length {
         var item = _read_value(index)
-        if item.attributes[member] {
+        if item[member] {
             return true
         }
         index = index + 1
@@ -190,11 +190,11 @@ func any_member(member: Spite.AttributeDeclaration<$element_type>): Boolean {
     return false
 }
 
-func all_member(member: Spite.AttributeDeclaration<$element_type>): Boolean {
+func all_member(member: Spite.AttributeDeclaration): Boolean {
     var index = 0
     while index < _length {
         var item = _read_value(index)
-        if not item.attributes[member] {
+        if not item[member] {
             return false
         }
         index = index + 1
@@ -202,43 +202,43 @@ func all_member(member: Spite.AttributeDeclaration<$element_type>): Boolean {
     return true
 }
 
-func sum_member(member: Spite.AttributeDeclaration<$element_type>): member.class {
+func sum_member(member: Spite.AttributeDeclaration): member.class {
     var total: member.class = 0
     var index = 0
     while index < _length {
         var item = _read_value(index)
-        total = total + item.attributes[member]
+        total = total + item[member]
         index = index + 1
     }
     return total
 }
 
-func each_member(member: Spite.AttributeDeclaration<$element_type>) {
+func each_member(member: Spite.AttributeDeclaration) {
     var index = 0
     while index < _length {
         var item = _read_value(index)
-        item.attributes[member]
+        item[member]
         index = index + 1
     }
 }
 
-func map_members(member: Spite.AttributeDeclaration<$element_type>): List<member.class> {
+func map_members(member: Spite.AttributeDeclaration): List<member.class> {
     var mapped = List<member.class>()
     var index = 0
     while index < _length {
         var item = _read_value(index)
-        var value = item.attributes[member]
+        var value = item[member]
         mapped.append(value)
         index = index + 1
     }
     return mapped
 }
 
-func find_by_member(member: Spite.AttributeDeclaration<$element_type>, value: member.class): $element_type? {
+func find_by_member(member: Spite.AttributeDeclaration, value: member.class): $element_type? {
     var index = 0
     while index < _length {
         var item = _read_value(index)
-        if item.attributes[member] == value {
+        if item[member] == value {
             return item
         }
         index = index + 1
@@ -246,11 +246,11 @@ func find_by_member(member: Spite.AttributeDeclaration<$element_type>, value: me
     return null
 }
 
-func find_index_by_member(member: Spite.AttributeDeclaration<$element_type>, value: member.class): Integer? {
+func find_index_by_member(member: Spite.AttributeDeclaration, value: member.class): Integer? {
     var index = 0
     while index < _length {
         var item = _read_value(index)
-        if item.attributes[member] == value {
+        if item[member] == value {
             return index
         }
         index = index + 1
@@ -258,13 +258,13 @@ func find_index_by_member(member: Spite.AttributeDeclaration<$element_type>, val
     return null
 }
 
-func sort_by_member(member: Spite.AttributeDeclaration<$element_type>): Items<$element_type> {
+func sort_by_member(member: Spite.AttributeDeclaration): Items<$element_type> {
     var keys = List<member.class>()
     var order = List<Integer>()
     var index = 0
     while index < _length {
         var item = _read_value(index)
-        var key = item.attributes[member]
+        var key = item[member]
         keys.append(key)
         order.append(index)
         index = index + 1

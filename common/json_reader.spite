@@ -124,7 +124,7 @@ func parse_object(cursor: JsonCursor): $value_type {
 }
 
 
-func read_attribute(attribute: Symbol<$value_type>, created: $value_type) {
+func read_attribute(attribute: Spite.AttributeDeclaration, created: $value_type) {
     var name = attribute.name
     assert not name.starts_with("_")
     assert not attribute.class.is_singleton
@@ -132,11 +132,11 @@ func read_attribute(attribute: Symbol<$value_type>, created: $value_type) {
     var cursor = _cursor
     crash cursor
     var attribute_json = JsonReader<attribute.class>()
-    created.attributes[attribute] = attribute_json.parse(cursor)
+    created[attribute] = attribute_json.parse(cursor)
     cursor.matched = true
 }
 
-func read_camel_attribute(attribute: Symbol<$value_type>, created: $value_type) {
+func read_camel_attribute(attribute: Spite.AttributeDeclaration, created: $value_type) {
     var name = attribute.name
     assert not name.starts_with("_")
     assert not attribute.class.is_singleton
@@ -144,7 +144,7 @@ func read_camel_attribute(attribute: Symbol<$value_type>, created: $value_type) 
     var cursor = _cursor
     crash cursor
     var attribute_json = JsonReader<attribute.class>()
-    created.attributes[attribute] = attribute_json.parse(cursor)
+    created[attribute] = attribute_json.parse(cursor)
     cursor.matched = true
 }
 

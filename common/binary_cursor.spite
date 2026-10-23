@@ -3,8 +3,6 @@ var position = 0
 var failed = false
 var walked = 0
 var found = 0
-var found_name = ""
-var last_name = ""
 
 func count(): Integer {
     var held = _buffer()
