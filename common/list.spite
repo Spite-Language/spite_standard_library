@@ -107,6 +107,26 @@ func clear() {
     _shrink_to(0)
 }
 
+func _renew_lists(wanted: Integer) {
+    var index = 0
+    while index < _length and index < wanted {
+        if _item_held_once(index) {
+            var kept = _read_value(index)
+            kept.clear()
+        } else {
+            var fresh = $element_type()
+            _write_value(index, fresh)
+        }
+        index = index + 1
+    }
+    _shrink_to(index)
+    while index < wanted {
+        var made = $element_type()
+        append(made)
+        index = index + 1
+    }
+}
+
 func contains(value: $element_type): Boolean {
     var index = 0
     while index < _length {
