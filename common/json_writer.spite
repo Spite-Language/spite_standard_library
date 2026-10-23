@@ -1,6 +1,7 @@
 generic $value_type
 
 var path = ""
+var keys = Dictionary<Spite.AttributeDeclaration, String>()
 var _members: List<String>? = null
 
 func write(value: $value_type?): String {
@@ -23,12 +24,6 @@ func written_boolean(value: $value_type?): String {
         return "false"
     }
     return "null"
-}
-
-func written_present(value: $value_type?): String {
-    var inner = JsonWriter<$value_type.value_type>()
-    inner.path = path
-    return inner.write(value)
 }
 
 func _written(shown: $value_type): String {
@@ -108,12 +103,23 @@ func write_attribute(attribute: Spite.AttributeDeclaration, shown: $value_type) 
     var attribute_text = attribute_json.write(shown[attribute])
     var members = _members
     crash members
-    members.append("\"{name}\":{attribute_text}")
+    var given = keys[attribute]
+    var key = "\"{name}\""
+    if given and not keys.is_empty() {
+        key = quoted(given)
+    }
+    members.append("{key}:{attribute_text}")
 }
 
 func written_decimal(shown: $value_type): String {
     crash shown - shown == 0
     return shown.to_string()
+}
+
+func written_present(value: $value_type?): String {
+    var inner = JsonWriter<$value_type.value_type>()
+    inner.path = path
+    return inner.write(value)
 }
 
 func quoted(text: String): String {

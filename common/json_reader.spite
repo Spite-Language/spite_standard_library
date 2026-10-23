@@ -1,5 +1,6 @@
 generic $value_type
 
+var keys = Dictionary<Spite.AttributeDeclaration, String>()
 var _key = ""
 var _cursor: JsonCursor? = null
 
@@ -148,7 +149,12 @@ func read_attribute(attribute: Spite.AttributeDeclaration, created: $value_type)
     var name = attribute.name
     assert not name.starts_with("_")
     assert not attribute.class.is_singleton
-    assert _key == name
+    var key = name
+    var given = keys[attribute]
+    if given and not keys.is_empty() {
+        key = given
+    }
+    assert _key == key
     var cursor = _cursor
     crash cursor
     var attribute_json = JsonReader<attribute.class>()
@@ -160,6 +166,9 @@ func read_camel_attribute(attribute: Spite.AttributeDeclaration, created: $value
     var name = attribute.name
     assert not name.starts_with("_")
     assert not attribute.class.is_singleton
+    var given = keys[attribute]
+    var is_renamed = given and not keys.is_empty()
+    assert not is_renamed
     assert _key == attribute.camel_case_name or _key == attribute.pascal_case_name
     var cursor = _cursor
     crash cursor
