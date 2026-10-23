@@ -125,8 +125,7 @@ func append(value: Byte) {
 }
 
 func truncate(kept_count: Integer) {
-    crash kept_count >= 0
-    if kept_count < item_count {
+    if kept_count >= 0 and kept_count < item_count {
         item_count = kept_count
     }
     if position > item_count {
