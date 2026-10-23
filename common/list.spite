@@ -178,7 +178,7 @@ func deep_copy(): List<$element_type> {
     return copied
 }
 
-func _deep_copy_in(table: Spite.Internal.CopyTable): List<$element_type> {
+func _deep_copy_in(table: Spite.CopyTable): List<$element_type> {
     var copied = List<$element_type>()
     var index = 0
     while index < _length {
