@@ -584,6 +584,60 @@ func _each_in_bands_member(member: Spite.AttributeDeclaration, least: Integer) {
     crash walked == _length
 }
 
+func _each_in_bands_repeated_member(member: Spite.AttributeDeclaration, least: Integer, times: Integer) {
+    var band_count = _processor_count()
+    if band_count > 64 {
+        band_count = 64
+    }
+    if band_count > _length {
+        band_count = _length
+    }
+    if _length < least or band_count < 2 or not _items_held_once() {
+        var round = 0
+        while round < times {
+            _each_range_member(member, 0, _length)
+            round = round + 1
+        }
+        return
+    }
+    var length: Long = _length
+    var runs = List<Parallel<Integer>>()
+    var band = 1
+    while band < band_count {
+        var start_at: Long = length * band / band_count
+        var end_at: Long = length * (band + 1) / band_count
+        var start: Integer = start_at
+        var end: Integer = end_at
+        var run = Parallel(_each_range_repeated_member(member, start, end, times))
+        runs.append(run)
+        band = band + 1
+    }
+    var first_end_at: Long = length / band_count
+    var first_end: Integer = first_end_at
+    var walked = _each_range_repeated_member(member, 0, first_end, times)
+    var index = 0
+    while index < runs.count() {
+        var piece: Integer = runs[index]
+        walked = walked + piece
+        index = index + 1
+    }
+    crash walked == _length
+}
+
+func _each_range_repeated_member(member: Spite.AttributeDeclaration, start: Integer, end: Integer, times: Integer): Integer {
+    var index = start
+    while index < end {
+        var item = _read_value(index)
+        var round = 0
+        while round < times {
+            item[member]
+            round = round + 1
+        }
+        index = index + 1
+    }
+    return end - start
+}
+
 func _items_held_once(): Boolean {
     var index = 0
     while index < _length {
