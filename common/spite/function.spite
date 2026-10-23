@@ -6,6 +6,7 @@ var _has_facts = false
 var _has_accesses = false
 var _returned_literal: String? = null
 var _called: Spite.Function<Nothing>? = null
+var _called_on: Spite.Function<Anything, Nothing>? = null
 var _accesses = List<Spite.Access>()
 var _accessed_names = List<String>()
 
@@ -55,6 +56,12 @@ func call_function() {
     crash _called
     var called = _called
     called()
+}
+
+func _call_on(instance: Anything) {
+    crash _called_on
+    var called = _called_on
+    called(instance)
 }
 
 func argument_count(): Integer {
