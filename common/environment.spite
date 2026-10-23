@@ -34,6 +34,7 @@ func text_setting(name: String, declared: String): String {
 }
 
 func _setting(name: String): String? {
+    _refuse_snake_case(name)
     var flag = name.replace("_", "-")
     var given = _arguments.named(flag)
     if given {
@@ -42,4 +43,23 @@ func _setting(name: String): String? {
     var program = Program()
     var variable = name.upper_case()
     return program.environment(variable)
+}
+
+func _refuse_snake_case(name: String) {
+    if name.contains("_") {
+        var written = _arguments.named(name)
+        if written {
+            _stop_on_snake_case(name)
+        }
+    }
+}
+
+func _stop_on_snake_case(name: String) {
+    var kebab = name.replace("_", "-")
+    var console = Console()
+    var first = "error: '--{name}' is written '--{kebab}'"
+    var second = "a program's setting is kebab-case on the command line, like the compiler's flags"
+    console.error("{first}: {second}, and it sets Environment.{name}")
+    var program = Program()
+    program.exit(1)
 }

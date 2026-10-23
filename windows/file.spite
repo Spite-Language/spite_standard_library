@@ -17,6 +17,17 @@ func rename_to(new_path: String): Boolean {
     return moved != 0
 }
 
+func lock(): LockedFile? {
+    var read_and_write = -1073741824
+    var share_everything = 7
+    var open_always = 4
+    var normal = 128
+    var nothing: Long = 0
+    var handle = kernel.CreateFileA_as_long(path, read_and_write, share_everything, nothing, open_always, normal, nothing)
+    assert handle != -1
+    return LockedFile(handle)
+}
+
 func _open_handle(mode: String): Long {
     return library.fopen_as_long(path, mode)
 }

@@ -1,0 +1,31 @@
+var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+var _handle: Long = 0
+var _overlapped = Buffer(32)
+
+func LockedFile(handle: Long) {
+    _handle = handle
+    var index = 0
+    while index < 32 {
+        _overlapped.append(0)
+        index = index + 1
+    }
+    var exclusive = 2
+    var reserved = 0
+    var every_byte = -1
+    var locked = kernel.LockFileEx(_handle, exclusive, reserved, every_byte, every_byte, _overlapped)
+    crash locked != 0
+}
+
+func unlock() {
+    if _handle != 0 {
+        var reserved = 0
+        var every_byte = -1
+        kernel.UnlockFileEx(_handle, reserved, every_byte, every_byte, _overlapped)
+        kernel.CloseHandle(_handle)
+        _handle = 0
+    }
+}
+
+func drop() {
+    unlock()
+}

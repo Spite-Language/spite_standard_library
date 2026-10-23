@@ -367,6 +367,12 @@ func to_double(): Double? {
     return library.strtod_as_double(text, end)
 }
 
+func to_color(): Color? {
+    var color = Color("#000000")
+    assert color.read(this)
+    return color
+}
+
 func to_float(): Float? {
     var text = trim()
     var valid = text._is_decimal()

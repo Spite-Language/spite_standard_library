@@ -42,11 +42,31 @@ func parse(cursor: JsonCursor): $value_type {
 func parse_number(cursor: JsonCursor): $value_type {
     var number_text = cursor.read_number()
     var number: $value_type? = number_text
-    if not number {
+    if number {
+        return number
+    }
+    var whole_text = _whole_part(number_text)
+    var whole: $value_type? = whole_text
+    if not whole {
         cursor.fail("a number that fits")
         return 0
     }
-    return number
+    return whole
+}
+
+func _whole_part(number_text: String): String {
+    var written = number_text
+    var has_exponent = written.contains("e") or written.contains("E")
+    if has_exponent {
+        var decimal = written.to_double()
+        crash decimal
+        written = decimal.to_string()
+    }
+    var point = written.index_of(".")
+    if not point {
+        return written
+    }
+    return written.slice(0, point)
 }
 
 func parse_present(cursor: JsonCursor): $value_type {
