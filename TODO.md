@@ -36,7 +36,7 @@ rooms and the two methods that read and write a byte yet, so the old library sta
 compiler is retired.
 
 **Each class is rewritten as it moves.** The class that arrives in `common/` is the new explicit version, not a
-copy of the old one. The old version stays in the old repository (`../SpiteLanguage/library`) until the old
+copy of the old one. The old version stays in the first repository (archived), in its `library/` folder, until the old
 compiler is retired, because the old compiler's rules are written against the paths there.
 
 ## The list
