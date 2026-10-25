@@ -67,6 +67,7 @@ func is_empty(): Boolean {
 }
 
 func code_at(index: Integer): Integer {
+    crash index >= 0 and index < _length
     return _buffer._read_byte_at(index)
 }
 

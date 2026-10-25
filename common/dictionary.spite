@@ -25,6 +25,10 @@ func contains(key: $key_type): Boolean {
     return slot >= 0
 }
 
+func has(key: $key_type): Boolean {
+    return contains(key)
+}
+
 func each(callback: Spite.Function<$value_type, Nothing>) {
     _values.each(callback)
 }

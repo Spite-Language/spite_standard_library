@@ -208,6 +208,47 @@ func each_member(member: Spite.AttributeDeclaration) {
     }
 }
 
+func parallel_each_member(member: Spite.AttributeDeclaration) {
+    if _length < 2 {
+        _each_range_member(member, 0, _length)
+        return
+    }
+    var piece_count = 4
+    if _length < piece_count {
+        piece_count = _length
+    }
+    var size = (_length + piece_count - 1) / piece_count
+    var runs = List<Parallel<Integer>>()
+    var start = size
+    while start < _length {
+        var end = start + size
+        if end > _length {
+            end = _length
+        }
+        var run = Parallel(_each_range_member(member, start, end))
+        runs.append(run)
+        start = end
+    }
+    var walked = _each_range_member(member, 0, size)
+    var index = 0
+    while index < runs.count() {
+        var piece: Integer = runs[index]
+        walked = walked + piece
+        index = index + 1
+    }
+    crash walked == _length
+}
+
+func _each_range_member(member: Spite.AttributeDeclaration, start: Integer, end: Integer): Integer {
+    var index = start
+    while index < end {
+        var item = _read_value(index)
+        item[member]
+        index = index + 1
+    }
+    return end - start
+}
+
 func map_members(member: Spite.AttributeDeclaration): List<member.class> {
     var mapped = List<member.class>()
     var index = 0
