@@ -626,6 +626,9 @@ func _cased_like(original: String, changed: String): String {
     if original.length() > 1 and original == upper_form and upper_form != lower_form {
         return changed.upper_case()
     }
+    if original.is_empty() {
+        return changed
+    }
     var first = original.code_at(0)
     if first >= 65 and first <= 90 {
         var head = changed.slice(0, 1).upper_case()
