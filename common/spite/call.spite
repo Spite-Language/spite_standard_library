@@ -13,5 +13,5 @@ func get_arguments(): Dictionary<String, Anything> {
 
 func call() {
     crash _instance
-    _declaration._call_on(_instance)
+    _declaration._call_on(_instance, _arguments)
 }

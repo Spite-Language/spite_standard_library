@@ -28,10 +28,8 @@ func transition_offset_seconds_at(unix_seconds: Long): Integer {
     if last_time {
         after_last = unix_seconds >= last_time
     }
-    if yearly_rule {
-        if after_last {
-            return yearly_rule.offset_seconds_at(unix_seconds)
-        }
+    if yearly_rule and after_last {
+        return yearly_rule.offset_seconds_at(unix_seconds)
     }
     if count == 0 {
         return _first_offset

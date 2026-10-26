@@ -146,16 +146,18 @@ func escape_of(code: Integer): String {
         10: return "\\n"
         13: return "\\r"
         9: return "\\t"
-        _: {
-            if code >= 32 {
-                return ""
-            }
-            var digits = "0123456789abcdef"
-            var high = digits.character_at(code / 16)
-            var low = digits.character_at(code % 16)
-            return "\\u00{high}{low}"
-        }
+        _: return control_escape_of(code)
     }
+}
+
+func control_escape_of(code: Integer): String {
+    if code >= 32 {
+        return ""
+    }
+    var digits = "0123456789abcdef"
+    var high = digits.character_at(code / 16)
+    var low = digits.character_at(code % 16)
+    return "\\u00{high}{low}"
 }
 
 func key_text(key: $value_type?): String {
