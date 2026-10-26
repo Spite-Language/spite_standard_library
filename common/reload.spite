@@ -1,0 +1,39 @@
+singleton
+
+var build = Build()
+var rebuilt = List<List<String>>()
+
+func generation(): Integer {
+    var swapped = 0
+    if build.hot_reload {
+        swapped = rebuilt.count()
+    }
+    return swapped
+}
+
+func rebuilt_since(since: Integer): List<String> {
+    var names = List<String>()
+    if build.hot_reload {
+        add_the_names_since(names, since)
+    }
+    return names
+}
+
+func add_the_names_since(names: List<String>, since: Integer) {
+    var index = since
+    if index < 0 {
+        index = 0
+    }
+    while index < rebuilt.count() {
+        var swap = rebuilt[index]
+        var name_index = 0
+        while name_index < swap.count() {
+            var name = swap[name_index]
+            if not names.contains(name) {
+                names.append(name)
+            }
+            name_index = name_index + 1
+        }
+        index = index + 1
+    }
+}
