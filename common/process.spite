@@ -2,6 +2,7 @@ var command = ""
 var arguments = List<String>()
 var working_directory = ""
 var environment_variables = Dictionary<String, String>()
+var with_errors = false
 var last_output = ""
 
 func Process(starting_command: String, starting_arguments: List<String>) {
@@ -52,6 +53,9 @@ func command_line(): String {
         var quoted = quoted_argument(argument)
         line = "{line} {quoted}"
         index = index + 1
+    }
+    if with_errors {
+        line = "{line} 2>&1"
     }
     var prefix = settings_prefix()
     return shell_line("{prefix}{line}")
