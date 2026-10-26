@@ -31,10 +31,7 @@ func part(unit: Unit): Long {
         'hours': return _seconds / 3600
         'minutes': return _seconds / 60 % 60
         'seconds': return _seconds % 60
-        _: {
-            var nanoseconds_per_unit = _nanoseconds_per_unit(unit)
-            return _nanoseconds / nanoseconds_per_unit
-        }
+        _: return _nanoseconds / _nanoseconds_per_unit(unit)
     }
 }
 
