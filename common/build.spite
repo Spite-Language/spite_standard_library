@@ -1,6 +1,8 @@
 singleton
 
 var check = false
+var build = false
+var executable_path = ""
 var high_ir = false
 var low_ir = false
 var final_classes = ""

@@ -5,3 +5,15 @@ var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
 func exit(code: Integer) {
     library.exit(code)
 }
+
+func live_allocations(): Long {
+    return _live_allocations()
+}
+
+func live_bytes(): Long {
+    return _live_bytes()
+}
+
+func _live_allocations(): Long
+
+func _live_bytes(): Long
