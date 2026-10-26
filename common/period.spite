@@ -56,7 +56,7 @@ func equals(other: Period): Boolean {
 }
 
 func to_string(): String {
-    if this.is_zero {
+    if get_is_zero() {
         return "P0D"
     }
     var written = "P"

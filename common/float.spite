@@ -339,7 +339,7 @@ func get_largest(): Float {
 }
 
 func get_smallest(): Float {
-    var largest = this.largest
+    var largest = get_largest()
     var zero: Float = 0.0
     return zero - largest
 }
