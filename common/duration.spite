@@ -75,12 +75,12 @@ func greater_than(other: Duration): Boolean {
 }
 
 func to_string(): String {
-    if get_is_zero() {
+    if this.is_zero {
         return "PT0S"
     }
     var sign = ""
     var size = this
-    if get_is_negative() {
+    if this.is_negative {
         sign = "-"
         size = -this
     }

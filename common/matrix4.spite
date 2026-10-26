@@ -223,7 +223,7 @@ func set_transform(
     rotation: Quaternion<$number_type>,
     scale: Vector3<$number_type>,
 ) {
-    set_rotation(rotation)
+    this.rotation = rotation
     column_0_row_0 = column_0_row_0 * scale.x
     column_0_row_1 = column_0_row_1 * scale.x
     column_0_row_2 = column_0_row_2 * scale.x

@@ -620,7 +620,7 @@ func get_largest(): Double {
 }
 
 func get_smallest(): Double {
-    var largest = get_largest()
+    var largest = this.largest
     var zero: Double = 0.0
     return zero - largest
 }
