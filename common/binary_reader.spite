@@ -1,8 +1,11 @@
 generic $value_type
 
 var position = 0
-var format = BinaryFormat<$value_type>()
-var cursor = BinaryCursor()
+var _source: Buffer? = null
+var _at = 0
+var _failed = false
+var _walked = 0
+var _found = 0
 
 func read(bytes: Buffer): $value_type? {
     var read_value = read_from(bytes, 0)
@@ -14,13 +17,349 @@ func read(bytes: Buffer): $value_type? {
 func read_from(bytes: Buffer, start: Integer): $value_type? {
     crash start >= 0
     crash start <= bytes.count()
-    cursor.source = bytes
-    cursor.position = start
-    cursor.failed = false
-    var read_value = format.read(cursor)
-    assert not cursor.failed
-    position = cursor.position
+    var read_value = _continue(bytes, start, false)
+    assert not _failed
+    position = _at
     return read_value
 }
 
 func schema(): Long
+
+func _continue(bytes: Buffer, start: Integer, failed: Boolean): $value_type {
+    _source = bytes
+    _at = start
+    _failed = failed
+    return _read()
+}
+
+func _read(): $value_type {
+    if $value_type == Null {
+        return _read_present()
+    } else if $value_type == Boolean {
+        var flag = _read_byte()
+        if flag > 1 {
+            _fail()
+        }
+        return flag == 1
+    } else if $value_type == Byte {
+        var stored = _read_byte()
+        return stored.to_byte()
+    } else if $value_type == Tiny {
+        var stored = _read_byte()
+        if stored > 127 {
+            stored = stored - 256
+        }
+        return stored.to_tiny()
+    } else if $value_type == Short {
+        var stored = _read_short()
+        return stored.to_short()
+    } else if $value_type == UnsignedShort {
+        var stored = _read_unsigned_short()
+        return stored.to_unsigned_short()
+    } else if $value_type == Integer {
+        return _read_integer()
+    } else if $value_type == UnsignedInteger {
+        var whole = _read_integer()
+        return whole.bits_as_unsigned()
+    } else if $value_type == Long {
+        return _read_long()
+    } else if $value_type == UnsignedLong {
+        var long = _read_long()
+        return long.bits_as_unsigned()
+    } else if $value_type == Float {
+        return _read_float()
+    } else if $value_type == Double {
+        return _read_double()
+    } else if $value_type == String {
+        return _read_text()
+    } else if $value_type == Symbol {
+        return _read_symbol()
+    } else if $value_type == List {
+        return _read_list()
+    } else if $value_type == Dictionary {
+        return _read_dictionary()
+    } else {
+        var created = _made()
+        read_attributes(created)
+        return created
+    }
+}
+
+func _read_present(): $value_type {
+    var flag = _read_byte()
+    if flag != 1 {
+        if flag != 0 {
+            _fail()
+        }
+        return null
+    }
+    var inner = BinaryReader<$value_type.value_type>()
+    var held = _buffer()
+    var item = inner._continue(held, _at, _failed)
+    _at = inner._at
+    _failed = inner._failed
+    return item
+}
+
+func _read_symbol(): $value_type {
+    if $value_type == Enum {
+        var values = $value_type.values
+        _walked = values.count()
+        _read_index()
+        var chosen = values[_found]
+        if chosen and not _failed {
+            return chosen
+        }
+        _fail()
+        return $value_type()
+    }
+    var name = _read_text()
+    var found = Symbol(name)
+    if not found {
+        _fail()
+        return class.name
+    }
+    return found
+}
+
+func _read_list(): $value_type {
+    var list = $value_type()
+    var count = _read_count()
+    var element = BinaryReader<$value_type.element_type>()
+    var index = 0
+    while index < count and not _failed {
+        var held = _buffer()
+        var item = element._continue(held, _at, _failed)
+        _at = element._at
+        _failed = element._failed
+        list.append(item)
+        index = index + 1
+    }
+    return list
+}
+
+func _read_dictionary(): $value_type {
+    var dictionary = $value_type()
+    var count = _read_count()
+    var entry = BinaryReader<$value_type.value_type>()
+    var key_reader = BinaryReader<$value_type.key_type>()
+    var index = 0
+    while index < count and not _failed {
+        var held = _buffer()
+        var key = key_reader._continue(held, _at, _failed)
+        _at = key_reader._at
+        _failed = key_reader._failed
+        var item = entry._continue(held, _at, _failed)
+        _at = entry._at
+        _failed = entry._failed
+        dictionary[key] = item
+        index = index + 1
+    }
+    return dictionary
+}
+
+func read_attribute(attribute: Spite.AttributeDeclaration, created: $value_type) {
+    var name = attribute.name
+    assert not name.starts_with("_")
+    assert not attribute.class.is_singleton
+    var reader = BinaryReader<attribute.class>()
+    var held = _buffer()
+    created[attribute] = reader._continue(held, _at, _failed)
+    _at = reader._at
+    _failed = reader._failed
+}
+
+func _made(): $value_type {
+    return $value_type()
+}
+
+func _take(wanted: Integer): Boolean {
+    var held = _buffer()
+    var available = held.count() - _at
+    if _failed or wanted > available {
+        _fail()
+        return false
+    }
+    _at = _at + wanted
+    return true
+}
+
+func _fail() {
+    _failed = true
+    var held = _buffer()
+    _at = held.count()
+}
+
+func _read_byte(): Integer {
+    if _holds(1) {
+        return _load_byte()
+    }
+    return 0
+}
+
+func _read_short(): Integer {
+    if _holds(2) {
+        return _load_short()
+    }
+    return 0
+}
+
+func _read_unsigned_short(): Integer {
+    if _holds(2) {
+        return _load_unsigned_short()
+    }
+    return 0
+}
+
+func _read_integer(): Integer {
+    if _holds(4) {
+        return _load_integer()
+    }
+    return 0
+}
+
+func _read_long(): Long {
+    if _holds(8) {
+        return _load_long()
+    }
+    return 0
+}
+
+func _read_float(): Float {
+    if _holds(4) {
+        return _load_float()
+    }
+    return 0.0
+}
+
+func _read_double(): Double {
+    if _holds(8) {
+        return _load_double()
+    }
+    return 0.0
+}
+
+func _read_count(): Integer {
+    var result: Long = 0
+    var scale: Long = 1
+    var more = true
+    var held = _buffer()
+    while more and not _failed {
+        var byte = _read_byte()
+        result = result + scale * (byte % 128)
+        scale = scale * 128
+        more = byte >= 128
+        var left: Long = held.count() - _at
+        if result > left or scale > 34359738368 {
+            _fail()
+        }
+    }
+    return result.to_integer()
+}
+
+func _read_text(): String {
+    var length = _read_count()
+    if not _take(length) {
+        return ""
+    }
+    var held = _buffer()
+    var start = _at - length
+    var text = held.text(start, length)
+    if text {
+        return text
+    }
+    _fail()
+    return ""
+}
+
+func _read_index() {
+    var index = 0
+    if _walked <= 256 {
+        index = _read_byte()
+    } else if _walked <= 65536 {
+        index = _read_unsigned_short()
+    } else {
+        index = _read_integer()
+    }
+    if index < 0 or index >= _walked {
+        _fail()
+    }
+    _found = index
+}
+
+func _holds(wanted: Integer): Boolean {
+    if _take(wanted) {
+        _at = _at - wanted
+        return true
+    }
+    return false
+}
+
+func _load_byte(): Integer {
+    var at = _at
+    var held = _buffer()
+    var loaded = held[at]
+    crash loaded
+    _at = at + 1
+    return loaded
+}
+
+func _load_short(): Integer {
+    var at = _at
+    var held = _buffer()
+    var loaded = held.read_short_little_endian_at(at)
+    crash loaded
+    _at = at + 2
+    return loaded
+}
+
+func _load_unsigned_short(): Integer {
+    var at = _at
+    var held = _buffer()
+    var loaded = held.read_unsigned_short_little_endian_at(at)
+    crash loaded
+    _at = at + 2
+    return loaded
+}
+
+func _load_integer(): Integer {
+    var at = _at
+    var held = _buffer()
+    var loaded = held.read_integer_little_endian_at(at)
+    crash loaded
+    _at = at + 4
+    return loaded
+}
+
+func _load_long(): Long {
+    var at = _at
+    var held = _buffer()
+    var loaded = held.read_long_little_endian_at(at)
+    crash loaded
+    _at = at + 8
+    return loaded
+}
+
+func _load_float(): Float {
+    var at = _at
+    var held = _buffer()
+    var loaded = held.read_float_little_endian_at(at)
+    crash loaded
+    _at = at + 4
+    return loaded
+}
+
+func _load_double(): Double {
+    var at = _at
+    var held = _buffer()
+    var loaded = held.read_double_little_endian_at(at)
+    crash loaded
+    _at = at + 8
+    return loaded
+}
+
+func _buffer(): Buffer {
+    var held = _source
+    crash held
+    return held
+}

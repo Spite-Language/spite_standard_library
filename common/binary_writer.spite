@@ -1,6 +1,8 @@
 generic $value_type
 
-var format = BinaryFormat<$value_type>()
+var _bytes: Buffer? = null
+var _walked = 0
+var _found = 0
 
 func write(value: $value_type): Buffer {
     var bytes = Buffer(16)
@@ -9,8 +11,187 @@ func write(value: $value_type): Buffer {
 }
 
 func append_to(value: $value_type, bytes: Buffer) {
-    var cursor = BinaryWriterCursor(bytes)
-    format.write(value, cursor)
+    _append(value, bytes)
 }
 
 func schema(): Long
+
+func _append(value: $value_type, bytes: Buffer) {
+    _bytes = bytes
+    if $value_type == Null {
+        _write_present(value)
+    } else if $value_type == Boolean {
+        var flag = 0
+        if value {
+            flag = 1
+        }
+        _write_byte(flag)
+    } else if $value_type == Byte or $value_type == Tiny {
+        _write_byte(value)
+    } else if $value_type == Short or $value_type == UnsignedShort {
+        _write_short(value)
+    } else if $value_type == Integer {
+        _write_integer(value)
+    } else if $value_type == UnsignedInteger {
+        var bits = value.bits_as_signed()
+        _write_integer(bits)
+    } else if $value_type == Long {
+        _write_long(value)
+    } else if $value_type == UnsignedLong {
+        var bits = value.bits_as_signed()
+        _write_long(bits)
+    } else if $value_type == Float {
+        _write_float(value)
+    } else if $value_type == Double {
+        _write_double(value)
+    } else if $value_type == String {
+        _write_text(value)
+    } else if $value_type == Symbol {
+        _write_symbol(value)
+    } else if $value_type == List {
+        _write_list(value)
+    } else if $value_type == Dictionary {
+        _write_dictionary(value)
+    } else {
+        write_attributes(value)
+    }
+}
+
+func _write_symbol(shown: $value_type) {
+    if $value_type == Enum {
+        var values = $value_type.values
+        var place = values.index_of(shown)
+        crash place
+        _walked = values.count()
+        _found = place
+        _write_index()
+        return
+    }
+    var name: String = shown
+    _write_text(name)
+}
+
+func _write_list(value: $value_type) {
+    var count = value.count()
+    _write_count(count)
+    var element = BinaryWriter<$value_type.element_type>()
+    var index = 0
+    while index < count {
+        var item = value[index]
+        var target = _target()
+        element._append(item, target)
+        index = index + 1
+    }
+}
+
+func _write_dictionary(value: $value_type) {
+    var keys = value.keys()
+    var entries = value.values()
+    var count = keys.count()
+    _write_count(count)
+    var entry = BinaryWriter<$value_type.value_type>()
+    var key_writer = BinaryWriter<$value_type.key_type>()
+    var index = 0
+    while index < keys.count() and index < entries.count() {
+        var key = keys[index]
+        var target = _target()
+        key_writer._append(key, target)
+        var item = entries[index]
+        entry._append(item, target)
+        index = index + 1
+    }
+}
+
+func write_attribute(attribute: Spite.AttributeDeclaration, value: $value_type) {
+    var name = attribute.name
+    assert not name.starts_with("_")
+    assert not attribute.class.is_singleton
+    var writer = BinaryWriter<attribute.class>()
+    var target = _target()
+    writer._append(value[attribute], target)
+}
+
+func _write_present(value: $value_type) {
+    if value {
+        _write_byte(1)
+        var inner = BinaryWriter<$value_type.value_type>()
+        var target = _target()
+        inner._append(value, target)
+        return
+    }
+    _write_byte(0)
+}
+
+func _write_byte(value: Integer) {
+    var low_bits = value.bits_and(255)
+    var byte = low_bits.to_byte()
+    var target = _target()
+    target.append(byte)
+}
+
+func _write_short(value: Integer) {
+    var low_bits = value.bits_and(65535)
+    var short = low_bits.to_unsigned_short()
+    var target = _target()
+    target.append_unsigned_short_little_endian(short)
+}
+
+func _write_integer(value: Integer) {
+    var target = _target()
+    target.append_integer_little_endian(value)
+}
+
+func _write_long(value: Long) {
+    var target = _target()
+    target.append_long_little_endian(value)
+}
+
+func _write_float(value: Float) {
+    var target = _target()
+    target.append_float_little_endian(value)
+}
+
+func _write_double(value: Double) {
+    var target = _target()
+    target.append_double_little_endian(value)
+}
+
+func _write_count(count: Integer) {
+    var rest = count
+    while rest >= 128 {
+        _write_byte(rest % 128 + 128)
+        rest = rest / 128
+    }
+    _write_byte(rest)
+}
+
+func _write_text(text: String) {
+    var length = text.length()
+    _write_count(length)
+    var target = _target()
+    var used = target.count()
+    target.reserve(used + length)
+    var index = 0
+    while index < length {
+        var code = text.code_at(index)
+        var byte = code.to_byte()
+        target.append(byte)
+        index = index + 1
+    }
+}
+
+func _write_index() {
+    if _walked <= 256 {
+        _write_byte(_found)
+    } else if _walked <= 65536 {
+        _write_short(_found)
+    } else {
+        _write_integer(_found)
+    }
+}
+
+func _target(): Buffer {
+    var target = _bytes
+    crash target
+    return target
+}

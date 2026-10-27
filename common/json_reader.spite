@@ -2,46 +2,55 @@ generic $value_type
 
 var keys = Dictionary<Spite.AttributeDeclaration, String>()
 var _key = ""
-var _cursor: JsonCursor? = null
+var _text = ""
+var position = 0
+var _expected = ""
+var _crashes = false
+var _matched = false
 
 func read(text: String): $value_type? {
-    var cursor = JsonCursor(text)
-    var parsed = parse(cursor)
-    cursor.finish()
-    assert not cursor.failed()
+    var parsed = _continue(text, 0, "", false)
+    _finish()
+    assert not _failed()
     return parsed
 }
 
 func read_or_crash(text: String): $value_type {
-    var cursor = JsonCursor(text)
-    cursor.crashes = true
-    var parsed = parse(cursor)
-    cursor.finish()
+    var parsed = _continue(text, 0, "", true)
+    _finish()
     return parsed
 }
 
-func parse(cursor: JsonCursor): $value_type {
+func _continue(text: String, start: Integer, wanted: String, crashes: Boolean): $value_type {
+    _text = text
+    position = start
+    _expected = wanted
+    _crashes = crashes
+    return _parse()
+}
+
+func _parse(): $value_type {
     if $value_type == String {
-        return cursor.read_text()
+        return _read_text()
     } else if $value_type == Boolean {
-        return cursor.read_boolean()
+        return _read_boolean()
     } else if $value_type == Number {
-        return parse_number(cursor)
+        return _parse_number()
     } else if $value_type == Symbol {
-        return read_symbol(cursor)
+        return _read_symbol()
     } else if $value_type == Null {
-        return parse_present(cursor)
+        return _parse_present()
     } else if $value_type == List {
-        return parse_list(cursor)
+        return _parse_list()
     } else if $value_type == Dictionary {
-        return parse_dictionary(cursor)
+        return _parse_dictionary()
     } else {
-        return parse_object(cursor)
+        return _parse_object()
     }
 }
 
-func parse_number(cursor: JsonCursor): $value_type {
-    var number_text = cursor.read_number()
+func _parse_number(): $value_type {
+    var number_text = _read_number()
     var number: $value_type? = number_text
     if number {
         return number
@@ -49,7 +58,7 @@ func parse_number(cursor: JsonCursor): $value_type {
     var whole_text = _whole_part(number_text)
     var whole: $value_type? = whole_text
     if not whole {
-        cursor.fail("a number that fits")
+        _fail("a number that fits")
         return 0
     }
     return whole
@@ -70,75 +79,80 @@ func _whole_part(number_text: String): String {
     return written.slice(0, point)
 }
 
-func parse_present(cursor: JsonCursor): $value_type {
-    var is_null = cursor.read_null()
+func _parse_present(): $value_type {
+    var is_null = _read_null()
     if is_null {
         return null
     }
     var inner = JsonReader<$value_type.value_type>()
-    return inner.parse(cursor)
+    var item = inner._continue(_text, position, _expected, _crashes)
+    position = inner.position
+    _expected = inner._expected
+    return item
 }
 
-func parse_list(cursor: JsonCursor): $value_type {
+func _parse_list(): $value_type {
     var list = $value_type()
     var element_json = JsonReader<$value_type.element_type>()
-    cursor.expect("[")
-    var more = not cursor.consume("]")
-    while more and not cursor.failed() {
-        var element = element_json.parse(cursor)
+    _expect("[")
+    var more = not _consume("]")
+    while more and not _failed() {
+        var element = element_json._continue(_text, position, _expected, _crashes)
+        position = element_json.position
+        _expected = element_json._expected
         list.append(element)
-        more = cursor.consume(",")
+        more = _consume(",")
         if not more {
-            cursor.expect("]")
+            _expect("]")
         }
     }
     return list
 }
 
-func parse_dictionary(cursor: JsonCursor): $value_type {
+func _parse_dictionary(): $value_type {
     var dictionary = $value_type()
     var entry_json = JsonReader<$value_type.value_type>()
-    cursor.expect("\{")
-    var more = not cursor.consume("}")
-    while more and not cursor.failed() {
-        var key_text = cursor.read_text()
+    _expect("\{")
+    var more = not _consume("}")
+    while more and not _failed() {
+        var key_text = _read_text()
         var key: $value_type.key_type? = key_text
         if not key {
-            cursor.fail("a key that fits the dictionary")
+            _fail("a key that fits the dictionary")
             return dictionary
         }
-        cursor.expect(":")
-        var entry = entry_json.parse(cursor)
+        _expect(":")
+        var entry = entry_json._continue(_text, position, _expected, _crashes)
+        position = entry_json.position
+        _expected = entry_json._expected
         dictionary[key] = entry
-        more = cursor.consume(",")
+        more = _consume(",")
         if not more {
-            cursor.expect("}")
+            _expect("}")
         }
     }
     return dictionary
 }
 
-func parse_object(cursor: JsonCursor): $value_type {
+func _parse_object(): $value_type {
     var created = $value_type()
-    cursor.expect("\{")
-    var more = not cursor.consume("}")
-    while more and not cursor.failed() {
-        var key = cursor.read_text()
-        cursor.expect(":")
-        cursor.matched = false
+    _expect("\{")
+    var more = not _consume("}")
+    while more and not _failed() {
+        var key = _read_text()
+        _expect(":")
+        _matched = false
         _key = key
-        _cursor = cursor
         read_attributes(created)
-        if not cursor.matched {
+        if not _matched {
             read_camel_attributes(created)
         }
-        _cursor = null
-        if not cursor.matched {
-            cursor.skip_value()
+        if not _matched {
+            _skip_value()
         }
-        more = cursor.consume(",")
+        more = _consume(",")
         if not more {
-            cursor.expect("}")
+            _expect("}")
         }
     }
     return created
@@ -155,11 +169,11 @@ func read_attribute(attribute: Spite.AttributeDeclaration, created: $value_type)
         key = given
     }
     assert _key == key
-    var cursor = _cursor
-    crash cursor
     var attribute_json = JsonReader<attribute.class>()
-    created[attribute] = attribute_json.parse(cursor)
-    cursor.matched = true
+    created[attribute] = attribute_json._continue(_text, position, _expected, _crashes)
+    position = attribute_json.position
+    _expected = attribute_json._expected
+    _matched = true
 }
 
 func read_camel_attribute(attribute: Spite.AttributeDeclaration, created: $value_type) {
@@ -170,39 +184,327 @@ func read_camel_attribute(attribute: Spite.AttributeDeclaration, created: $value
     var is_renamed = given and not keys.is_empty()
     assert not is_renamed
     assert _key == attribute.camel_case_name or _key == attribute.pascal_case_name
-    var cursor = _cursor
-    crash cursor
     var attribute_json = JsonReader<attribute.class>()
-    created[attribute] = attribute_json.parse(cursor)
-    cursor.matched = true
+    created[attribute] = attribute_json._continue(_text, position, _expected, _crashes)
+    position = attribute_json.position
+    _expected = attribute_json._expected
+    _matched = true
 }
 
 
-func read_symbol(cursor: JsonCursor): $value_type {
+func _read_symbol(): $value_type {
     if $value_type == Enum {
-        return read_enum(cursor)
+        return _read_enum()
     } else {
-        return read_plain_symbol(cursor)
+        return _read_plain_symbol()
     }
 }
 
-func read_enum(cursor: JsonCursor): $value_type {
-    var name = cursor.read_text()
+func _read_enum(): $value_type {
+    var name = _read_text()
     var symbol: $value_type? = name
     if symbol {
         return symbol
     }
     var unnamed = $value_type()
-    cursor.fail("one of the names of {unnamed.class.name}")
+    _fail("one of the names of {unnamed.class.name}")
     return unnamed
 }
 
-func read_plain_symbol(cursor: JsonCursor): $value_type {
-    var name = cursor.read_text()
+func _read_plain_symbol(): $value_type {
+    var name = _read_text()
     var found = Symbol(name)
     if not found {
-        cursor.fail("a name the program already uses as a Symbol")
-        return cursor.class.name
+        _fail("a name the program already uses as a Symbol")
+        return class.name
     }
     return found
+}
+
+func _failed(): Boolean {
+    return not _expected.is_empty()
+}
+
+func _fail(wanted: String) {
+    crash not _crashes
+    if _expected.is_empty() {
+        _expected = wanted
+    }
+}
+
+func _finish() {
+    _skip_space()
+    if position < _text.length() {
+        _fail("the end of the text")
+    }
+}
+
+func _skip_space() {
+    var spacing = true
+    while spacing and position < _text.length() {
+        var code = _text.code_at(position)
+        spacing = code == 32 or code == 9 or code == 10 or code == 13
+        if spacing {
+            position = position + 1
+        }
+    }
+}
+
+func _consume(token: String): Boolean {
+    _skip_space()
+    var end = position + token.length()
+    var found = _text.slice(position, end)
+    if found == token {
+        position = end
+        return true
+    }
+    return false
+}
+
+func _expect(token: String) {
+    var found = _consume(token)
+    if not found {
+        _fail("'{token}'")
+    }
+}
+
+func _read_null(): Boolean {
+    return _consume("null")
+}
+
+func _read_boolean(): Boolean {
+    var is_true = _consume("true")
+    if is_true {
+        return true
+    }
+    var is_false = _consume("false")
+    if not is_false {
+        _fail("true or false")
+    }
+    return false
+}
+
+func _read_number(): String {
+    _skip_space()
+    var start = position
+    _skip_character(45)
+    var whole_digits = _skip_digits()
+    if whole_digits == 0 {
+        _fail("a number")
+        return "0"
+    }
+    if _skip_character(46) {
+        var fraction_digits = _skip_digits()
+        if fraction_digits == 0 {
+            _fail("a digit after '.'")
+        }
+    }
+    if _skip_character(101) or _skip_character(69) {
+        if not _skip_character(43) {
+            _skip_character(45)
+        }
+        var exponent_digits = _skip_digits()
+        if exponent_digits == 0 {
+            _fail("a digit in the exponent")
+        }
+    }
+    return _text.slice(start, position)
+}
+
+func _read_text(): String {
+    var opened = _consume("\"")
+    if not opened {
+        _fail("text in double quotes")
+        return ""
+    }
+    var made = String()
+    var start = position
+    var closed = false
+    while not closed and position < _text.length() and _expected.is_empty() {
+        var code = _text.code_at(position)
+        if code == 34 {
+            var last_run = _text.slice(start, position)
+            made = made + last_run
+            position = position + 1
+            closed = true
+        } else if code == 92 {
+            var run = _text.slice(start, position)
+            var escaped = _read_escape()
+            made = made + run + escaped
+            start = position
+        } else {
+            position = position + 1
+        }
+    }
+    if not closed {
+        _fail("'\"' to close the text")
+    }
+    return made
+}
+
+func _read_escape(): String {
+    position = position + 1
+    var code = 0
+    if position < _text.length() {
+        code = _text.code_at(position)
+    }
+    position = position + 1
+    if code == 34 or code == 92 or code == 47 {
+        return _text.slice(position - 1, position)
+    }
+    switch code {
+        110: return "\n"
+        116: return "\t"
+        114: return "\r"
+        98: return _text_of(8)
+        102: return _text_of(12)
+        _: return _unicode_escape_of(code)
+    }
+}
+
+func _unicode_escape_of(code: Integer): String {
+    if code != 117 {
+        _fail("an escape: one of \\\" \\\\ \\/ \\b \\f \\n \\r \\t \\u")
+        return ""
+    }
+    var code_point = _read_hexadecimal()
+    if code_point >= 55296 and code_point < 56320 and _consume("\\u") {
+        var low = _read_hexadecimal()
+        code_point = 65536 + (code_point - 55296) * 1024 + low - 56320
+    }
+    return _text_of(code_point)
+}
+
+func _read_hexadecimal(): Integer {
+    var value = 0
+    var digits = 0
+    while digits < 4 {
+        var digit = _hexadecimal_digit(position)
+        if digit < 0 {
+            _fail("four hexadecimal digits after \\u")
+            return 0
+        }
+        value = value * 16 + digit
+        position = position + 1
+        digits = digits + 1
+    }
+    return value
+}
+
+func _hexadecimal_digit(at: Integer): Integer {
+    if at >= _text.length() {
+        return -1
+    }
+    var code = _text.code_at(at)
+    if code >= 48 and code <= 57 {
+        return code - 48
+    }
+    if code >= 97 and code <= 102 {
+        return code - 87
+    }
+    if code >= 65 and code <= 70 {
+        return code - 55
+    }
+    return -1
+}
+
+func _text_of(code_point: Integer): String {
+    var result = String()
+    var shift = 0
+    var lead_marker = 0
+    if code_point >= 65536 {
+        shift = 18
+        lead_marker = 240
+    } else if code_point >= 2048 {
+        shift = 12
+        lead_marker = 224
+    } else if code_point >= 128 {
+        shift = 6
+        lead_marker = 192
+    }
+    var moved = code_point.shifted_right(shift)
+    var lead = moved.bits_or(lead_marker)
+    result.append_code(lead)
+    while shift > 0 {
+        shift = shift - 6
+        var part = code_point.shifted_right(shift)
+        var low_bits = part.bits_and(63)
+        var continuation = low_bits.bits_or(128)
+        result.append_code(continuation)
+    }
+    return result
+}
+
+func _skip_character(code: Integer): Boolean {
+    if position < _text.length() and _text.code_at(position) == code {
+        position = position + 1
+        return true
+    }
+    return false
+}
+
+func _skip_digits(): Integer {
+    var start = position
+    var digit = true
+    while digit and position < _text.length() {
+        var code = _text.code_at(position)
+        digit = code >= 48 and code <= 57
+        if digit {
+            position = position + 1
+        }
+    }
+    return position - start
+}
+
+func _skip_value() {
+    _skip_space()
+    if position >= _text.length() {
+        _fail("a value")
+        return
+    }
+    var code = _text.code_at(position)
+    if code == 34 {
+        _read_text()
+    } else if code == 123 {
+        _skip_members()
+    } else if code == 91 {
+        _skip_elements()
+    } else {
+        _skip_word()
+    }
+}
+
+func _skip_word() {
+    var is_true = _consume("true")
+    var is_false = _consume("false")
+    var is_null = _read_null()
+    if not is_true and not is_false and not is_null {
+        _read_number()
+    }
+}
+
+func _skip_members() {
+    _expect("\{")
+    var more = not _consume("}")
+    while more and _expected.is_empty() {
+        _read_text()
+        _expect(":")
+        _skip_value()
+        more = _consume(",")
+        if not more {
+            _expect("}")
+        }
+    }
+}
+
+func _skip_elements() {
+    _expect("[")
+    var more = not _consume("]")
+    while more and _expected.is_empty() {
+        _skip_value()
+        more = _consume(",")
+        if not more {
+            _expect("]")
+        }
+    }
 }
