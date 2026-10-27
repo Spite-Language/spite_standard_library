@@ -107,6 +107,23 @@ func deep_copy(): Items<$element_type> {
     return copied
 }
 
+func _deep_copy_in(table: Spite.CopyTable): Items<$element_type> {
+    var copied = Items<$element_type>()
+    copied.reserve(_length)
+    var index = 0
+    while index < _length {
+        var held = _read_value(index)
+        if $element_type.is_fixed_size {
+            copied.append(held)
+        } else {
+            var held_copy = _deep_copied_in(held, table)
+            copied.append(held_copy)
+        }
+        index = index + 1
+    }
+    return copied
+}
+
 func make_room() {
     if _length == _capacity {
         reserve(_length + 1)

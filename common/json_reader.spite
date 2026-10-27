@@ -36,8 +36,8 @@ func _parse(): $value_type {
         return _read_boolean()
     } else if $value_type == Number {
         return _parse_number()
-    } else if $value_type == Symbol {
-        return _read_symbol()
+    } else if $value_type == Enum {
+        return _read_enum()
     } else if $value_type == Null {
         return _parse_present()
     } else if $value_type == List {
@@ -192,14 +192,6 @@ func read_camel_attribute(attribute: Spite.AttributeDeclaration, created: $value
 }
 
 
-func _read_symbol(): $value_type {
-    if $value_type == Enum {
-        return _read_enum()
-    } else {
-        return _read_plain_symbol()
-    }
-}
-
 func _read_enum(): $value_type {
     var name = _read_text()
     var symbol: $value_type? = name
@@ -211,15 +203,6 @@ func _read_enum(): $value_type {
     return unnamed
 }
 
-func _read_plain_symbol(): $value_type {
-    var name = _read_text()
-    var found = Symbol(name)
-    if not found {
-        _fail("a name the program already uses as a Symbol")
-        return class.name
-    }
-    return found
-}
 
 func _failed(): Boolean {
     return not _expected.is_empty()

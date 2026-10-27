@@ -72,8 +72,8 @@ func _read(): $value_type {
         return _read_double()
     } else if $value_type == String {
         return _read_text()
-    } else if $value_type == Symbol {
-        return _read_symbol()
+    } else if $value_type == Enum {
+        return _read_enum()
     } else if $value_type == List {
         return _read_list()
     } else if $value_type == Dictionary {
@@ -101,25 +101,16 @@ func _read_present(): $value_type {
     return item
 }
 
-func _read_symbol(): $value_type {
-    if $value_type == Enum {
-        var values = $value_type.values
-        _walked = values.count()
-        _read_index()
-        var chosen = values[_found]
-        if chosen and not _failed {
-            return chosen
-        }
-        _fail()
-        return $value_type()
+func _read_enum(): $value_type {
+    var values = $value_type.values
+    _walked = values.count()
+    _read_index()
+    var chosen = values[_found]
+    if chosen and not _failed {
+        return chosen
     }
-    var name = _read_text()
-    var found = Symbol(name)
-    if not found {
-        _fail()
-        return class.name
-    }
-    return found
+    _fail()
+    return $value_type()
 }
 
 func _read_list(): $value_type {

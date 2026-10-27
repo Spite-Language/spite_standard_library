@@ -1,8 +1,14 @@
+enum Naming {
+    'identity'
+    'windows'
+    'camel_case'
+}
+
 var handle: Long = 0
 var file_name = ""
 var header_file_name = ""
 
-func DynamicLibrary(library_file_name: String, _naming: Symbol, header: String) {
+func DynamicLibrary(library_file_name: String, _naming: Naming, header: String) {
     file_name = library_file_name
     header_file_name = header
     handle = open_library(library_file_name)

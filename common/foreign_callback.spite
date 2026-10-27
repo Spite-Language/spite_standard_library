@@ -1,11 +1,17 @@
 # ../docs/foreign_libraries.md#calling-back-into-spite
 
+enum ContextPlace {
+    'no_context'
+    'context_first'
+    'context_last'
+}
+
 var address: Long = 0
 var context: Long = 0
 var _function: Spite.Function? = null
 var _cell: Long = 0
 
-func ForeignCallback(function: Spite.Function, _where_context: Symbol) {
+func ForeignCallback(function: Spite.Function, _where_context: ContextPlace) {
     _function = function
 }
 

@@ -1,7 +1,7 @@
 generic $value_type
 
 func text(value: $value_type): String {
-    if $value_type == Symbol {
+    if $value_type == Enum {
         return "'{value}'"
     } else if $value_type == Null {
         if value {

@@ -46,8 +46,8 @@ func _append(value: $value_type, bytes: Buffer) {
         _write_double(value)
     } else if $value_type == String {
         _write_text(value)
-    } else if $value_type == Symbol {
-        _write_symbol(value)
+    } else if $value_type == Enum {
+        _write_enum(value)
     } else if $value_type == List {
         _write_list(value)
     } else if $value_type == Dictionary {
@@ -57,18 +57,13 @@ func _append(value: $value_type, bytes: Buffer) {
     }
 }
 
-func _write_symbol(shown: $value_type) {
-    if $value_type == Enum {
-        var values = $value_type.values
-        var place = values.index_of(shown)
-        crash place
-        _walked = values.count()
-        _found = place
-        _write_index()
-        return
-    }
-    var name: String = shown
-    _write_text(name)
+func _write_enum(shown: $value_type) {
+    var values = $value_type.values
+    var place = values.index_of(shown)
+    crash place
+    _walked = values.count()
+    _found = place
+    _write_index()
 }
 
 func _write_list(value: $value_type) {
