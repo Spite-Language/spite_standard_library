@@ -8,11 +8,11 @@ func FunctionDeclaration(starting_name: String, starting_hole: String, starting_
     _index = starting_index
 }
 
-func get_name(): Symbol {
+func get_name(): String {
     return _name
 }
 
-func get_hole(): Symbol {
+func get_hole(): String {
     return _hole
 }
 

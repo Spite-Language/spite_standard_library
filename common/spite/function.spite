@@ -14,7 +14,7 @@ func Function(starting_name: String) {
     _name = starting_name
 }
 
-func get_name(): Symbol {
+func get_name(): String {
     return _name
 }
 

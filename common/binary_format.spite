@@ -32,8 +32,8 @@ func write(value: $value_type, output: BinaryWriterCursor) {
         output.write_double(value)
     } else if $value_type == String {
         output.write_text(value)
-    } else if $value_type == Symbol {
-        write_symbol(value, output)
+    } else if $value_type == Enum {
+        write_enum(value, output)
     } else if $value_type == List {
         write_list(value, output)
     } else if $value_type == Dictionary {
@@ -44,18 +44,13 @@ func write(value: $value_type, output: BinaryWriterCursor) {
 }
 
 
-func write_symbol(shown: $value_type, output: BinaryWriterCursor) {
-    if $value_type == Enum {
-        var values = $value_type.values
-        var place = values.index_of(shown)
-        crash place
-        output.walked = values.count()
-        output.found = place
-        output.write_index()
-        return
-    }
-    var name: String = shown
-    output.write_text(name)
+func write_enum(shown: $value_type, output: BinaryWriterCursor) {
+    var values = $value_type.values
+    var place = values.index_of(shown)
+    crash place
+    output.walked = values.count()
+    output.found = place
+    output.write_index()
 }
 
 func write_list(value: $value_type, output: BinaryWriterCursor) {
@@ -145,8 +140,8 @@ func read(input: BinaryCursor): $value_type {
         return input.read_double()
     } else if $value_type == String {
         return input.read_text()
-    } else if $value_type == Symbol {
-        return read_symbol(input)
+    } else if $value_type == Enum {
+        return read_enum(input)
     } else if $value_type == List {
         return read_list(input)
     } else if $value_type == Dictionary {
@@ -170,25 +165,16 @@ func read_present(input: BinaryCursor): $value_type {
     return inner.read(input)
 }
 
-func read_symbol(input: BinaryCursor): $value_type {
-    if $value_type == Enum {
-        var values = $value_type.values
-        input.walked = values.count()
-        input.read_index()
-        var chosen = values[input.found]
-        if chosen and not input.failed {
-            return chosen
-        }
-        input.fail()
-        return $value_type()
+func read_enum(input: BinaryCursor): $value_type {
+    var values = $value_type.values
+    input.walked = values.count()
+    input.read_index()
+    var chosen = values[input.found]
+    if chosen and not input.failed {
+        return chosen
     }
-    var name = input.read_text()
-    var found = Symbol(name)
-    if not found {
-        input.fail()
-        return input.class.name
-    }
-    return found
+    input.fail()
+    return $value_type()
 }
 
 func read_list(input: BinaryCursor): $value_type {

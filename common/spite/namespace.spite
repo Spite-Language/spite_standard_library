@@ -11,11 +11,11 @@ func Namespace(starting_name: String, starting_name_with_namespaces: String) {
     _name_with_namespaces = starting_name_with_namespaces
 }
 
-func get_name(): Symbol {
+func get_name(): String {
     return _name
 }
 
-func get_name_with_namespaces(): Symbol {
+func get_name_with_namespaces(): String {
     return _name_with_namespaces
 }
 

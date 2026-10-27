@@ -33,8 +33,8 @@ func _written(shown: $value_type): String {
         return written_decimal(shown)
     } else if $value_type == Number {
         return shown.to_string()
-    } else if $value_type == Symbol {
-        var name: String = shown
+    } else if $value_type == Enum {
+        var name = shown.to_string()
         return quoted(name)
     } else if $value_type == List {
         return written_list(shown)
