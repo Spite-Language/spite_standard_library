@@ -1,8 +1,8 @@
-var _data = ""
+var _data = Buffer(0)
 var _position: Long = 0
 var _failed = false
 
-func TzifReader(data: String) {
+func TzifReader(data: Buffer) {
     _data = data
 }
 
@@ -21,7 +21,7 @@ func read_rules(): ZoneRules? {
     var type_count = _unsigned_at(header + 36, 4)
     var block = _block_bytes(header, time_bytes)
     var block_end = block + header + 44
-    assert type_count > 0 and block_end <= _data.length()
+    assert type_count > 0 and block_end <= _data.count()
     var times = header + 44
     var indices = time_count * time_bytes + times
     var types = time_count + indices
@@ -44,7 +44,7 @@ func read_rules(): ZoneRules? {
     }
     assert _byte_at(block_end) == 10
     var footer_end = block_end + 1
-    var length = _data.length()
+    var length = _data.count()
     while footer_end < length and _byte_at(footer_end) != 10 {
         footer_end = footer_end + 1
     }
@@ -55,7 +55,8 @@ func read_rules(): ZoneRules? {
     var footer_first = block_end + 1
     var footer_start = footer_first.to_integer()
     var footer_stop = footer_end.to_integer()
-    var footer = _data.slice(footer_start, footer_stop)
+    var footer = _data.read_buffer_at(footer_start, footer_stop - footer_start)
+    assert footer
     var footer_reader = TzifReader(footer)
     var yearly_rule = footer_reader.read_daylight_rule()
     assert yearly_rule
@@ -69,7 +70,7 @@ func read_daylight_rule(): DaylightRule? {
     var standard_offset = -_read_offset()
     var rule = DaylightRule(standard_offset)
     assert not _failed
-    if _position == _data.length() {
+    if _position == _data.count() {
         return rule
     }
     _skip_zone_name()
@@ -79,20 +80,20 @@ func read_daylight_rule(): DaylightRule? {
         daylight_offset = -_read_offset()
     }
     assert not _failed
-    if _position == _data.length() {
+    if _position == _data.count() {
         return rule
     }
     _expect(44)
     var start = _read_change()
     _expect(44)
     var end = _read_change()
-    assert not _failed and _position == _data.length()
+    assert not _failed and _position == _data.count()
     rule.observe_daylight(daylight_offset, start, end)
     return rule
 }
 
 func _is_header_at(position: Long): Boolean {
-    var length = _data.length()
+    var length = _data.count()
     if position + 44 > length {
         return false
     }
@@ -121,22 +122,22 @@ func _offset_of_type(type_start: Long): Integer {
 }
 
 func _byte_at(position: Long): Integer {
-    var length: Long = _data.length()
+    var length: Long = _data.count()
     if position < 0 or position >= length {
         _failed = true
         return 0
     }
     var index = position.to_integer()
-    return _data.byte_at(index)
+    return _byte_in(index)
 }
 
 func _peek(): Integer {
-    var length: Long = _data.length()
+    var length: Long = _data.count()
     if _position >= length {
         return 0
     }
     var index = _position.to_integer()
-    return _data.byte_at(index)
+    return _byte_in(index)
 }
 
 func _unsigned_at(position: Long, bytes: Long): Long {
@@ -162,7 +163,7 @@ func _signed_at(position: Long, bytes: Long): Long {
 func _skip_zone_name() {
     var start = _position
     if _peek() == 60 {
-        while _position < _data.length() and _peek() != 62 {
+        while _position < _data.count() and _peek() != 62 {
             _position = _position + 1
         }
         _expect(62)
@@ -262,4 +263,10 @@ func _is_digit(code: Integer): Boolean {
 
 func _is_letter(code: Integer): Boolean {
     return code >= 65 and code <= 90 or code >= 97 and code <= 122
+}
+
+func _byte_in(index: Integer): Integer {
+    var held = _data[index]
+    crash held
+    return held.to_integer()
 }

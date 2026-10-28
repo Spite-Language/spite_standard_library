@@ -15,28 +15,27 @@ func _rename_to(new_path: String): Boolean {
     return moved != 0
 }
 
-func _entry_names(want_folders: Boolean): List<String> {
+func _entry_names(want_folders: Boolean): List<String>? {
     var names = List<String>()
     var found = Buffer(600)
     var pattern = "{path}/*"
     var search = kernel.FindFirstFileA_as_long(pattern, found)
-    if search != -1 {
-        var more = true
-        while more {
-            found.take_written(600)
-            var attributes = found.read_integer_little_endian_at(0)
-            crash attributes
-            var is_folder = attributes.bits_and(16) != 0
-            var name = _name_in(found)
-            var listed = name != "." and name != ".."
-            if is_folder == want_folders and listed {
-                names.append(name)
-            }
-            var next = kernel.FindNextFileA(search, found)
-            more = next != 0
+    assert search != -1
+    var more = true
+    while more {
+        found.take_written(600)
+        var attributes = found.read_integer_little_endian_at(0)
+        crash attributes
+        var is_folder = attributes.bits_and(16) != 0
+        var name = _name_in(found)
+        var listed = name != "." and name != ".."
+        if is_folder == want_folders and listed {
+            names.append(name)
         }
-        kernel.FindClose(search)
+        var next = kernel.FindNextFileA(search, found)
+        more = next != 0
     }
+    kernel.FindClose(search)
     return names
 }
 

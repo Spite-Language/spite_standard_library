@@ -38,7 +38,7 @@ func to_string(): String {
 func read_as_string(): String? {
     var bytes = read_as_buffer()
     assert bytes
-    return _text_of(bytes)
+    return bytes.read_as_string()
 }
 
 func write_string(text: String): Boolean {
@@ -161,11 +161,4 @@ func _put(text: String, mode: String): Boolean {
     var closed = _close_handle(handle)
     var length: Long = text.length()
     return written == length and closed == 0
-}
-
-func _text_of(bytes: Buffer): String {
-    var text = String()
-    text._buffer = bytes
-    text._length = bytes.count()
-    return text
 }

@@ -3,20 +3,18 @@ var arguments = List<String>()
 var working_directory = ""
 var environment_variables = Dictionary<String, String>()
 var with_errors = false
-var _output = Buffer(0)
+var _output: Buffer? = null
 
 func Process(starting_command: String, starting_arguments: List<String>) {
     command = starting_command
     arguments = starting_arguments
 }
 
-func run(): Integer {
+func run(): Integer? {
+    _output = null
     var command_text = _command_line()
     var handle = _open_process(command_text)
-    if handle == 0 {
-        _output = Buffer(0)
-        return -1
-    }
+    assert handle != 0
     var output_bytes = Buffer(0)
     var chunk = Buffer(4096)
     var got = _read_into(chunk, 4096, handle)
@@ -31,10 +29,11 @@ func run(): Integer {
 }
 
 func read_output_as_string(): String? {
+    assert _output
     return _output.read_as_string()
 }
 
-func read_output_as_buffer(): Buffer {
+func read_output_as_buffer(): Buffer? {
     return _output
 }
 

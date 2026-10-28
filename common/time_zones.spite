@@ -17,7 +17,7 @@ func fixed_offset(offset: Duration): TimeZone {
     return TimeZone(name, zone_rules)
 }
 
-func read_tzif(name: String, data: String): TimeZone? {
+func read_tzif(name: String, data: Buffer): TimeZone? {
     var reader = TzifReader(data)
     var rules = reader.read_rules()
     assert rules
