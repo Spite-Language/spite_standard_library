@@ -1,5 +1,6 @@
 var _parts = [0, 0, 0, 0]
 var _scope = 0
+var _name = ""
 
 func is_ipv4(): Boolean {
     return _parts.count() == 4
@@ -37,6 +38,58 @@ func to_string(): String {
         return "{text}%{_scope}"
     }
     return text
+}
+
+func _host_text(): String {
+    if not _name.is_empty() {
+        return _name
+    }
+    var text = to_string()
+    if is_ipv6() {
+        return "[{text}]"
+    }
+    return text
+}
+
+func _names_a_host(text: String): Boolean {
+    var length = text.length()
+    if length == 0 or length > 253 {
+        return false
+    }
+    var labels = text.split(".")
+    var index = 0
+    while index < labels.count() {
+        var label = labels[index]
+        crash label
+        if not _is_host_label(label) {
+            return false
+        }
+        index = index + 1
+    }
+    var last = labels.last()
+    crash last
+    return _decimal_value(last, 63) < 0
+}
+
+func _is_host_label(label: String): Boolean {
+    var length = label.length()
+    if length == 0 or length > 63 {
+        return false
+    }
+    if label.starts_with("-") or label.ends_with("-") {
+        return false
+    }
+    var index = 0
+    while index < length {
+        var code = label.byte_at(index)
+        var letter = code >= 97 and code <= 122 or code >= 65 and code <= 90
+        var digit = code >= 48 and code <= 57
+        if not letter and not digit and code != 45 {
+            return false
+        }
+        index = index + 1
+    }
+    return true
 }
 
 func _read_text(text: String): Boolean {

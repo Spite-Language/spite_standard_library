@@ -3,7 +3,8 @@ var largest_idle = 8
 var _idle = List<Tcp.Connection>()
 var _idle_keys = List<String>()
 
-func send(host: String, port: Integer, request: Http.Request): Http.Response? {
+func send(address: IpAddress, port: Integer, request: Http.Request): Http.Response? {
+    var host = address._host_text()
     var key = "{host} {port}"
     var reused = _take_idle(key)
     if reused {
@@ -14,7 +15,7 @@ func send(host: String, port: Integer, request: Http.Request): Http.Response? {
         reused.close()
     }
     var client = Tcp.Client()
-    var connected = client.connect_to_host(host, port)
+    var connected = client.connect(address, port)
     assert connected
     var connection = client._connection
     var answer = _ask(connection, host, request)
@@ -59,9 +60,6 @@ func _take_idle(key: String): Tcp.Connection? {
 func _ask(connection: Tcp.Connection, host: String, request: Http.Request): String? {
     var body_length = request._body.count()
     var host_header = host
-    if host.contains(":") {
-        host_header = "[{host}]"
-    }
     var method = request.method
     var path = request.path
     var head = "{method} {path} HTTP/1.1\r\nhost: {host_header}\r\n"

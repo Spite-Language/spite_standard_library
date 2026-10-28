@@ -40,16 +40,6 @@ func open_at(address: IpAddress, port: Integer): Boolean {
     return true
 }
 
-func open_at_host(host: String, port: Integer): Boolean {
-    var addresses = host.resolve_ip_addresses()
-    if addresses.is_empty() {
-        return false
-    }
-    var address = addresses[0]
-    crash address
-    return open_at(address, port)
-}
-
 func send_to(address: IpAddress, port: Integer, bytes: Buffer): Boolean {
     crash handle != -1
     if address.is_ipv6() and not _as_ipv6 {
@@ -60,21 +50,6 @@ func send_to(address: IpAddress, port: Integer, bytes: Buffer): Boolean {
     var counted = bytes.count()
     var sent = _send(system_address, length, bytes, counted)
     return sent == counted
-}
-
-func send_to_host(host: String, port: Integer, bytes: Buffer): Boolean {
-    crash handle != -1
-    var addresses = host.resolve_ip_addresses()
-    var index = 0
-    while index < addresses.count() {
-        var address = addresses[index]
-        crash address
-        if address.is_ipv4() or _as_ipv6 {
-            return send_to(address, port, bytes)
-        }
-        index = index + 1
-    }
-    return false
 }
 
 func receive(): Udp.Datagram? {

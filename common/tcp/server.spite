@@ -33,16 +33,6 @@ func listen_at(address: IpAddress, port: Integer): Boolean {
     return listening
 }
 
-func listen_at_host(host: String, port: Integer): Boolean {
-    var addresses = host.resolve_ip_addresses()
-    if addresses.is_empty() {
-        return false
-    }
-    var address = addresses[0]
-    crash address
-    return listen_at(address, port)
-}
-
 func accept(): Tcp.Connection? {
     assert not closed
     _use_blocking_calls()

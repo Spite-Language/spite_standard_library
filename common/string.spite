@@ -718,9 +718,16 @@ func _annotation_agrees(is_first: Boolean, instant: Instant, offset_seconds: Int
 
 func to_ip_address(): IpAddress? {
     var address = IpAddress()
-    var read = address._read_text(this)
-    assert read
-    return address
+    if address._read_text(this) {
+        return address
+    }
+    assert address._names_a_host(this)
+    var addresses = resolve_ip_addresses()
+    assert not addresses.is_empty()
+    var first = addresses[0]
+    crash first
+    first._name = this
+    return first
 }
 
 func to_float(): Float? {

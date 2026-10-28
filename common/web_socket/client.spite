@@ -2,12 +2,12 @@ var _connection: WebSocket.Connection? = null
 var _random = SecureRandom()
 var _base64 = Base64()
 
-func connect(host: String, port: Integer, request: Http.Request): Boolean {
+func connect(address: IpAddress, port: Integer, request: Http.Request): Boolean {
     crash not _connection
     var body = request.read_body_as_buffer()
     crash request.method == "GET" and body.is_empty()
     var client = Tcp.Client()
-    var connected = client.connect_to_host(host, port)
+    var connected = client.connect(address, port)
     if not connected {
         return false
     }
@@ -18,10 +18,7 @@ func connect(host: String, port: Integer, request: Http.Request): Boolean {
         return false
     }
     var key = _base64.encode(nonce)
-    var host_header = host
-    if host.contains(":") {
-        host_header = "[{host}]"
-    }
+    var host_header = address._host_text()
     if port != 80 {
         host_header = "{host_header}:{port}"
     }

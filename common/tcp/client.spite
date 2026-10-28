@@ -8,19 +8,6 @@ func connect(address: IpAddress, port: Integer): Boolean {
     return connected
 }
 
-func connect_to_host(host: String, port: Integer): Boolean {
-    var addresses = host.resolve_ip_addresses()
-    var connected = false
-    var index = 0
-    while not connected and index < addresses.count() {
-        var address = addresses[index]
-        crash address
-        connected = connect(address, port)
-        index = index + 1
-    }
-    return connected
-}
-
 func connect_locally(port: Integer): Boolean {
     var address = IpAddress()
     address._parts = [127, 0, 0, 1]
