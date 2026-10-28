@@ -6,6 +6,29 @@ func exit(code: Integer) {
     library.exit(code)
 }
 
+func argument_named(name: String): String? {
+    var bare = "--{name}"
+    var with_value = "{bare}="
+    var given = arguments()
+    var index = 0
+    while index < given.count() {
+        var argument = given[index]
+        if argument.starts_with(with_value) {
+            var start = with_value.length()
+            var end = argument.length()
+            return argument.slice(start, end)
+        }
+        index = index + 1
+    }
+    return null
+}
+
+func has_flag(name: String): Boolean {
+    var bare = "--{name}"
+    var given = arguments()
+    return given.contains(bare)
+}
+
 func live_allocations(): Long {
     return _live_allocations()
 }

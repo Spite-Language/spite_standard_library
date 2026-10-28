@@ -71,7 +71,7 @@ func command_line(): String {
     return text
 }
 
-func command_arguments(): List<String> {
+func arguments(): List<String> {
     var line = command_line()
     var pieces = List<String>()
     var piece = String()
