@@ -258,7 +258,9 @@ func _send_frame(opcode: Integer, payload: Buffer): Boolean {
     }
     if _masking {
         var mask = _random.random_buffer(4)
-        crash mask
+        if not mask {
+            return false
+        }
         frame.append_buffer(mask, 0, 4)
         var index = 0
         while index < count {

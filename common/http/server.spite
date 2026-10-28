@@ -33,13 +33,13 @@ func next_request(): Http.Request? {
     }
 }
 
-func respond(request: Http.Request, response: Http.Response) {
+func respond(request: Http.Request, response: Http.Response): Boolean {
     var client = request._connection
     var waiting_count = _waiting.count()
     var keep = _keeps_alive(request) and waiting_count < largest_waiting and not _listener.closed
     var with_body = request.method != "HEAD" and response.status != 204 and response.status != 304
     var announce = keep and request.version == "HTTP/1.0"
-    _write_response(client, response, with_body, announce or not keep)
+    var written = _write_response(client, response, with_body, announce or not keep)
     if keep and not client.closed {
         _waiting.append(client)
         var now = _clock.elapsed()
@@ -47,6 +47,7 @@ func respond(request: Http.Request, response: Http.Response) {
     } else {
         client.close()
     }
+    return written
 }
 
 func close() {
@@ -103,8 +104,9 @@ func _next_ready_connection(): Tcp.Connection? {
         assert ready != -2
         if ready == 0 {
             var client = _listener.accept()
-            assert client
-            return client
+            if client {
+                return client
+            }
         }
         if ready > 0 {
             return _take_waiting(ready - 1)
@@ -211,7 +213,7 @@ func _read_headers(client: Tcp.Connection, headers: Dictionary<String, String>):
     return false
 }
 
-func _write_response(client: Tcp.Connection, response: Http.Response, with_body: Boolean, closing: Boolean) {
+func _write_response(client: Tcp.Connection, response: Http.Response, with_body: Boolean, closing: Boolean): Boolean {
     var reason = response.reason()
     var body_length = response._body.count()
     var status = response.status
@@ -237,8 +239,9 @@ func _write_response(client: Tcp.Connection, response: Http.Response, with_body:
     if with_body {
         bytes.append_buffer(response._body, 0, body_length)
     }
-    client.write_buffer(bytes)
+    var written = client.write_buffer(bytes)
     if closing {
         client.close()
     }
+    return written
 }

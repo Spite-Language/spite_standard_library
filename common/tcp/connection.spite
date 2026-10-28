@@ -20,7 +20,9 @@ func read_line(): String? {
         }
     }
     assert newline
-    return _take_line(newline)
+    var line = _take_line(newline)
+    var bytes = line.to_buffer()
+    return bytes.read_as_string()
 }
 
 func read_as_buffer(): Buffer? {
@@ -138,7 +140,9 @@ func _read_line_now(): String? {
         }
     }
     assert newline
-    return _take_line(newline)
+    var line = _take_line(newline)
+    var bytes = line.to_buffer()
+    return bytes.read_as_string()
 }
 
 func _read_as_buffer_now(): Buffer {

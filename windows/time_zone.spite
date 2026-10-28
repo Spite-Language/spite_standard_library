@@ -16,7 +16,9 @@ func _open_calendar(): Boolean {
     _status.append_integer_little_endian(0)
     if _identifier.is_empty() {
         var default_identifier = _default_identifier()
-        assert default_identifier
+        if not default_identifier {
+            return false
+        }
         _identifier = default_identifier
     }
     _calendar = _opened_calendar()

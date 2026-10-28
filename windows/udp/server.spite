@@ -33,7 +33,7 @@ func _close_handle() {
     _sockets.closesocket(handle)
 }
 
-func _local_port(): Integer {
+func _local_port(): Integer? {
     var address = Buffer(28)
     var index = 0
     while index < 28 {
@@ -43,7 +43,7 @@ func _local_port(): Integer {
     var length_slot = Buffer(4)
     length_slot.append_integer_little_endian(28)
     var asked = _sockets.getsockname(handle, address, length_slot)
-    crash asked == 0
+    assert asked == 0
     var bound = IpAddress()
     return bound._system_port(address)
 }

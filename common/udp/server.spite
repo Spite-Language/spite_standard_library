@@ -31,7 +31,12 @@ func open_at(address: IpAddress, port: Integer): Boolean {
         close()
         return false
     }
-    _port = _local_port()
+    var local_port = _local_port()
+    if not local_port {
+        close()
+        return false
+    }
+    _port = local_port
     return true
 }
 
@@ -86,7 +91,7 @@ func receive(): Udp.Datagram? {
     room.take_written(received)
     var sender_address = IpAddress()
     var read = sender_address._read_system_address(sender)
-    crash read
+    assert read
     var sender_port = sender_address._system_port(sender)
     var bytes = room.copy()
     return Udp.Datagram(bytes, sender_address, sender_port)
