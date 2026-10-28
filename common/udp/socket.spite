@@ -1,7 +1,5 @@
 var handle: Long = -1
 var _family = 0
-var _sender_host = ""
-var _sender_port = 0
 var _port = 0
 
 func open(): Boolean {
@@ -43,18 +41,12 @@ func send_to(host: String, port: Integer, bytes: Buffer): Boolean {
     return sent == counted
 }
 
-func receive_as_buffer(): Buffer? {
+func receive(): Udp.Datagram? {
     assert handle != -1
     return _received()
 }
 
-func receive_as_string(): String? {
-    var received = receive_as_buffer()
-    assert received
-    return received.read_as_string()
-}
-
-func receive_as_buffer_now(): Buffer? {
+func receive_now(): Udp.Datagram? {
     assert handle != -1
     assert _ready_now()
     return _received()
@@ -63,14 +55,6 @@ func receive_as_buffer_now(): Buffer? {
 func get_port(): Integer {
     crash handle != -1
     return _port
-}
-
-func sender_host(): String {
-    return _sender_host
-}
-
-func sender_port(): Integer {
-    return _sender_port
 }
 
 func close() {
@@ -137,15 +121,16 @@ func _destination(host: String, port: Integer): Buffer? {
     return destination
 }
 
-func _received(): Buffer? {
+func _received(): Udp.Datagram? {
     var room = Buffer(65536)
     var sender = _empty_address()
     var received = _receive_from(room, 65536, sender)
     assert received >= 0
     room.take_written(received)
-    _sender_host = _address_text(sender)
-    _sender_port = _read_port(sender)
-    return room.copy()
+    var sender_host = _address_text(sender)
+    var sender_port = _read_port(sender)
+    var bytes = room.copy()
+    return Udp.Datagram(bytes, sender_host, sender_port)
 }
 
 func _local_address(port: Integer): Buffer {

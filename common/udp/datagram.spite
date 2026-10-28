@@ -1,0 +1,25 @@
+var _bytes = Buffer(0)
+var _sender_host = ""
+var _sender_port = 0
+
+func Datagram(bytes: Buffer, sender_host: String, sender_port: Integer) {
+    _bytes = bytes
+    _sender_host = sender_host
+    _sender_port = sender_port
+}
+
+func read_as_string(): String? {
+    return _bytes.read_as_string()
+}
+
+func read_as_buffer(): Buffer {
+    return _bytes
+}
+
+func get_sender_host(): String {
+    return _sender_host
+}
+
+func get_sender_port(): Integer {
+    return _sender_port
+}
