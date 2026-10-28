@@ -4,99 +4,489 @@ enum Ambiguity {
     'later'
 }
 
-var _time_text = TimeText()
-var _name = ""
-var _rules = ZoneRules(0)
+var _identifier = ""
+var _first_offset = 0
+var _times = List<Long>()
+var _offsets = List<Integer>()
+var _follows_yearly_rule = false
+var _standard_offset = 0
+var _daylight_offset = 0
+var _observes_daylight = false
+var _start_letter = 0
+var _start_number = 0
+var _start_week = 0
+var _start_weekday = 0
+var _start_time = 7200
+var _end_letter = 0
+var _end_number = 0
+var _end_week = 0
+var _end_weekday = 0
+var _end_time = 7200
 
-func TimeZone(name: String, rules: ZoneRules) {
-    _name = name
-    _rules = rules
+func TimeZone(identifier: String, offset: Duration) {
+    var seconds = offset.total('seconds')
+    crash seconds > -86400 and seconds < 86400
+    _identifier = identifier
+    _first_offset = seconds.to_integer()
 }
 
-func get_name(): String {
-    return _name
+func get_identifier(): String {
+    return _identifier
 }
 
 func offset_at(instant: Instant): Duration {
-    var seconds = _offset_seconds_at(instant)
-    return Duration(seconds, 'seconds')
-}
-
-func to_local(instant: Instant): DateTime {
-    var offset = offset_at(instant)
-    var since_1970 = instant.since_1970
-    var wall = since_1970 + offset
-    var seconds = wall.total('seconds')
-    var nanosecond_long = wall.part('nanoseconds')
-    if nanosecond_long < 0 {
-        nanosecond_long = nanosecond_long + 1000000000
-        seconds = seconds - 1
-    }
-    var second_of_day = seconds % 86400
-    if second_of_day < 0 {
-        second_of_day = second_of_day + 86400
-    }
-    var first_day = Date(1970, 1, 1)
-    var days_long = (seconds - second_of_day) / 86400
-    var days = days_long.to_integer()
-    var date = first_day + Period(days, 'days')
-    var second_of_day_count = second_of_day.to_integer()
-    var nanosecond = nanosecond_long.to_integer()
-    var time = Time(second_of_day_count / 3600, second_of_day_count / 60 % 60, second_of_day_count % 60, nanosecond)
-    return DateTime(date, time)
-}
-
-func to_instant(local: DateTime, ambiguity: Ambiguity): Instant {
-    var date = local.date
-    var time = local.time
-    var second_of_day: Long = time.second_of_day
-    var wall = date.days_since_1970 * 86400 + second_of_day
-    var offset_before = _rules.offset_seconds_at(wall - 86400)
-    var offset_after = _rules.offset_seconds_at(wall + 86400)
-    var offset_before_long: Long = offset_before
-    var offset_after_long: Long = offset_after
-    var before = wall - offset_before_long
-    var after = wall - offset_after_long
-    var offset_at_before = _rules.offset_seconds_at(before)
-    var offset_at_after = _rules.offset_seconds_at(after)
-    var before_fits = offset_at_before == offset_before
-    var after_fits = offset_at_after == offset_after
-    var earliest = before
-    var latest = after
-    if after < before {
-        earliest = after
-        latest = before
-    }
-    var in_gap = not before_fits and not after_fits
-    var in_overlap = before_fits and after_fits and before != after
-    var chosen = before
-    if in_gap or in_overlap {
-        chosen = latest
-        if ambiguity == 'earlier' or ambiguity == 'compatible' and in_overlap {
-            chosen = earliest
-        }
-    } else if after_fits {
-        chosen = after
-    }
-    var whole = Duration(chosen, 'seconds')
-    var part = Duration(time.nanosecond, 'nanoseconds')
-    var since_1970 = whole + part
-    return Instant(since_1970)
-}
-
-func to_text(instant: Instant): String {
-    var local = to_local(instant)
-    var seconds = _offset_seconds_at(instant)
-    var offset = _time_text.write_offset(seconds)
-    return "{local}{offset}"
-}
-
-func _offset_seconds_at(instant: Instant): Integer {
     var since_1970 = instant.since_1970
     var seconds = since_1970.total('seconds')
     var nanoseconds = since_1970.part('nanoseconds')
     if nanoseconds < 0 {
         seconds = seconds - 1
     }
-    return _rules.offset_seconds_at(seconds)
+    var offset_seconds = _offset_seconds_at_unix(seconds)
+    return Duration(offset_seconds, 'seconds')
+}
+
+func _offset_seconds_at_unix(unix_seconds: Long): Integer {
+    return _transition_offset_seconds_at(unix_seconds)
+}
+
+func _transition_offset_seconds_at(unix_seconds: Long): Integer {
+    var count = _times.count()
+    var last_time = _times.last()
+    var after_last = true
+    if last_time {
+        after_last = unix_seconds >= last_time
+    }
+    if _follows_yearly_rule and after_last {
+        return _yearly_offset_seconds_at(unix_seconds)
+    }
+    if count == 0 {
+        return _first_offset
+    }
+    var first_time = _times.first()
+    crash first_time
+    if unix_seconds < first_time {
+        return _first_offset
+    }
+    var low = 0
+    var high = count - 1
+    while low < high {
+        var middle = (low + high + 1) / 2
+        var middle_time = _times[middle]
+        crash middle_time
+        if middle_time <= unix_seconds {
+            low = middle
+        } else {
+            high = middle - 1
+        }
+    }
+    var offset = _offsets[low]
+    crash offset
+    return offset
+}
+
+func _yearly_offset_seconds_at(unix_seconds: Long): Integer {
+    if not _observes_daylight {
+        return _standard_offset
+    }
+    var standard_offset: Long = _standard_offset
+    var daylight_offset: Long = _daylight_offset
+    var local_seconds = unix_seconds + standard_offset
+    var second_of_day = local_seconds % 86400
+    if second_of_day < 0 {
+        second_of_day = second_of_day + 86400
+    }
+    var first_day = Date(1970, 1, 1)
+    var days_long = (local_seconds - second_of_day) / 86400
+    var days = days_long.to_integer()
+    var date = first_day + Period(days, 'days')
+    var year = date.year
+    var start_local = _change_local_seconds_in(year, _start_letter, _start_number, _start_week, _start_weekday, _start_time)
+    var end_local = _change_local_seconds_in(year, _end_letter, _end_number, _end_week, _end_weekday, _end_time)
+    var start = start_local - standard_offset
+    var end = end_local - daylight_offset
+    var in_daylight = unix_seconds >= start and unix_seconds < end
+    if end < start {
+        in_daylight = unix_seconds < end or unix_seconds >= start
+    }
+    if in_daylight {
+        return _daylight_offset
+    }
+    return _standard_offset
+}
+
+func _change_local_seconds_in(year: Integer, letter: Integer, number: Integer, week: Integer, weekday: Integer, time_seconds: Integer): Long {
+    var day = _change_day_since_1970(year, letter, number, week, weekday)
+    var time: Long = time_seconds
+    return day * 86400 + time
+}
+
+func _change_day_since_1970(year: Integer, letter: Integer, number: Integer, week: Integer, weekday: Integer): Long {
+    if letter == 77 {
+        var first = Date(year, number, 1)
+        var first_since_1970 = first.days_since_1970
+        var first_weekday_long = (first_since_1970 % 7 + 11) % 7
+        var first_weekday = first_weekday_long.to_integer()
+        var day = 1 + (weekday - first_weekday + 7) % 7 + (week - 1) * 7
+        var days_in_month = first.days_in_month
+        while day > days_in_month {
+            day = day - 7
+        }
+        var day_long: Long = day
+        return first_since_1970 + day_long - 1
+    }
+    var january = Date(year, 1, 1)
+    var since_1970 = january.days_since_1970
+    var day_of_year: Long = number
+    if letter == 74 and january.is_leap_year and number >= 60 {
+        return since_1970 + day_of_year
+    }
+    if letter == 74 {
+        return since_1970 + day_of_year - 1
+    }
+    return since_1970 + day_of_year
+}
+
+func _read_tzif(data: Buffer): Boolean {
+    if not _is_tzif_header_at(data, 0) {
+        return false
+    }
+    var header = 0
+    var time_bytes = 4
+    var version = _tzif_byte_at(data, 4)
+    if version != 0 {
+        var first_block = _tzif_block_bytes(data, 0, 4)
+        if first_block > 100000000 {
+            return false
+        }
+        header = first_block.to_integer() + 44
+        time_bytes = 8
+        if not _is_tzif_header_at(data, header) {
+            return false
+        }
+    }
+    var time_count = _tzif_unsigned_at(data, header + 32, 4)
+    var type_count = _tzif_unsigned_at(data, header + 36, 4)
+    var block = _tzif_block_bytes(data, header, time_bytes)
+    var header_long: Long = header
+    var block_end_long = block + header_long + 44
+    var length: Long = data.count()
+    if type_count == 0 or block_end_long > length {
+        return false
+    }
+    var block_end = block_end_long.to_integer()
+    var times = header + 44
+    var indices = time_count.to_integer() * time_bytes + times
+    var types = time_count.to_integer() + indices
+    var first_offset = _tzif_offset_of_type(data, types)
+    if not first_offset {
+        return false
+    }
+    _first_offset = first_offset
+    var index = 0
+    while time_count > index {
+        var time = _tzif_signed_at(data, times + index * time_bytes, time_bytes)
+        var type_index = _tzif_byte_at(data, indices + index)
+        if type_count <= type_index {
+            return false
+        }
+        var type_start = types + type_index * 6
+        var offset = _tzif_offset_of_type(data, type_start)
+        if not offset {
+            return false
+        }
+        _times.append(time)
+        _offsets.append(offset)
+        index = index + 1
+    }
+    if time_bytes == 4 {
+        return true
+    }
+    if block_end >= data.count() or _tzif_byte_at(data, block_end) != 10 {
+        return false
+    }
+    var footer_start = block_end + 1
+    var footer_end = footer_start
+    while footer_end < data.count() and _tzif_byte_at(data, footer_end) != 10 {
+        footer_end = footer_end + 1
+    }
+    if footer_end == footer_start {
+        return true
+    }
+    var footer = data.read_string_at(footer_start, footer_end - footer_start)
+    if not footer {
+        return false
+    }
+    return _read_posix_rule(footer)
+}
+
+func _is_tzif_header_at(data: Buffer, position: Integer): Boolean {
+    if position < 0 or position + 44 > data.count() {
+        return false
+    }
+    return _tzif_byte_at(data, position) == 84 and _tzif_byte_at(data, position + 1) == 90 and _tzif_byte_at(data, position + 2) == 105 and _tzif_byte_at(data, position + 3) == 102
+}
+
+func _tzif_block_bytes(data: Buffer, header: Integer, time_bytes: Integer): Long {
+    var universal_count = _tzif_unsigned_at(data, header + 20, 4)
+    var standard_count = _tzif_unsigned_at(data, header + 24, 4)
+    var leap_count = _tzif_unsigned_at(data, header + 28, 4)
+    var time_count = _tzif_unsigned_at(data, header + 32, 4)
+    var type_count = _tzif_unsigned_at(data, header + 36, 4)
+    var character_count = _tzif_unsigned_at(data, header + 40, 4)
+    var time_bytes_long: Long = time_bytes
+    var transitions = time_count * (time_bytes_long + 1)
+    var leap_seconds = leap_count * (time_bytes_long + 4)
+    return transitions + type_count * 6 + character_count + leap_seconds + standard_count + universal_count
+}
+
+func _tzif_offset_of_type(data: Buffer, type_start: Integer): Integer? {
+    var offset = _tzif_signed_at(data, type_start, 4)
+    assert offset > -100000 and offset < 100000
+    return offset.to_integer()
+}
+
+func _tzif_byte_at(data: Buffer, position: Integer): Integer {
+    var held = data[position]
+    crash held
+    return held.to_integer()
+}
+
+func _tzif_unsigned_at(data: Buffer, position: Integer, bytes: Integer): Long {
+    var value: Long = 0
+    var index = 0
+    while index < bytes {
+        var byte: Long = _tzif_byte_at(data, position + index)
+        value = value.shifted_left(8)
+        value = value.bits_or(byte)
+        index = index + 1
+    }
+    return value
+}
+
+func _tzif_signed_at(data: Buffer, position: Integer, bytes: Integer): Long {
+    var value = _tzif_unsigned_at(data, position, bytes)
+    if bytes == 4 and value >= 2147483648 {
+        return value - 4294967296
+    }
+    return value
+}
+
+func _read_posix_rule(rule: String): Boolean {
+    var parts = rule.split(",")
+    if parts.count() != 1 and parts.count() != 3 {
+        return false
+    }
+    var head = parts[0]
+    crash head
+    var standard_name_end = _posix_name_end(head, 0)
+    if not standard_name_end {
+        return false
+    }
+    var standard_offset_end = _posix_offset_end(head, standard_name_end)
+    var standard_offset = _posix_offset_between(head, standard_name_end, standard_offset_end)
+    if not standard_offset {
+        return false
+    }
+    _follows_yearly_rule = true
+    _standard_offset = -standard_offset
+    _daylight_offset = -standard_offset
+    if standard_offset_end == head.length() {
+        return parts.count() == 1
+    }
+    var daylight_name_end = _posix_name_end(head, standard_offset_end)
+    if not daylight_name_end {
+        return false
+    }
+    var daylight_offset = _standard_offset + 3600
+    if daylight_name_end < head.length() {
+        var daylight_offset_end = _posix_offset_end(head, daylight_name_end)
+        var read_offset = _posix_offset_between(head, daylight_name_end, daylight_offset_end)
+        if not read_offset or daylight_offset_end != head.length() {
+            return false
+        }
+        daylight_offset = -read_offset
+    }
+    if parts.count() != 3 {
+        return false
+    }
+    var start = parts[1]
+    var end = parts[2]
+    crash start and end
+    var start_read = _read_posix_change(start, true)
+    var end_read = _read_posix_change(end, false)
+    if not start_read or not end_read {
+        return false
+    }
+    _daylight_offset = daylight_offset
+    _observes_daylight = true
+    return true
+}
+
+func _posix_name_end(text: String, start: Integer): Integer? {
+    var length = text.length()
+    assert start < length
+    var position = start
+    if text.byte_at(start) == 60 {
+        while position < length and text.byte_at(position) != 62 {
+            position = position + 1
+        }
+        assert position < length
+        return position + 1
+    }
+    var letter = text._code_at(position)
+    while _is_posix_letter(letter) {
+        position = position + 1
+        letter = text._code_at(position)
+    }
+    assert position > start
+    return position
+}
+
+func _posix_offset_end(text: String, start: Integer): Integer {
+    var position = start
+    var sign = text._code_at(position)
+    if sign == 43 or sign == 45 {
+        position = position + 1
+    }
+    var code = text._code_at(position)
+    while _is_posix_digit(code) or code == 58 {
+        position = position + 1
+        code = text._code_at(position)
+    }
+    return position
+}
+
+func _posix_offset_between(text: String, start: Integer, end: Integer): Integer? {
+    assert end > start
+    var sign = 1
+    var position = start
+    var first = text.byte_at(start)
+    if first == 43 or first == 45 {
+        position = position + 1
+    }
+    if first == 45 {
+        sign = -1
+    }
+    var written = text.slice(position, end)
+    var pieces = written.split(":")
+    assert pieces.count() <= 3
+    var seconds = 0
+    var scale = 3600
+    var index = 0
+    while index < pieces.count() {
+        var piece = pieces[index]
+        crash piece
+        var number = _posix_number(piece)
+        assert number
+        seconds = seconds + number * scale
+        scale = scale / 60
+        index = index + 1
+    }
+    return sign * seconds
+}
+
+func _read_posix_change(text: String, is_start: Boolean): Boolean {
+    var pieces = text.split("/")
+    if pieces.count() > 2 {
+        return false
+    }
+    var day = pieces[0]
+    crash day
+    var time_seconds = 7200
+    if pieces.count() == 2 {
+        var time = pieces[1]
+        crash time
+        var time_end = _posix_offset_end(time, 0)
+        var read_time = _posix_offset_between(time, 0, time_end)
+        if not read_time or time_end != time.length() {
+            return false
+        }
+        time_seconds = read_time
+    }
+    if day.is_empty() {
+        return false
+    }
+    var letter = day.byte_at(0)
+    var number_start = 0
+    if letter == 77 or letter == 74 {
+        number_start = 1
+    } else {
+        letter = 0
+    }
+    var day_length = day.length()
+    var number_text = day.slice(number_start, day_length)
+    var week = 0
+    var weekday = 0
+    var number: Integer? = null
+    if letter == 77 {
+        var fields = number_text.split(".")
+        if fields.count() != 3 {
+            return false
+        }
+        var month_text = fields[0]
+        var week_text = fields[1]
+        var weekday_text = fields[2]
+        crash month_text and week_text and weekday_text
+        var month = _posix_number(month_text)
+        var read_week = _posix_number(week_text)
+        var read_weekday = _posix_number(weekday_text)
+        if not month or not read_week or not read_weekday {
+            return false
+        }
+        if month < 1 or month > 12 or read_week < 1 or read_week > 5 or read_weekday > 6 {
+            return false
+        }
+        number = month
+        week = read_week
+        weekday = read_weekday
+    } else {
+        var day_number = _posix_number(number_text)
+        if not day_number {
+            return false
+        }
+        if letter == 74 and (day_number < 1 or day_number > 365) {
+            return false
+        }
+        if day_number > 365 {
+            return false
+        }
+        number = day_number
+    }
+    crash number
+    if is_start {
+        _start_letter = letter
+        _start_number = number
+        _start_week = week
+        _start_weekday = weekday
+        _start_time = time_seconds
+    } else {
+        _end_letter = letter
+        _end_number = number
+        _end_week = week
+        _end_weekday = weekday
+        _end_time = time_seconds
+    }
+    return true
+}
+
+func _posix_number(text: String): Integer? {
+    var length = text.length()
+    assert length >= 1 and length <= 6
+    var value = 0
+    var index = 0
+    while index < length {
+        var code = text.byte_at(index)
+        assert _is_posix_digit(code)
+        value = value * 10 + code - 48
+        index = index + 1
+    }
+    return value
+}
+
+func _is_posix_digit(code: Integer): Boolean {
+    return code >= 48 and code <= 57
+}
+
+func _is_posix_letter(code: Integer): Boolean {
+    return code >= 65 and code <= 90 or code >= 97 and code <= 122
 }

@@ -224,6 +224,34 @@ func to_debug(): String {
     return to_string()
 }
 
+func _written_with_digits(width: Integer): String {
+    var value: Long = _value()
+    var sign = ""
+    if value < 0 {
+        sign = "-"
+        value = -value
+    }
+    var digits = value.to_string()
+    while digits.length() < width {
+        digits = "0{digits}"
+    }
+    return "{sign}{digits}"
+}
+
+func _written_as_fraction(): String {
+    var nanoseconds = _value()
+    if nanoseconds == 0 {
+        return ""
+    }
+    var digits = nanoseconds._written_with_digits(9)
+    var length = digits.length()
+    while digits.byte_at(length - 1) == 48 {
+        length = length - 1
+    }
+    var kept = digits.slice(0, length)
+    return ".{kept}"
+}
+
 func set_bit_count(): Integer {
     var count = 0
     var index = 0

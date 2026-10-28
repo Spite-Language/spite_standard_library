@@ -34,6 +34,42 @@ func greater_than(other: DateTime): Boolean {
     return other < this
 }
 
+func to_instant_in(zone: TimeZone, ambiguity: TimeZone.Ambiguity): Instant {
+    var second_of_day: Long = _time.second_of_day
+    var wall = _date.days_since_1970 * 86400 + second_of_day
+    var offset_before = zone._offset_seconds_at_unix(wall - 86400)
+    var offset_after = zone._offset_seconds_at_unix(wall + 86400)
+    var offset_before_long: Long = offset_before
+    var offset_after_long: Long = offset_after
+    var before = wall - offset_before_long
+    var after = wall - offset_after_long
+    var offset_at_before = zone._offset_seconds_at_unix(before)
+    var offset_at_after = zone._offset_seconds_at_unix(after)
+    var before_fits = offset_at_before == offset_before
+    var after_fits = offset_at_after == offset_after
+    var earliest = before
+    var latest = after
+    if after < before {
+        earliest = after
+        latest = before
+    }
+    var in_gap = not before_fits and not after_fits
+    var in_overlap = before_fits and after_fits and before != after
+    var chosen = before
+    if in_gap or in_overlap {
+        chosen = latest
+        if ambiguity == 'earlier' or ambiguity == 'compatible' and in_overlap {
+            chosen = earliest
+        }
+    } else if after_fits {
+        chosen = after
+    }
+    var whole = Duration(chosen, 'seconds')
+    var part = Duration(_time.nanosecond, 'nanoseconds')
+    var since_1970 = whole + part
+    return Instant(since_1970)
+}
+
 func to_string(): String {
     return "{_date}T{_time}"
 }

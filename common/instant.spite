@@ -30,8 +30,38 @@ func greater_than(other: Instant): Boolean {
     return _since_1970 > other._since_1970
 }
 
+func to_date_time_in(zone: TimeZone): DateTime {
+    var offset = zone.offset_at(this)
+    var wall = _since_1970 + offset
+    var seconds = wall.total('seconds')
+    var nanosecond_long = wall.part('nanoseconds')
+    if nanosecond_long < 0 {
+        nanosecond_long = nanosecond_long + 1000000000
+        seconds = seconds - 1
+    }
+    var second_of_day = seconds % 86400
+    if second_of_day < 0 {
+        second_of_day = second_of_day + 86400
+    }
+    var first_day = Date(1970, 1, 1)
+    var days_long = (seconds - second_of_day) / 86400
+    var days = days_long.to_integer()
+    var date = first_day + Period(days, 'days')
+    var second_of_day_count = second_of_day.to_integer()
+    var nanosecond = nanosecond_long.to_integer()
+    var time = Time(second_of_day_count / 3600, second_of_day_count / 60 % 60, second_of_day_count % 60, nanosecond)
+    return DateTime(date, time)
+}
+
+func to_string_in(zone: TimeZone): String {
+    var local = to_date_time_in(zone)
+    var offset = zone.offset_at(this)
+    var offset_text = offset._written_as_offset()
+    return "{local}{offset_text}"
+}
+
 func to_string(): String {
     var universal = _zones.utc()
-    var local = universal.to_local(this)
+    var local = to_date_time_in(universal)
     return "{local}Z"
 }

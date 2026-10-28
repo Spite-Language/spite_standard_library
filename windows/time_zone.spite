@@ -1,41 +1,44 @@
-var icu = DynamicLibrary("icu.dll", 'identity', "")
-var _name = ""
-var _handle: Long = 0
-var _status = Buffer(4)
+var _icu: DynamicLibrary? = null
+var _calendar: Long = 0
+var _status = Buffer(0)
 
-func ZoneCalendar(name: String) {
-    _status.append_integer_little_endian(0)
-    _name = name
-    if name.is_empty() {
-        _name = _default_name()
+func _offset_seconds_at_unix(unix_seconds: Long): Integer {
+    if _calendar != 0 {
+        return _calendar_offset_seconds_at(unix_seconds)
     }
-    _handle = _opened()
+    return _transition_offset_seconds_at(unix_seconds)
 }
 
-func get_name(): String {
-    return _name
-}
-
-func get_is_open(): Boolean {
-    return _handle != 0
-}
-
-func offset_seconds_at(unix_seconds: Long): Integer {
-    crash _handle != 0
-    _clear_status()
-    var milliseconds: Double = unix_seconds * 1000
-    icu.ucal_setMillis(_handle, milliseconds, _status)
-    var zone = icu.ucal_get(_handle, 15, _status)
-    var daylight = icu.ucal_get(_handle, 16, _status)
-    var status = _status_value()
-    crash status <= 0
-    return (zone + daylight) / 1000
+func _open_calendar(): Boolean {
+    var icu = DynamicLibrary("icu.dll", 'identity', "")
+    _icu = icu
+    _status = Buffer(4)
+    _status.append_integer_little_endian(0)
+    if _identifier.is_empty() {
+        _identifier = _default_identifier()
+    }
+    _calendar = _opened_calendar()
+    return _calendar != 0
 }
 
 func drop() {
-    if _handle != 0 {
-        icu.ucal_close(_handle)
+    var icu = _icu
+    if icu and _calendar != 0 {
+        icu.ucal_close(_calendar)
     }
+}
+
+func _calendar_offset_seconds_at(unix_seconds: Long): Integer {
+    var icu = _icu
+    crash icu and _calendar != 0
+    _clear_status()
+    var milliseconds: Double = unix_seconds * 1000
+    icu.ucal_setMillis(_calendar, milliseconds, _status)
+    var zone = icu.ucal_get(_calendar, 15, _status)
+    var daylight = icu.ucal_get(_calendar, 16, _status)
+    var status = _status_value()
+    crash status <= 0
+    return (zone + daylight) / 1000
 }
 
 func _clear_status() {
@@ -58,12 +61,14 @@ func _zeroed(size: Integer): Buffer {
     return room
 }
 
-func _opened(): Long {
-    var length = _name.length()
+func _opened_calendar(): Long {
+    var icu = _icu
+    crash icu
+    var length = _identifier.length()
     var characters = Buffer(length * 2 + 2)
     var index = 0
     while index < length {
-        var code = _name.byte_at(index)
+        var code = _identifier.byte_at(index)
         if code > 127 {
             return 0
         }
@@ -89,20 +94,22 @@ func _opened(): Long {
     return handle
 }
 
-func _default_name(): String {
+func _default_identifier(): String {
+    var icu = _icu
+    crash icu
     var characters = _zeroed(512)
     _clear_status()
     var length = icu.ucal_getDefaultTimeZone(characters, 256, _status)
     var status = _status_value()
     crash status <= 0 and length >= 0 and length <= 256
-    var name = String()
+    var identifier = String()
     var index = 0
     while index < length {
         var held = characters.read_unsigned_short_little_endian_at(index * 2)
         crash held
         var code: Integer = held
-        name.append_code(code)
+        identifier.append_code(code)
         index = index + 1
     }
-    return name
+    return identifier
 }

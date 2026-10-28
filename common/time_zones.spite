@@ -1,25 +1,20 @@
 singleton
 
-var _time_text = TimeText()
-var _utc_rules = ZoneRules(0)
-var _utc = TimeZone("UTC", _utc_rules)
+var _no_offset = Duration(0, 'seconds')
+var _utc = TimeZone("UTC", _no_offset)
 
 func utc(): TimeZone {
     return _utc
 }
 
 func fixed_offset(offset: Duration): TimeZone {
-    var seconds = offset.total('seconds')
-    crash seconds > -86400 and seconds < 86400
-    var name = _time_text.write_offset(seconds)
-    var offset_seconds = seconds.to_integer()
-    var zone_rules = ZoneRules(offset_seconds)
-    return TimeZone(name, zone_rules)
+    var identifier = offset._written_as_offset()
+    return TimeZone(identifier, offset)
 }
 
-func read_tzif(name: String, data: Buffer): TimeZone? {
-    var reader = TzifReader(data)
-    var rules = reader.read_rules()
-    assert rules
-    return TimeZone(name, rules)
+func read_tzif(identifier: String, data: Buffer): TimeZone? {
+    var zone = TimeZone(identifier, _no_offset)
+    var read = zone._read_tzif(data)
+    assert read
+    return zone
 }

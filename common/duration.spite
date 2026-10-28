@@ -7,7 +7,6 @@ enum Unit {
     'hours'
 }
 
-var _time_text = TimeText()
 var _seconds: Long = 0
 var _nanoseconds: Long = 0
 
@@ -87,8 +86,8 @@ func to_string(): String {
     var hours = size.part('hours')
     var minutes = size.part('minutes')
     var seconds = size.part('seconds')
-    var nanoseconds = size._nanoseconds
-    var fraction = _time_text.write_fraction(nanoseconds)
+    var nanoseconds = size._nanoseconds.to_integer()
+    var fraction = nanoseconds._written_as_fraction()
     var written = "{sign}PT"
     if hours != 0 {
         written = "{written}{hours}H"
@@ -100,6 +99,27 @@ func to_string(): String {
         written = "{written}{seconds}{fraction}S"
     }
     return written
+}
+
+func _written_as_offset(): String {
+    var sign = "+"
+    var size = this
+    if get_is_negative() {
+        sign = "-"
+        size = -this
+    }
+    var seconds_long = size.total('seconds')
+    var seconds = seconds_long.to_integer()
+    var hours = seconds / 3600
+    var minutes = seconds / 60 % 60
+    var remaining = seconds % 60
+    var hours_text = hours._written_with_digits(2)
+    var minutes_text = minutes._written_with_digits(2)
+    if remaining == 0 {
+        return "{sign}{hours_text}:{minutes_text}"
+    }
+    var remaining_text = remaining._written_with_digits(2)
+    return "{sign}{hours_text}:{minutes_text}:{remaining_text}"
 }
 
 func _made(seconds: Long, nanoseconds: Long): Duration {

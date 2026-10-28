@@ -396,6 +396,334 @@ func to_color(): Color? {
     return Color(read_red, read_green, read_blue, read_alpha)
 }
 
+func to_date(): Date? {
+    return _date_between(0, _length)
+}
+
+func to_time(): Time? {
+    return _time_between(0, _length)
+}
+
+func to_date_time(): DateTime? {
+    return _date_time_between(0, _length)
+}
+
+func to_instant(): Instant? {
+    var offset_start = _date_end_at(0) + 1
+    while offset_start < _length and not _is_offset_start_at(offset_start) {
+        offset_start = offset_start + 1
+    }
+    var annotations_start = offset_start
+    while annotations_start < _length and byte_at(annotations_start) != 91 {
+        annotations_start = annotations_start + 1
+    }
+    assert offset_start < annotations_start
+    var local = _date_time_between(0, offset_start)
+    var offset_seconds = _offset_between(offset_start, annotations_start)
+    assert local and offset_seconds
+    var date = local.date
+    var time = local.time
+    var second_of_day: Long = time.second_of_day
+    var offset: Long = offset_seconds
+    var seconds = date.days_since_1970 * 86400 + second_of_day - offset
+    var whole = Duration(seconds, 'seconds')
+    var part = Duration(time.nanosecond, 'nanoseconds')
+    var since_1970 = whole + part
+    var instant = Instant(since_1970)
+    var offset_is_unknown = _code_at(offset_start) == 90 or _code_at(offset_start) == 122
+    var position = annotations_start
+    var is_first = true
+    while position < _length {
+        var close = _found_at("]", position)
+        assert byte_at(position) == 91 and close > position
+        var name_start = position + 1
+        if _code_at(name_start) == 33 {
+            name_start = name_start + 1
+        }
+        var annotation = slice(name_start, close)
+        var agrees = annotation._annotation_agrees(is_first, instant, offset_seconds, offset_is_unknown)
+        assert agrees
+        is_first = false
+        position = close + 1
+    }
+    return instant
+}
+
+func to_duration(): Duration? {
+    var index = 0
+    var negative = false
+    if _length > 0 and _is_sign_at(0) {
+        negative = byte_at(0) == 45
+        index = 1
+    }
+    assert _code_at(index) == 80 and _code_at(index + 1) == 84
+    index = index + 2
+    assert index < _length
+    var seconds: Long = 0
+    var nanoseconds = 0
+    var order = 0
+    while index < _length {
+        assert order < 3
+        var number_end = _digits_end(index)
+        var digit_count = number_end - index
+        assert digit_count >= 1 and digit_count <= 15
+        var number_text = slice(index, number_end)
+        var number = number_text.to_long()
+        assert number
+        var unit_at = number_end
+        var fraction = 0
+        var has_fraction = false
+        if _code_at(unit_at) == 46 or _code_at(unit_at) == 44 {
+            var fraction_end = _digits_end(unit_at + 1)
+            var read_fraction = _fraction_between(unit_at, fraction_end)
+            assert read_fraction
+            fraction = read_fraction
+            has_fraction = true
+            unit_at = fraction_end
+        }
+        var unit = _code_at(unit_at)
+        if unit == 72 and order < 1 and not has_fraction {
+            seconds = seconds + number * 3600
+            order = 1
+        } else if unit == 77 and order < 2 and not has_fraction {
+            seconds = seconds + number * 60
+            order = 2
+        } else if unit == 83 {
+            seconds = seconds + number
+            nanoseconds = fraction
+            order = 3
+        } else {
+            return null
+        }
+        index = unit_at + 1
+    }
+    var whole = Duration(seconds, 'seconds')
+    var part = Duration(nanoseconds, 'nanoseconds')
+    var duration = whole + part
+    if negative {
+        return -duration
+    }
+    return duration
+}
+
+func to_period(): Period? {
+    var index = 0
+    var negative = false
+    if _length > 0 and _is_sign_at(0) {
+        negative = byte_at(0) == 45
+        index = 1
+    }
+    assert _code_at(index) == 80
+    index = index + 1
+    assert index < _length
+    var years = 0
+    var months = 0
+    var days: Long = 0
+    var order = 0
+    while index < _length {
+        var component_negative = false
+        if _is_sign_at(index) {
+            component_negative = byte_at(index) == 45
+            index = index + 1
+        }
+        var number_end = _digits_end(index)
+        var digit_count = number_end - index
+        assert digit_count >= 1 and digit_count <= 10
+        var number_text = slice(index, number_end)
+        var number = number_text.to_long()
+        assert number and number <= 2147483647
+        var signed = number
+        if component_negative {
+            signed = -number
+        }
+        var unit = _code_at(number_end)
+        if unit == 89 and order < 1 {
+            years = signed.to_integer()
+            order = 1
+        } else if unit == 77 and order < 2 {
+            months = signed.to_integer()
+            order = 2
+        } else if unit == 87 and order < 3 {
+            days = signed * 7
+            order = 3
+        } else if unit == 68 and order < 4 {
+            days = days + signed
+            order = 4
+        } else {
+            return null
+        }
+        index = number_end + 1
+    }
+    assert days <= 2147483647 and days >= -2147483647
+    var days_count = days.to_integer()
+    var whole_years = Period(years, 'years')
+    var whole_months = Period(months, 'months')
+    var whole_days = Period(days_count, 'days')
+    var period = whole_years + whole_months + whole_days
+    if negative {
+        return -period
+    }
+    return period
+}
+
+func _code_at(index: Integer): Integer {
+    if index < 0 or index >= _length {
+        return 0
+    }
+    return byte_at(index)
+}
+
+func _digits_at(start: Integer, count: Integer): Integer? {
+    var value = 0
+    var index = start
+    while index < start + count {
+        var code = _code_at(index)
+        assert code >= 48 and code <= 57
+        value = value * 10 + code - 48
+        index = index + 1
+    }
+    return value
+}
+
+func _date_end_at(start: Integer): Integer {
+    var sign = _code_at(start)
+    if sign == 43 or sign == 45 {
+        return start + 13
+    }
+    return start + 10
+}
+
+func _date_between(start: Integer, end: Integer): Date? {
+    var date_end = _date_end_at(start)
+    assert end == date_end
+    var month_start = date_end - 5
+    var sign = _code_at(start)
+    var year_start = start
+    if sign == 43 or sign == 45 {
+        year_start = start + 1
+    }
+    var year = _digits_at(year_start, month_start - 1 - year_start)
+    var month = _digits_at(month_start, 2)
+    var day = _digits_at(month_start + 3, 2)
+    assert year and month and day
+    assert _code_at(month_start - 1) == 45 and _code_at(month_start + 2) == 45
+    assert month >= 1 and month <= 12 and day >= 1
+    var signed_year = year
+    if sign == 45 {
+        assert year != 0
+        signed_year = -year
+    }
+    var first = Date(signed_year, month, 1)
+    assert day <= first.days_in_month
+    return Date(signed_year, month, day)
+}
+
+func _time_between(start: Integer, end: Integer): Time? {
+    var size = end - start
+    assert size == 5 or size >= 8
+    var hour = _digits_at(start, 2)
+    var minute = _digits_at(start + 3, 2)
+    assert hour and minute and _code_at(start + 2) == 58
+    var second = 0
+    var nanosecond = 0
+    if size >= 8 {
+        var read_second = _digits_at(start + 6, 2)
+        assert read_second and _code_at(start + 5) == 58
+        second = read_second
+    }
+    if size > 8 {
+        var fraction = _fraction_between(start + 8, end)
+        assert fraction
+        nanosecond = fraction
+    }
+    assert hour <= 23 and minute <= 59 and second <= 59
+    return Time(hour, minute, second, nanosecond)
+}
+
+func _fraction_between(start: Integer, end: Integer): Integer? {
+    var separator = _code_at(start)
+    assert separator == 46 or separator == 44
+    var count = end - start - 1
+    assert count >= 1 and count <= 9
+    var digits = _digits_at(start + 1, count)
+    assert digits
+    var value = digits
+    var index = count
+    while index < 9 {
+        value = value * 10
+        index = index + 1
+    }
+    return value
+}
+
+func _date_time_between(start: Integer, end: Integer): DateTime? {
+    var date_end = _date_end_at(start)
+    assert end > date_end
+    var date = _date_between(start, date_end)
+    var separator = _code_at(date_end)
+    assert separator == 84 or separator == 116 or separator == 32
+    var time = _time_between(date_end + 1, end)
+    assert date and time
+    return DateTime(date, time)
+}
+
+func _is_offset_start_at(index: Integer): Boolean {
+    var code = _code_at(index)
+    return code == 90 or code == 122 or code == 43 or code == 45
+}
+
+func _offset_between(start: Integer, end: Integer): Integer? {
+    var sign = _code_at(start)
+    if sign == 90 or sign == 122 {
+        assert end == start + 1
+        return 0
+    }
+    assert sign == 43 or sign == 45
+    assert end == start + 6 or end == start + 9
+    var hours = _digits_at(start + 1, 2)
+    var minutes = _digits_at(start + 4, 2)
+    assert hours and minutes and _code_at(start + 3) == 58
+    var seconds = 0
+    if end == start + 9 {
+        var read_seconds = _digits_at(start + 7, 2)
+        assert read_seconds and _code_at(start + 6) == 58
+        seconds = read_seconds
+    }
+    assert hours <= 23 and minutes <= 59 and seconds <= 59
+    var offset = hours * 3600 + minutes * 60 + seconds
+    if sign == 45 {
+        return -offset
+    }
+    return offset
+}
+
+func _annotation_agrees(is_first: Boolean, instant: Instant, offset_seconds: Integer, offset_is_unknown: Boolean): Boolean {
+    if contains("=") {
+        return this == "u-ca=iso8601"
+    }
+    if not is_first {
+        return false
+    }
+    if _code_at(0) == 43 or _code_at(0) == 45 {
+        var named_offset = _offset_between(0, _length)
+        if not named_offset {
+            return false
+        }
+        return offset_is_unknown or named_offset == offset_seconds
+    }
+    var zones = TimeZones()
+    var zone = zones.find(this)
+    if not zone {
+        return false
+    }
+    if offset_is_unknown {
+        return true
+    }
+    var zone_offset = zone.offset_at(instant)
+    var zone_seconds = zone_offset.total('seconds')
+    return zone_seconds == offset_seconds
+}
+
 func to_float(): Float? {
     var text = trim()
     var valid = text._is_decimal()
