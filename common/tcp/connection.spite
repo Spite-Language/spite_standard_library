@@ -57,6 +57,7 @@ func write_line(text: String): Boolean {
     var written = 0
     while written < line_length and not closed {
         var rest = line.slice(written, line_length)
+        crash rest
         var sent = _send_string(rest)
         if sent > 0 {
             written = written + sent
@@ -158,11 +159,16 @@ func _read_exactly(count: Integer): Buffer? {
 
 func _take_line(newline: Integer): String {
     var line = pending.slice(0, newline)
+    crash line
     var pending_length = pending.length()
-    pending = pending.slice(newline + 1, pending_length)
+    var sliced_pending = pending.slice(newline + 1, pending_length)
+    crash sliced_pending
+    pending = sliced_pending
     if line.ends_with("\r") {
         var line_length = line.length()
-        return line.slice(0, line_length - 1)
+        var sliced = line.slice(0, line_length - 1)
+        crash sliced
+        return sliced
     }
     return line
 }
@@ -219,7 +225,9 @@ func _take_pending(count: Integer): Buffer {
         index = index + 1
     }
     if taken > 0 {
-        pending = pending.slice(taken, pending_length)
+        var sliced_pending = pending.slice(taken, pending_length)
+        crash sliced_pending
+        pending = sliced_pending
     }
     return bytes
 }

@@ -68,7 +68,9 @@ func _whole_part(number_text: String): String {
     if not point {
         return written
     }
-    return written.slice(0, point)
+    var sliced = written.slice(0, point)
+    crash sliced
+    return sliced
 }
 
 func _parse_present(): $value_type {
@@ -227,7 +229,11 @@ func _skip_space() {
 func _consume(token: String): Boolean {
     _skip_space()
     var end = position + token.length()
+    if end > _text.length() {
+        return false
+    }
     var found = _text.slice(position, end)
+    crash found
     if found == token {
         position = end
         return true
@@ -282,7 +288,9 @@ func _read_number(): String {
             _fail("a digit in the exponent")
         }
     }
-    return _text.slice(start, position)
+    var sliced = _text.slice(start, position)
+    crash sliced
+    return sliced
 }
 
 func _read_text(): String {
@@ -298,11 +306,13 @@ func _read_text(): String {
         var code = _text.byte_at(position)
         if code == 34 {
             var last_run = _text.slice(start, position)
+            crash last_run
             made = made + last_run
             position = position + 1
             closed = true
         } else if code == 92 {
             var run = _text.slice(start, position)
+            crash run
             var escaped = _read_escape()
             made = made + run + escaped
             start = position
@@ -324,7 +334,9 @@ func _read_escape(): String {
     }
     position = position + 1
     if code == 34 or code == 92 or code == 47 {
-        return _text.slice(position - 1, position)
+        var sliced = _text.slice(position - 1, position)
+        crash sliced
+        return sliced
     }
     switch code {
         110: return "\n"

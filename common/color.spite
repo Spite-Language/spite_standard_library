@@ -175,6 +175,7 @@ func _channels_of(text: String): List<Float>? {
 func _read_hex(text: String): List<Float>? {
     var text_length = text.length()
     var digits = text.slice(1, text_length)
+    crash digits
     var count = digits.length()
     assert count == 3 or count == 4 or count == 6 or count == 8
     var valid = _all_hex(digits)
@@ -242,10 +243,12 @@ func _read_function(text: String): List<Float>? {
     var closed = text.ends_with(")")
     assert closed
     var function_name = text.slice(0, open)
+    crash function_name
     var is_hue = function_name == "hsl" or function_name == "hsla"
     assert is_hue or function_name == "rgb" or function_name == "rgba"
     var text_length = text.length()
     var inside = text.slice(open + 1, text_length - 1)
+    crash inside
     var commas_removed = inside.replace(",", " ")
     var spaced = commas_removed.replace("/", " ")
     var parts = _pieces(spaced)
@@ -308,10 +311,14 @@ func _pieces(spaced: String): List<String> {
 func _without_unit(part: String): String {
     var part_length = part.length()
     if part.ends_with("%") {
-        return part.slice(0, part_length - 1)
+        var sliced = part.slice(0, part_length - 1)
+        crash sliced
+        return sliced
     }
     if part.ends_with("deg") {
-        return part.slice(0, part_length - 3)
+        var sliced = part.slice(0, part_length - 3)
+        crash sliced
+        return sliced
     }
     return part
 }

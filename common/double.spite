@@ -218,7 +218,9 @@ func _shortest_text(value: Double, significand_limit: Long, lowest_exponent: Lon
         var candidate = _rounded_digits(digits, precision)
         var candidate_exponent = digits_exponent + candidate.length() - precision
         if precision < candidate.length() {
-            candidate = candidate.slice(0, precision)
+            var sliced_candidate = candidate.slice(0, precision)
+            crash sliced_candidate
+            candidate = sliced_candidate
         }
         candidate = _without_trailing_zeros(candidate)
         var fixed = _is_fixed(candidate_exponent, precision)
@@ -234,7 +236,9 @@ func _shortest_text(value: Double, significand_limit: Long, lowest_exponent: Lon
     var fallback = _rounded_digits(digits, most_digits)
     var fallback_exponent = digits_exponent + fallback.length() - most_digits
     if most_digits < fallback.length() {
-        fallback = fallback.slice(0, most_digits)
+        var sliced_fallback = fallback.slice(0, most_digits)
+        crash sliced_fallback
+        fallback = sliced_fallback
     }
     fallback = _without_trailing_zeros(fallback)
     if _is_fixed(fallback_exponent, most_digits) {
@@ -397,7 +401,9 @@ func _without_trailing_zeros(digits: String): String {
     while end > 1 and digits.byte_at(end - 1) == 48 {
         end = end - 1
     }
-    return digits.slice(0, end)
+    var sliced = digits.slice(0, end)
+    crash sliced
+    return sliced
 }
 
 func _is_fixed(exponent: Long, precision: Long): Boolean {
@@ -455,15 +461,19 @@ func _fixed_text(digits: String, exponent: Long): String {
         return "{digits}{trailing}"
     }
     var whole = digits.slice(0, exponent + 1)
+    crash whole
     var fraction = digits.slice(exponent + 1, length)
+    crash fraction
     return "{whole}.{fraction}"
 }
 
 func _scientific_text(digits: String, exponent: Long): String {
     var mantissa = digits.slice(0, 1)
+    crash mantissa
     if digits.length() > 1 {
         var length = digits.length()
         var rest = digits.slice(1, length)
+        crash rest
         mantissa = "{mantissa}.{rest}"
     }
     var sign = "+"

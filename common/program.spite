@@ -16,7 +16,9 @@ func argument_named(name: String): String? {
         if argument.starts_with(with_value) {
             var start = with_value.length()
             var end = argument.length()
-            return argument.slice(start, end)
+            var sliced = argument.slice(start, end)
+            crash sliced
+            return sliced
         }
         index = index + 1
     }

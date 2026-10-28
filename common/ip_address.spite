@@ -44,9 +44,12 @@ func _read_text(text: String): Boolean {
     var scope = 0
     var percent = text.index_of("%")
     if percent {
-        address_text = text.slice(0, percent)
+        var sliced_address_text = text.slice(0, percent)
+        crash sliced_address_text
+        address_text = sliced_address_text
         var text_length = text.length()
         var scope_text = text.slice(percent + 1, text_length)
+        crash scope_text
         scope = _decimal_value(scope_text, 10)
     }
     if scope < 0 {
@@ -270,6 +273,7 @@ func _hex_text(value: Integer): String {
     while rest > 0 or text.is_empty() {
         var digit = rest.bits_and(15)
         var character = digits.slice(digit, digit + 1)
+        crash character
         text = "{character}{text}"
         rest = rest.shifted_right(4)
     }

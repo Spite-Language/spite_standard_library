@@ -83,7 +83,9 @@ func _setting(name: String, flag: String, written: String?): String? {
     if written {
         var start = flag.length() + 3
         var end = written.length()
-        return written.slice(start, end)
+        var sliced = written.slice(start, end)
+        crash sliced
+        return sliced
     }
     var variable = name.upper_case()
     return _program.environment(variable)

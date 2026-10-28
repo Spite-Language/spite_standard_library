@@ -83,7 +83,9 @@ func _fits_around(pattern: String, opening: Integer, closing: Integer): Boolean 
     }
     var pattern_length = pattern.length()
     var prefix = pattern.slice(0, opening)
+    crash prefix
     var suffix = pattern.slice(closing + 1, pattern_length)
+    crash suffix
     var prefix_length = prefix.length()
     var suffix_length = suffix.length()
     var name_length = _name.length()

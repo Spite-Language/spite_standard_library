@@ -159,8 +159,10 @@ func _answer_fits(key: String, request: Http.Request): Boolean {
                 return false
             }
             var name = line.slice(0, colon)
+            crash name
             var line_length = line.length()
             var value = line.slice(colon + 1, line_length)
+            crash value
             var lowered = name.lower_case()
             var trimmed = value.trim()
             headers[lowered] = trimmed

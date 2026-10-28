@@ -246,6 +246,7 @@ func _cost(field: String, prefix: String): Integer? {
     assert field.starts_with(prefix)
     var field_length = field.length()
     var digits = field.slice(2, field_length)
+    crash digits
     var parsed = digits.to_long()
     assert parsed
     assert parsed >= 0 and parsed <= 2147483647

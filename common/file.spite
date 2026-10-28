@@ -28,7 +28,9 @@ func get_file_name(): String {
     while start > 0 and path.byte_at(start - 1) != 47 and path.byte_at(start - 1) != 92 {
         start = start - 1
     }
-    return path.slice(start, end)
+    var sliced = path.slice(start, end)
+    crash sliced
+    return sliced
 }
 
 func to_string(): String {

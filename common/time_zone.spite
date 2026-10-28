@@ -368,6 +368,7 @@ func _posix_offset_between(text: String, start: Integer, end: Integer): Integer?
         sign = -1
     }
     var written = text.slice(position, end)
+    crash written
     var pieces = written.split(":")
     assert pieces.count() <= 3
     var seconds = 0
@@ -415,6 +416,7 @@ func _read_posix_change(text: String, is_start: Boolean): Boolean {
     }
     var day_length = day.length()
     var number_text = day.slice(number_start, day_length)
+    crash number_text
     var week = 0
     var weekday = 0
     var number: Integer? = null

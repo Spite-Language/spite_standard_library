@@ -200,24 +200,11 @@ func _character_size(lead: Integer): Integer {
     return 4
 }
 
-func slice(start: Integer, end: Integer): String {
-    var first = _clamped(start)
-    var last = _clamped(end)
+func slice(start: Integer, end: Integer): String? {
+    assert start >= 0 and start <= end and end <= _length
     var sliced = String()
-    if last > first {
-        sliced._append_bytes(_buffer, first, last - first)
-    }
+    sliced._append_bytes(_buffer, start, end - start)
     return sliced
-}
-
-func _clamped(position: Integer): Integer {
-    if position < 0 {
-        return 0
-    }
-    if _length < position {
-        return _length
-    }
-    return position
 }
 
 func sum(other: String): String {
@@ -327,11 +314,13 @@ func split(separator: String): List<String> {
     var found = _found_at(separator, 0)
     while found >= 0 {
         var piece = slice(start, found)
+        crash piece
         pieces.append(piece)
         start = found + separator._length
         found = _found_at(separator, start)
     }
     var rest = slice(start, _length)
+    crash rest
     pieces.append(rest)
     return pieces
 }
@@ -441,6 +430,7 @@ func to_instant(): Instant? {
             name_start = name_start + 1
         }
         var annotation = slice(name_start, close)
+        crash annotation
         var agrees = annotation._annotation_agrees(is_first, instant, offset_seconds, offset_is_unknown)
         assert agrees
         is_first = false
@@ -468,6 +458,7 @@ func to_duration(): Duration? {
         var digit_count = number_end - index
         assert digit_count >= 1 and digit_count <= 15
         var number_text = slice(index, number_end)
+        crash number_text
         var number = number_text.to_long()
         assert number
         var unit_at = number_end
@@ -530,6 +521,7 @@ func to_period(): Period? {
         var digit_count = number_end - index
         assert digit_count >= 1 and digit_count <= 10
         var number_text = slice(index, number_end)
+        crash number_text
         var number = number_text.to_long()
         assert number and number <= 2147483647
         var signed = number
@@ -839,7 +831,9 @@ func to_unsigned_long(): UnsignedLong? {
 }
 
 func to_string(): String {
-    return slice(0, _length)
+    var sliced = slice(0, _length)
+    crash sliced
+    return sliced
 }
 
 func to_debug(): String {
@@ -892,6 +886,7 @@ func lines(): List<String> {
         if piece.ends_with("\r") {
             var piece_length = piece.length()
             var kept = piece.slice(0, piece_length - 1)
+            crash kept
             pieces[index] = kept
         }
         index = index + 1
@@ -913,7 +908,9 @@ func trim(): String {
     while end > start and _is_space_at(end - 1) {
         end = end - 1
     }
-    return slice(start, end)
+    var sliced = slice(start, end)
+    crash sliced
+    return sliced
 }
 
 func upper_case(): String {
@@ -950,7 +947,9 @@ func _inflected(to_plural: Boolean): String {
     var own_length = length()
     var start = _last_word_start()
     var head = slice(0, start)
+    crash head
     var word = slice(start, own_length)
+    crash word
     var lower = word.lower_case()
     var changed = lower
     if to_plural {
@@ -988,9 +987,13 @@ func _cased_like(original: String, changed: String): String {
     }
     var first = original.byte_at(0)
     if first >= 65 and first <= 90 {
-        var head = changed.slice(0, 1).upper_case()
+        var first_letter = changed.slice(0, 1)
+        crash first_letter
+        var head = first_letter.upper_case()
         var changed_length = changed.length()
-        return head + changed.slice(1, changed_length)
+        var rest = changed.slice(1, changed_length)
+        crash rest
+        return head + rest
     }
     return changed
 }
@@ -1042,7 +1045,9 @@ func _irregular_singular(word: String): String {
 
 func _cut(word: String, count: Integer): String {
     var kept = word.length() - count
-    return word.slice(0, kept)
+    var sliced = word.slice(0, kept)
+    crash sliced
+    return sliced
 }
 
 func _code_before(word: String, suffix_length: Integer): Integer {

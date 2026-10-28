@@ -41,9 +41,11 @@ func _quoted_argument(argument: String): String {
     var equals = argument.index_of("=")
     if equals {
         var key = argument.slice(0, equals)
+        crash key
         if equals > 0 and not _needs_quotes(key) {
             var argument_length = argument.length()
             var value = argument.slice(equals + 1, argument_length)
+            crash value
             var quoted_value = _quoted_text(value)
             return "{key}={quoted_value}"
         }

@@ -22,12 +22,17 @@ func watch_file(path: String): Boolean {
     }
     var path_length = path.length()
     var name = path.slice(cut, path_length)
+    crash name
     var lower_name = name.lower_case()
     var folder = "."
     if cut > 1 {
-        folder = path.slice(0, cut - 1)
+        var sliced_folder = path.slice(0, cut - 1)
+        crash sliced_folder
+        folder = sliced_folder
     } else if cut == 1 {
-        folder = path.slice(0, 1)
+        var sliced_folder = path.slice(0, 1)
+        crash sliced_folder
+        folder = sliced_folder
     }
     return _open_watch(folder, path, lower_name)
 }

@@ -101,6 +101,7 @@ func _read_response(connection: Tcp.Connection, request: Http.Request, first_lin
     var line_length = first_line.length()
     assert line_length >= 12
     var status_text = first_line.slice(9, 12)
+    crash status_text
     var status = status_text.to_integer()
     assert status
     var response = Http.Response()
@@ -157,8 +158,10 @@ func _read_headers(connection: Tcp.Connection, headers: Dictionary<String, Strin
             return false
         }
         var name = line.slice(0, colon)
+        crash name
         var line_length = line.length()
         var value = line.slice(colon + 1, line_length)
+        crash value
         var lowered = name.lower_case()
         var trimmed = value.trim()
         headers[lowered] = trimmed
@@ -197,6 +200,7 @@ func _hex_value(line: String): Integer {
         end = semicolon
     }
     var digits = line.slice(0, end)
+    crash digits
     var trimmed = digits.trim()
     var trimmed_length = trimmed.length()
     if trimmed_length == 0 or trimmed_length > 7 {
