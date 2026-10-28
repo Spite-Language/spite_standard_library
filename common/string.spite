@@ -385,9 +385,15 @@ func to_double(): Double? {
 }
 
 func to_color(): Color? {
-    var color = Color("#000000")
-    assert color.read(this)
-    return color
+    var reader = Color(0.0, 0.0, 0.0, 1.0)
+    var channels = reader._channels_of(this)
+    assert channels
+    crash channels.count() == 4
+    var read_red = channels[0]
+    var read_green = channels[1]
+    var read_blue = channels[2]
+    var read_alpha = channels[3]
+    return Color(read_red, read_green, read_blue, read_alpha)
 }
 
 func to_float(): Float? {
