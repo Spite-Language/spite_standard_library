@@ -25,7 +25,10 @@ func lock(): LockedFile? {
     var nothing: Long = 0
     var handle = kernel.CreateFileA_as_long(path, read_and_write, share_everything, nothing, open_always, normal, nothing)
     assert handle != -1
-    return LockedFile(handle)
+    var locked = LockedFile(handle)
+    var held = locked._is_held()
+    assert held
+    return locked
 }
 
 func _open_handle(mode: String): Long {

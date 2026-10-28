@@ -15,7 +15,9 @@ func _open_calendar(): Boolean {
     _status = Buffer(4)
     _status.append_integer_little_endian(0)
     if _identifier.is_empty() {
-        _identifier = _default_identifier()
+        var default_identifier = _default_identifier()
+        assert default_identifier
+        _identifier = default_identifier
     }
     _calendar = _opened_calendar()
     return _calendar != 0
@@ -31,6 +33,7 @@ func drop() {
 func _calendar_offset_seconds_at(unix_seconds: Long): Integer {
     var icu = _icu
     crash icu and _calendar != 0
+    crash unix_seconds >= -184303902528000 and unix_seconds <= 183882168921600
     _clear_status()
     var milliseconds: Double = unix_seconds * 1000
     icu.ucal_setMillis(_calendar, milliseconds, _status)
@@ -94,14 +97,14 @@ func _opened_calendar(): Long {
     return handle
 }
 
-func _default_identifier(): String {
+func _default_identifier(): String? {
     var icu = _icu
     crash icu
     var characters = _zeroed(512)
     _clear_status()
     var length = icu.ucal_getDefaultTimeZone(characters, 256, _status)
     var status = _status_value()
-    crash status <= 0 and length >= 0 and length <= 256
+    assert status <= 0 and length >= 0 and length <= 256
     var identifier = String()
     var index = 0
     while index < length {

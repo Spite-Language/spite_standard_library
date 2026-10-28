@@ -4,42 +4,41 @@ func read_line(): String? {
     if input == 0 {
         input = library._fdopen_as_long(0, "r")
     }
-    var line = ""
+    var line = Buffer(0)
     var read_anything = false
-    var more = _read_a_line()
-    while not more.is_empty() {
-        read_anything = true
-        var piece = more
-        if piece.ends_with("\n") {
-            var piece_length = piece.length()
-            var kept = piece.slice(0, piece_length - 1)
-            crash kept
-            line = "{line}{kept}"
-            more = ""
+    var ended = false
+    while not ended {
+        var room = Buffer(256)
+        var read = library.fgets(room, 256, input)
+        if read == 0 {
+            ended = true
         } else {
-            line = "{line}{piece}"
-            more = _read_a_line()
+            read_anything = true
+            var room_count = library.strlen(room)
+            room.take_written(room_count)
+            line.append_buffer(room, 0, room_count)
+            ended = _ends_with_byte(line, 10)
         }
     }
     assert read_anything
-    if line.ends_with("\r") {
-        var line_length = line.length()
-        var sliced = line.slice(0, line_length - 1)
-        crash sliced
-        return sliced
+    var length = line.count()
+    if _ends_with_byte(line, 10) {
+        length = length - 1
+        line.take_written(length)
     }
-    return line
+    if _ends_with_byte(line, 13) {
+        length = length - 1
+    }
+    return line.read_string_at(0, length)
 }
 
-func _read_a_line(): String {
-    var room = Buffer(256)
-    var read = library.fgets(room, 256, input)
-    if read == 0 {
-        return ""
+func _ends_with_byte(bytes: Buffer, wanted: Integer): Boolean {
+    var count = bytes.count()
+    if count == 0 {
+        return false
     }
-    var room_count = library.strlen(room)
-    room.take_written(room_count)
-    var text = room.read_string_at(0, room_count)
-    crash text
-    return text
+    var last = bytes[count - 1]
+    crash last
+    var code: Integer = last
+    return code == wanted
 }

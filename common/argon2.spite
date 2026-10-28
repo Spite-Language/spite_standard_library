@@ -176,8 +176,9 @@ var _blake_order: List<Integer> = [
 ]
 
 
-func hash(password: String): String {
+func hash(password: String): String? {
     var salt = random.random_buffer(16)
+    assert salt
     var secret = password.to_buffer()
     var tag = derive(secret, salt, 3, 65536, 1, 32)
     return _encoded(salt, tag, 3, 65536, 1)

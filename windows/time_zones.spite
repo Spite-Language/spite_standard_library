@@ -6,9 +6,9 @@ func find(identifier: String): TimeZone? {
     return zone
 }
 
-func system(): TimeZone {
+func system(): TimeZone? {
     var zone = TimeZone("", _no_offset)
     var opened = zone._open_calendar()
-    crash opened
+    assert opened
     return zone
 }

@@ -76,12 +76,13 @@ func read_as_buffer(): Buffer? {
     var sought = _seek(handle, 0, 2)
     var length = _tell(handle)
     var rewound = _seek(handle, 0, 0)
-    if sought != 0 or rewound != 0 or length < 0 {
+    if sought != 0 or rewound != 0 or length < 0 or length > 2147483647 {
         _close_handle(handle)
         return null
     }
     var bytes = _read_into_buffer(handle, length)
     var closed = _close_handle(handle)
+    assert bytes
     assert closed == 0 and length == bytes.count()
     return bytes
 }
@@ -106,6 +107,7 @@ func read_buffer_at(position: Long, count: Integer): Buffer? {
     }
     var bytes = _read_into_buffer(handle, available)
     var closed = _close_handle(handle)
+    assert bytes
     var got_count: Long = bytes.count()
     assert closed == 0 and got_count == available
     return bytes
@@ -134,12 +136,12 @@ func append_buffer(bytes: Buffer): Long? {
     return start
 }
 
-func _read_into_buffer(handle: Long, wanted: Long): Buffer {
+func _read_into_buffer(handle: Long, wanted: Long): Buffer? {
     var counted = wanted.to_integer()
     var bytes = Buffer(counted)
     if wanted > 0 {
         var got = _read_into(bytes, wanted, handle)
-        crash got >= 0 and got <= wanted
+        assert got >= 0 and got <= wanted
         var got_count = got.to_integer()
         bytes.take_written(got_count)
     }

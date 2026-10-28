@@ -13,6 +13,7 @@ func connect(host: String, port: Integer, request: Http.Request): Boolean {
     }
     var connection = WebSocket.Connection(client._connection, true)
     var nonce = _random.random_buffer(16)
+    crash nonce
     var key = _base64.encode(nonce)
     var host_header = host
     if host.contains(":") {

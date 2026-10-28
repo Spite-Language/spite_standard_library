@@ -1,6 +1,7 @@
 var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
 var _handle: Long = 0
 var _overlapped = Buffer(32)
+var _held = false
 
 func LockedFile(handle: Long) {
     _handle = handle
@@ -13,16 +14,25 @@ func LockedFile(handle: Long) {
     var reserved = 0
     var every_byte = -1
     var locked = kernel.LockFileEx(_handle, exclusive, reserved, every_byte, every_byte, _overlapped)
-    crash locked != 0
+    _held = locked != 0
+    if not _held {
+        kernel.CloseHandle(_handle)
+        _handle = 0
+    }
+}
+
+func _is_held(): Boolean {
+    return _held
 }
 
 func unlock() {
-    if _handle != 0 {
+    if _held {
         var reserved = 0
         var every_byte = -1
         kernel.UnlockFileEx(_handle, reserved, every_byte, every_byte, _overlapped)
         kernel.CloseHandle(_handle)
         _handle = 0
+        _held = false
     }
 }
 
