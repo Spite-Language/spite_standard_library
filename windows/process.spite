@@ -55,11 +55,12 @@ func needs_quotes(text: String): Boolean {
     var index = 0
     var special = " \t\n\"&|<>^"
     while index < text.length() {
-        var character = text.character_at(index)
+        var character = text[index]
+        crash character
         if special.contains(character) {
             return true
         }
-        index = index + 1
+        index = index + character.length()
     }
     return false
 }
@@ -69,7 +70,8 @@ func quoted_text(text: String): String {
     var backslashes = 0
     var index = 0
     while index < text.length() {
-        var character = text.character_at(index)
+        var character = text[index]
+        crash character
         if character == "\\" {
             backslashes = backslashes + 1
         } else {
@@ -81,7 +83,7 @@ func quoted_text(text: String): String {
             quoted = "{quoted}{escaped}{character}"
             backslashes = 0
         }
-        index = index + 1
+        index = index + character.length()
     }
     var closing = escaped_backslashes(backslashes, true)
     return "{quoted}{closing}\""

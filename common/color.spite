@@ -186,8 +186,9 @@ func _byte_hex(channel: Float): String {
     var whole = _byte_of(channel)
     var high = whole / 16
     var low = whole % 16
-    var high_digit = digits.character_at(high)
-    var low_digit = digits.character_at(low)
+    var high_digit = digits[high]
+    var low_digit = digits[low]
+    crash high_digit and low_digit
     return "{high_digit}{low_digit}"
 }
 

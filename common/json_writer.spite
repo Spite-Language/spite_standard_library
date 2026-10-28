@@ -155,8 +155,9 @@ func control_escape_of(code: Integer): String {
         return ""
     }
     var digits = "0123456789abcdef"
-    var high = digits.character_at(code / 16)
-    var low = digits.character_at(code % 16)
+    var high = digits[code / 16]
+    var low = digits[code % 16]
+    crash high and low
     return "\\u00{high}{low}"
 }
 

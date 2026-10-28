@@ -14,7 +14,7 @@ func watch_file(path: String): Boolean {
     var cut = path.length()
     var found = false
     while cut > 0 and not found {
-        var before = path.character_at(cut - 1)
+        var before = path[cut - 1]
         found = before == "/" or before == "\\"
         if not found {
             cut = cut - 1
