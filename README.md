@@ -6,6 +6,8 @@ system, which reopen the classes of `common/`. The compiler names no class of th
 
 What is left is in the [issues](https://github.com/Spite-Language/spite_standard_library/issues) of this
 repository, and the language's in the [compiler's](https://github.com/Spite-Language/spite_compiler/issues).
+Work here follows [`spite_compiler/AGENTS.md`](https://github.com/Spite-Language/spite_compiler/blob/master/AGENTS.md): a change a program can see
+updates the specification and the docs in the same push.
 
 ## The rules the library keeps
 
