@@ -1,0 +1,382 @@
+var _parts = [0, 0, 0, 0]
+var _scope = 0
+
+func is_ipv4(): Boolean {
+    return _parts.count() == 4
+}
+
+func is_ipv6(): Boolean {
+    return _parts.count() == 8
+}
+
+func equals(other: IpAddress): Boolean {
+    var count = _parts.count()
+    var same = count == other._parts.count() and _scope == other._scope
+    var index = 0
+    while same and index < count {
+        var mine = _parts[index]
+        var theirs = other._parts[index]
+        crash mine and theirs
+        same = mine == theirs
+        index = index + 1
+    }
+    return same
+}
+
+func to_string(): String {
+    if is_ipv4() {
+        var first = _parts[0]
+        var second = _parts[1]
+        var third = _parts[2]
+        var fourth = _parts[3]
+        crash first and second and third and fourth
+        return "{first}.{second}.{third}.{fourth}"
+    }
+    var text = _ipv6_groups_text()
+    if _scope != 0 {
+        return "{text}%{_scope}"
+    }
+    return text
+}
+
+func _read_text(text: String): Boolean {
+    var address_text = text
+    var scope = 0
+    var percent = text.index_of("%")
+    if percent {
+        address_text = text.slice(0, percent)
+        var text_length = text.length()
+        var scope_text = text.slice(percent + 1, text_length)
+        scope = _decimal_value(scope_text, 10)
+    }
+    if scope < 0 {
+        return false
+    }
+    if not address_text.contains(":") {
+        if percent {
+            return false
+        }
+        var ipv4_parts = _ipv4_parts(address_text)
+        if ipv4_parts.count() != 4 {
+            return false
+        }
+        _parts = ipv4_parts
+        _scope = 0
+        return true
+    }
+    var groups = _ipv6_text_groups(address_text)
+    if not groups {
+        return false
+    }
+    _parts = groups
+    _scope = scope
+    _unmap()
+    return true
+}
+
+func _ipv6_text_groups(text: String): List<Integer>? {
+    var halves = text.split("::")
+    var halves_count = halves.count()
+    assert halves_count <= 2
+    var head_text = halves[0]
+    crash head_text
+    var head_ends = halves_count == 1
+    var groups = _ipv6_groups(head_text, head_ends)
+    assert groups
+    if halves_count == 2 {
+        var tail_text = halves[1]
+        crash tail_text
+        var tail = _ipv6_groups(tail_text, true)
+        assert tail
+        assert groups.count() + tail.count() <= 7
+        while groups.count() + tail.count() < 8 {
+            groups.append(0)
+        }
+        var index = 0
+        while index < tail.count() {
+            var group = tail[index]
+            crash group
+            groups.append(group)
+            index = index + 1
+        }
+    }
+    assert groups.count() == 8
+    return groups
+}
+
+func _unmap() {
+    var mapped = is_ipv6() and _scope == 0
+    var index = 0
+    while mapped and index < 6 {
+        var expected = 0
+        if index == 5 {
+            expected = 65535
+        }
+        mapped = _parts[index] == expected
+        index = index + 1
+    }
+    if mapped {
+        var high = _parts[6]
+        var low = _parts[7]
+        crash high and low
+        var first = high.shifted_right(8)
+        var second = high.bits_and(255)
+        var third = low.shifted_right(8)
+        var fourth = low.bits_and(255)
+        _parts = [first, second, third, fourth]
+    }
+}
+
+func _ipv4_parts(text: String): List<Integer> {
+    var parts = List<Integer>()
+    var pieces = text.split(".")
+    assert pieces.count() == 4
+    var index = 0
+    while index < 4 {
+        var piece = pieces[index]
+        crash piece
+        var piece_length = piece.length()
+        var leading_zero = piece_length > 1 and piece.starts_with("0")
+        var value = _decimal_value(piece, 3)
+        assert not leading_zero and value >= 0 and value <= 255
+        parts.append(value)
+        index = index + 1
+    }
+    return parts
+}
+
+func _ipv6_groups(text: String, ends_the_address: Boolean): List<Integer>? {
+    var groups = List<Integer>()
+    if text.is_empty() {
+        return groups
+    }
+    var pieces = text.split(":")
+    var count = pieces.count()
+    var index = 0
+    while index < count {
+        var piece = pieces[index]
+        crash piece
+        var is_last = index == count - 1
+        if is_last and ends_the_address and piece.contains(".") {
+            var bytes = _ipv4_parts(piece)
+            assert bytes.count() == 4
+            var first = bytes[0]
+            var second = bytes[1]
+            var third = bytes[2]
+            var fourth = bytes[3]
+            crash first and second and third and fourth
+            groups.append(first * 256 + second)
+            groups.append(third * 256 + fourth)
+        } else {
+            var group = _hex_value(piece)
+            assert group >= 0
+            groups.append(group)
+        }
+        index = index + 1
+    }
+    return groups
+}
+
+func _decimal_value(text: String, longest: Integer): Integer {
+    var text_length = text.length()
+    if text_length == 0 or text_length > longest {
+        return -1
+    }
+    var value = 0
+    var index = 0
+    while index < text_length {
+        var code = text.byte_at(index)
+        if code < 48 or code > 57 {
+            return -1
+        }
+        value = value * 10 + code - 48
+        index = index + 1
+    }
+    return value
+}
+
+func _hex_value(text: String): Integer {
+    var text_length = text.length()
+    if text_length == 0 or text_length > 4 {
+        return -1
+    }
+    var value = 0
+    var index = 0
+    while index < text_length {
+        var code = text.byte_at(index)
+        var digit = -1
+        if code >= 48 and code <= 57 {
+            digit = code - 48
+        } else if code >= 97 and code <= 102 {
+            digit = code - 87
+        } else if code >= 65 and code <= 70 {
+            digit = code - 55
+        }
+        if digit < 0 {
+            return -1
+        }
+        value = value * 16 + digit
+        index = index + 1
+    }
+    return value
+}
+
+func _ipv6_groups_text(): String {
+    var longest_start = -1
+    var longest_length = 1
+    var run_start = -1
+    var index = 0
+    while index <= 8 {
+        var zero = false
+        if index < 8 {
+            zero = _parts[index] == 0
+        }
+        if zero and run_start < 0 {
+            run_start = index
+        }
+        if not zero and run_start >= 0 {
+            if index - run_start > longest_length {
+                longest_start = run_start
+                longest_length = index - run_start
+            }
+            run_start = -1
+        }
+        index = index + 1
+    }
+    var text = ""
+    index = 0
+    while index < 8 {
+        if index == longest_start {
+            text = "{text}::"
+            index = index + longest_length
+        } else {
+            if not text.is_empty() and not text.ends_with(":") {
+                text = "{text}:"
+            }
+            var group = _parts[index]
+            crash group
+            var digits = _hex_text(group)
+            text = "{text}{digits}"
+            index = index + 1
+        }
+    }
+    return text
+}
+
+func _hex_text(value: Integer): String {
+    var digits = "0123456789abcdef"
+    var text = ""
+    var rest = value
+    while rest > 0 or text.is_empty() {
+        var digit = rest.bits_and(15)
+        var character = digits.slice(digit, digit + 1)
+        text = "{character}{text}"
+        rest = rest.shifted_right(4)
+    }
+    return text
+}
+
+func _system_family(as_ipv6: Boolean): Integer {
+    if as_ipv6 {
+        return _ipv6_family()
+    }
+    return _ipv4_family()
+}
+
+func _system_address_length(as_ipv6: Boolean): Integer {
+    if as_ipv6 {
+        return 28
+    }
+    return 16
+}
+
+func _system_address(port: Integer, as_ipv6: Boolean): Buffer {
+    crash as_ipv6 or is_ipv4()
+    var address = Buffer(28)
+    var index = 0
+    while index < 28 {
+        address.append(0)
+        index = index + 1
+    }
+    var family = _system_family(as_ipv6)
+    var narrow_family = family.to_unsigned_short()
+    address.write_unsigned_short_little_endian_at(0, narrow_family)
+    var narrow_port = port.to_unsigned_short()
+    address.write_unsigned_short_big_endian_at(2, narrow_port)
+    if not as_ipv6 {
+        index = 0
+        while index < 4 {
+            var byte = _parts[index]
+            crash byte
+            address[4 + index] = byte
+            index = index + 1
+        }
+        return address
+    }
+    if is_ipv4() {
+        address[18] = 255
+        address[19] = 255
+        index = 0
+        while index < 4 {
+            var byte = _parts[index]
+            crash byte
+            address[20 + index] = byte
+            index = index + 1
+        }
+        return address
+    }
+    index = 0
+    while index < 8 {
+        var group = _parts[index]
+        crash group
+        var narrow_group = group.to_unsigned_short()
+        address.write_unsigned_short_big_endian_at(8 + index * 2, narrow_group)
+        index = index + 1
+    }
+    address.write_integer_little_endian_at(24, _scope)
+    return address
+}
+
+func _read_system_address(address: Buffer): Boolean {
+    var read_family = address.read_unsigned_short_little_endian_at(0)
+    crash read_family
+    var family = read_family.to_integer()
+    if family == _ipv4_family() {
+        var bytes = List<Integer>()
+        var index = 0
+        while index < 4 {
+            var byte = address[4 + index]
+            crash byte
+            var value = byte.to_integer()
+            bytes.append(value)
+            index = index + 1
+        }
+        _parts = bytes
+        _scope = 0
+        return true
+    }
+    if family != _ipv6_family() {
+        return false
+    }
+    var groups = List<Integer>()
+    var index = 0
+    while index < 8 {
+        var group = address.read_unsigned_short_big_endian_at(8 + index * 2)
+        crash group
+        var value = group.to_integer()
+        groups.append(value)
+        index = index + 1
+    }
+    var scope = address.read_integer_little_endian_at(24)
+    crash scope
+    _parts = groups
+    _scope = scope
+    _unmap()
+    return true
+}
+
+func _system_port(address: Buffer): Integer {
+    var port = address.read_unsigned_short_big_endian_at(2)
+    crash port
+    return port.to_integer()
+}

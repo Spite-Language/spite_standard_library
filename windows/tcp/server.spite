@@ -1,0 +1,103 @@
+var sockets = DynamicLibrary("ws2_32.dll", 'identity', "")
+var nonblocking = false
+
+func _start_sockets() {
+    var information = Buffer(512)
+    sockets.WSAStartup(514, information)
+}
+
+func _open_handle(family: Integer, as_ipv6: Boolean): Long {
+    nonblocking = false
+    var opened = sockets.socket_as_long(family, 1, 6)
+    if opened != -1 and as_ipv6 {
+        var disabled = Buffer(4)
+        disabled.append_integer_little_endian(0)
+        sockets.setsockopt(opened, 41, 27, disabled, 4)
+    }
+    return opened
+}
+
+func _bind_address(address: Buffer, length: Integer): Boolean {
+    return sockets.bind(handle, address, length) == 0
+}
+
+func _listen_for_clients(): Boolean {
+    return sockets.listen(handle, 64) == 0
+}
+
+func _accept_handle(): Long {
+    var no_address: Long = 0
+    return sockets.accept_as_long(handle, no_address, no_address)
+}
+
+func _use_blocking_calls() {
+    if nonblocking {
+        _switch_blocking(handle, false)
+        nonblocking = false
+    }
+}
+
+func _use_nonblocking_calls() {
+    if not nonblocking {
+        _switch_blocking(handle, true)
+        nonblocking = true
+    }
+}
+
+func _switch_blocking(socket: Long, enabled: Boolean) {
+    var mode = Buffer(4)
+    var value = 0
+    if enabled {
+        value = 1
+    }
+    mode.append_integer_little_endian(value)
+    sockets.ioctlsocket(socket, -2147195266, mode)
+}
+
+func _accept_handle_now(): Long {
+    _use_nonblocking_calls()
+    var no_address: Long = 0
+    var accepted = sockets.accept_as_long(handle, no_address, no_address)
+    if accepted != -1 {
+        _switch_blocking(accepted, false)
+    }
+    return accepted
+}
+
+func _close_handle() {
+    sockets.closesocket(handle)
+}
+
+func _first_readable(handles: List<Long>, patience: Duration): Integer {
+    var milliseconds = patience.total('milliseconds')
+    var count = handles.count()
+    var watched = Buffer(count * 16)
+    var index = 0
+    while index < count * 16 {
+        watched.append(0)
+        index = index + 1
+    }
+    index = 0
+    while index < count {
+        var watched_handle = handles[index]
+        crash watched_handle
+        watched.write_long_little_endian_at(index * 16, watched_handle)
+        watched.write_short_little_endian_at(index * 16 + 8, 256)
+        index = index + 1
+    }
+    var ready = sockets.WSAPoll(watched, count, milliseconds)
+    var found = -1
+    if ready < 0 {
+        found = -2
+    }
+    index = 0
+    while ready > 0 and found < 0 and index < count {
+        var returned = watched.read_unsigned_short_little_endian_at(index * 16 + 10)
+        crash returned
+        if returned.to_integer() != 0 {
+            found = index
+        }
+        index = index + 1
+    }
+    return found
+}

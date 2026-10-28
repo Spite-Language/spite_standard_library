@@ -1,10 +1,10 @@
 var _bytes = Buffer(0)
-var _sender_host = ""
+var _sender_address = IpAddress()
 var _sender_port = 0
 
-func Datagram(bytes: Buffer, sender_host: String, sender_port: Integer) {
+func Datagram(bytes: Buffer, sender_address: IpAddress, sender_port: Integer) {
     _bytes = bytes
-    _sender_host = sender_host
+    _sender_address = sender_address
     _sender_port = sender_port
 }
 
@@ -16,8 +16,8 @@ func read_as_buffer(): Buffer {
     return _bytes
 }
 
-func get_sender_host(): String {
-    return _sender_host
+func get_sender_address(): IpAddress {
+    return _sender_address
 }
 
 func get_sender_port(): Integer {

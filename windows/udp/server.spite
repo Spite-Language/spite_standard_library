@@ -1,0 +1,49 @@
+var _sockets = DynamicLibrary("ws2_32.dll", 'identity', "")
+
+func _start_sockets() {
+    var information = Buffer(512)
+    _sockets.WSAStartup(514, information)
+}
+
+func _open_handle(family: Integer, as_ipv6: Boolean): Long {
+    var opened = _sockets.socket_as_long(family, 2, 17)
+    if opened != -1 and as_ipv6 {
+        var disabled = Buffer(4)
+        disabled.append_integer_little_endian(0)
+        _sockets.setsockopt(opened, 41, 27, disabled, 4)
+    }
+    return opened
+}
+
+func _bind(address: Buffer, length: Integer): Boolean {
+    return _sockets.bind(handle, address, length) == 0
+}
+
+func _send(address: Buffer, length: Integer, room: Buffer, count: Integer): Integer {
+    return _sockets.sendto(handle, room, count, 0, address, length)
+}
+
+func _receive_from(room: Buffer, count: Integer, sender: Buffer): Integer {
+    var length_slot = Buffer(4)
+    length_slot.append_integer_little_endian(28)
+    return _sockets.recvfrom(handle, room, count, 0, sender, length_slot)
+}
+
+func _close_handle() {
+    _sockets.closesocket(handle)
+}
+
+func _local_port(): Integer {
+    var address = Buffer(28)
+    var index = 0
+    while index < 28 {
+        address.append(0)
+        index = index + 1
+    }
+    var length_slot = Buffer(4)
+    length_slot.append_integer_little_endian(28)
+    var asked = _sockets.getsockname(handle, address, length_slot)
+    crash asked == 0
+    var bound = IpAddress()
+    return bound._system_port(address)
+}

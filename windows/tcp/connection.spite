@@ -1,0 +1,75 @@
+var sockets = DynamicLibrary("ws2_32.dll", 'identity', "")
+var nonblocking = false
+
+func _start_sockets() {
+    var information = Buffer(512)
+    sockets.WSAStartup(514, information)
+}
+
+func _open_handle(family: Integer, as_ipv6: Boolean): Long {
+    nonblocking = false
+    var opened = sockets.socket_as_long(family, 1, 6)
+    if opened != -1 and as_ipv6 {
+        var disabled = Buffer(4)
+        disabled.append_integer_little_endian(0)
+        sockets.setsockopt(opened, 41, 27, disabled, 4)
+    }
+    return opened
+}
+
+func _connect_address(address: Buffer, length: Integer): Boolean {
+    return sockets.connect(handle, address, length) == 0
+}
+
+func _receive_into(room: Buffer, bytes: Integer): Integer {
+    return sockets.recv(handle, room, bytes, 0)
+}
+
+func _send_string(text: String): Integer {
+    var text_length = text.length()
+    return sockets.send(handle, text, text_length, 0)
+}
+
+func _send_from(room: Buffer, bytes: Integer): Integer {
+    return sockets.send(handle, room, bytes, 0)
+}
+
+func _use_blocking_calls() {
+    if nonblocking {
+        _switch_blocking(false)
+        nonblocking = false
+    }
+}
+
+func _use_nonblocking_calls() {
+    if not nonblocking {
+        _switch_blocking(true)
+        nonblocking = true
+    }
+}
+
+func _switch_blocking(enabled: Boolean) {
+    var mode = Buffer(4)
+    var value = 0
+    if enabled {
+        value = 1
+    }
+    mode.append_integer_little_endian(value)
+    sockets.ioctlsocket(handle, -2147195266, mode)
+}
+
+func _receive_now(room: Buffer, bytes: Integer): Integer {
+    _use_nonblocking_calls()
+    var received = sockets.recv(handle, room, bytes, 0)
+    if received > 0 {
+        return received
+    }
+    if received < 0 and sockets.WSAGetLastError() == 10035 {
+        return 0
+    }
+    return -1
+}
+
+func _close_handle() {
+    sockets.closesocket(handle)
+}

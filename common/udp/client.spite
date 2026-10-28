@@ -1,0 +1,25 @@
+var _socket = Udp.Server()
+
+func open(): Boolean {
+    return _socket.open_everywhere(0)
+}
+
+func send_to(address: IpAddress, port: Integer, bytes: Buffer): Boolean {
+    return _socket.send_to(address, port, bytes)
+}
+
+func send_to_host(host: String, port: Integer, bytes: Buffer): Boolean {
+    return _socket.send_to_host(host, port, bytes)
+}
+
+func receive(): Udp.Datagram? {
+    return _socket.receive()
+}
+
+func get_port(): Integer {
+    return _socket.port
+}
+
+func close() {
+    _socket.close()
+}

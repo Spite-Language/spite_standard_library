@@ -1,8 +1,8 @@
 var largest_body = 1048576
 var idle_limit = Duration(5, 'seconds')
 var largest_waiting = 64
-var _listener = Socket()
-var _waiting = List<Socket>()
+var _listener = Tcp.Server()
+var _waiting = List<Tcp.Connection>()
 var _waiting_since = List<Duration>()
 var _longest_patience = Duration(1, 'seconds')
 var _clock = Clock()
@@ -78,7 +78,7 @@ func _keeps_alive(request: Http.Request): Boolean {
     return request.version == "HTTP/1.1" or asked.contains("keep-alive")
 }
 
-func _next_ready_connection(): Socket? {
+func _next_ready_connection(): Tcp.Connection? {
     while true {
         _close_idle_connections()
         var pipelined = _first_pipelined()
@@ -102,7 +102,7 @@ func _next_ready_connection(): Socket? {
         var ready = _listener._first_readable(handles, patience)
         assert ready != -2
         if ready == 0 {
-            var client = _listener.accept_client()
+            var client = _listener.accept()
             assert client
             return client
         }
@@ -125,7 +125,7 @@ func _first_pipelined(): Integer {
     return -1
 }
 
-func _take_waiting(index: Integer): Socket {
+func _take_waiting(index: Integer): Tcp.Connection {
     var taken = _waiting[index]
     crash taken
     _waiting.remove_at(index)
@@ -149,7 +149,7 @@ func _close_idle_connections() {
     }
 }
 
-func _read_request(client: Socket): Http.Request? {
+func _read_request(client: Tcp.Connection): Http.Request? {
     var first_line = client.read_line()
     assert first_line
     var parts = first_line.split(" ")
@@ -184,7 +184,7 @@ func _read_request(client: Socket): Http.Request? {
     return request
 }
 
-func _read_headers(client: Socket, headers: Dictionary<String, String>): Boolean {
+func _read_headers(client: Tcp.Connection, headers: Dictionary<String, String>): Boolean {
     var count = 0
     while count < 200 {
         var line = client.read_line()
@@ -209,7 +209,7 @@ func _read_headers(client: Socket, headers: Dictionary<String, String>): Boolean
     return false
 }
 
-func _write_response(client: Socket, response: Http.Response, with_body: Boolean, closing: Boolean) {
+func _write_response(client: Tcp.Connection, response: Http.Response, with_body: Boolean, closing: Boolean) {
     var reason = response.reason()
     var body_length = response._body.count()
     var status = response.status

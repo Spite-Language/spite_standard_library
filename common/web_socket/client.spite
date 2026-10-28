@@ -6,12 +6,12 @@ func connect(host: String, port: Integer, request: Http.Request): Boolean {
     crash not _connection
     var body = request.read_body_as_buffer()
     crash request.method == "GET" and body.is_empty()
-    var socket = Socket()
-    var connected = socket.connect(host, port)
+    var client = Tcp.Client()
+    var connected = client.connect_to_host(host, port)
     if not connected {
         return false
     }
-    var connection = WebSocket.Connection(socket, true)
+    var connection = WebSocket.Connection(client._connection, true)
     var nonce = _random.random_buffer(16)
     var key = _base64.encode(nonce)
     var host_header = host
@@ -41,7 +41,7 @@ func connect(host: String, port: Integer, request: Http.Request): Boolean {
     var written = connection._write_string(head)
     var answered = written and connection._answer_fits(key, request)
     if not answered {
-        socket.close()
+        client.close()
         return false
     }
     connection._begin()

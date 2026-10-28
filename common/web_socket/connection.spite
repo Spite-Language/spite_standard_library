@@ -3,7 +3,7 @@ var _closed = true
 var _close_code: Integer? = null
 var _close_reason = ""
 var _last_pong: Buffer? = null
-var _connection = Socket()
+var _connection = Tcp.Connection()
 var _masking = false
 var _close_sent = false
 var _final = false
@@ -13,8 +13,8 @@ var _parts = Buffer(0)
 var _random = SecureRandom()
 var _base64 = Base64()
 
-func Connection(socket: Socket, masking: Boolean) {
-    _connection = socket
+func Connection(connection: Tcp.Connection, masking: Boolean) {
+    _connection = connection
     _masking = masking
 }
 
@@ -432,9 +432,9 @@ func _fail(code: Integer) {
 }
 
 func _drain() {
-    var got = _connection.read_as_buffer_now()
+    var got = _connection._read_as_buffer_now()
     while got.count() > 0 {
-        got = _connection.read_as_buffer_now()
+        got = _connection._read_as_buffer_now()
     }
 }
 

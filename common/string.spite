@@ -724,6 +724,13 @@ func _annotation_agrees(is_first: Boolean, instant: Instant, offset_seconds: Int
     return zone_seconds == offset_seconds
 }
 
+func to_ip_address(): IpAddress? {
+    var address = IpAddress()
+    var read = address._read_text(this)
+    assert read
+    return address
+}
+
 func to_float(): Float? {
     var text = trim()
     var valid = text._is_decimal()

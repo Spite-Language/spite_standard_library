@@ -1,0 +1,60 @@
+var _connection = Tcp.Connection()
+
+func connect(address: IpAddress, port: Integer): Boolean {
+    _connection.close()
+    var connection = Tcp.Connection()
+    var connected = connection._connect_to(address, port)
+    _connection = connection
+    return connected
+}
+
+func connect_to_host(host: String, port: Integer): Boolean {
+    var addresses = host.resolve_ip_addresses()
+    var connected = false
+    var index = 0
+    while not connected and index < addresses.count() {
+        var address = addresses[index]
+        crash address
+        connected = connect(address, port)
+        index = index + 1
+    }
+    return connected
+}
+
+func connect_locally(port: Integer): Boolean {
+    var address = IpAddress()
+    address._parts = [127, 0, 0, 1]
+    return connect(address, port)
+}
+
+func get_closed(): Boolean {
+    return _connection.closed
+}
+
+func read_line(): String? {
+    return _connection.read_line()
+}
+
+func read_as_string(): String? {
+    return _connection.read_as_string()
+}
+
+func read_as_buffer(): Buffer? {
+    return _connection.read_as_buffer()
+}
+
+func write_line(text: String): Boolean {
+    return _connection.write_line(text)
+}
+
+func write_string(text: String): Boolean {
+    return _connection.write_string(text)
+}
+
+func write_buffer(bytes: Buffer): Boolean {
+    return _connection.write_buffer(bytes)
+}
+
+func close() {
+    _connection.close()
+}

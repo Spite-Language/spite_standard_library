@@ -1,0 +1,7 @@
+func _ipv4_family(): Integer {
+    return 2
+}
+
+func _ipv6_family(): Integer {
+    return 23
+}

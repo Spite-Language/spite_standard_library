@@ -1,0 +1,61 @@
+func resolve_ip_addresses(): List<IpAddress> {
+    var sockets = DynamicLibrary("ws2_32.dll", 'identity', "")
+    var memory_library = DynamicLibrary("ucrtbase.dll", 'identity', "")
+    var addresses = List<IpAddress>()
+    var information = Buffer(512)
+    sockets.WSAStartup(514, information)
+    var hints = Buffer(48)
+    var index = 0
+    while index < 48 {
+        hints.append(0)
+        index = index + 1
+    }
+    hints.write_integer_little_endian_at(8, 1)
+    var found = Buffer(8)
+    found.append_long_little_endian(0)
+    var no_service: Long = 0
+    var answer = sockets.getaddrinfo(this, no_service, hints, found)
+    var read_first = found.read_long_little_endian_at(0)
+    crash read_first
+    var first = read_first
+    if answer != 0 or first == 0 {
+        return addresses
+    }
+    var ipv4_count = 0
+    var entry_place = first
+    while entry_place != 0 {
+        var entry = Buffer(48)
+        var entry_size: Long = 48
+        memory_library.memcpy(entry, entry_place, entry_size)
+        entry.take_written(48)
+        var read_length = entry.read_integer_little_endian_at(16)
+        crash read_length
+        var resolved_length = read_length
+        if resolved_length > 28 {
+            resolved_length = 28
+        }
+        var read_place = entry.read_long_little_endian_at(32)
+        crash read_place
+        var system_address = Buffer(28)
+        var copied: Long = resolved_length
+        memory_library.memcpy(system_address, read_place, copied)
+        system_address.take_written(resolved_length)
+        while system_address.count() < 28 {
+            system_address.append(0)
+        }
+        var address = IpAddress()
+        if address._read_system_address(system_address) {
+            if address.is_ipv4() {
+                addresses.insert(ipv4_count, address)
+                ipv4_count = ipv4_count + 1
+            } else {
+                addresses.append(address)
+            }
+        }
+        var read_next = entry.read_long_little_endian_at(40)
+        crash read_next
+        entry_place = read_next
+    }
+    sockets.freeaddrinfo(first)
+    return addresses
+}

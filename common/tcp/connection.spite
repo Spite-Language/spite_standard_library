@@ -1,0 +1,225 @@
+var handle: Long = -1
+var pending = ""
+var closed = true
+
+func read_line(): String? {
+    var newline = pending.index_of("\n")
+    if not newline and not closed {
+        _use_blocking_calls()
+        var room = Buffer(4096)
+        while not newline and not closed {
+            var received = _receive_into(room, 4096)
+            if received > 0 {
+                room.take_written(received)
+                var more = _text_of(room, received)
+                pending = "{pending}{more}"
+                newline = pending.index_of("\n")
+            } else {
+                closed = true
+            }
+        }
+    }
+    assert newline
+    return _take_line(newline)
+}
+
+func read_as_buffer(): Buffer? {
+    var bytes = _chunk(true, 65536)
+    assert bytes.count() > 0
+    return bytes
+}
+
+func read_as_string(): String? {
+    var bytes = read_as_buffer()
+    assert bytes
+    var text = bytes.read_as_string()
+    var added = 0
+    while not text and added < 3 and not closed {
+        var more = _chunk(true, 1)
+        var more_count = more.count()
+        assert more_count > 0
+        bytes.append_buffer(more, 0, more_count)
+        text = bytes.read_as_string()
+        added = added + 1
+    }
+    return text
+}
+
+func write_string(text: String): Boolean {
+    var bytes = text.to_buffer()
+    return write_buffer(bytes)
+}
+
+func write_line(text: String): Boolean {
+    _use_blocking_calls()
+    var line = "{text}\n"
+    var line_length = line.length()
+    var written = 0
+    while written < line_length and not closed {
+        var rest = line.slice(written, line_length)
+        var sent = _send_string(rest)
+        if sent > 0 {
+            written = written + sent
+        } else {
+            closed = true
+        }
+    }
+    return written == line_length
+}
+
+func write_buffer(bytes: Buffer): Boolean {
+    _use_blocking_calls()
+    var counted = bytes.count()
+    var written = 0
+    while written < counted and not closed {
+        var rest = Buffer(counted - written)
+        rest.append_buffer(bytes, written, counted - written)
+        var sent = _send_from(rest, counted - written)
+        if sent > 0 {
+            written = written + sent
+        } else {
+            closed = true
+        }
+    }
+    return written == counted
+}
+
+func close() {
+    closed = true
+    if handle != -1 {
+        _close_handle()
+        handle = -1
+    }
+}
+
+func drop() {
+    close()
+}
+
+func _connect_to(address: IpAddress, port: Integer): Boolean {
+    close()
+    _start_sockets()
+    var as_ipv6 = address.is_ipv6()
+    var family = address._system_family(as_ipv6)
+    var system_address = address._system_address(port, as_ipv6)
+    var length = address._system_address_length(as_ipv6)
+    handle = _open_handle(family, as_ipv6)
+    closed = false
+    var connected = handle != -1 and _connect_address(system_address, length)
+    if not connected {
+        close()
+    }
+    return connected
+}
+
+func _take_over(accepted: Long) {
+    handle = accepted
+    pending = ""
+    closed = false
+}
+
+func _read_line_now(): String? {
+    var newline = pending.index_of("\n")
+    if not newline and not closed {
+        var room = Buffer(4096)
+        var received = _receive_now(room, 4096)
+        while not newline and received > 0 {
+            room.take_written(received)
+            var more = _text_of(room, received)
+            pending = "{pending}{more}"
+            newline = pending.index_of("\n")
+            if not newline {
+                received = _receive_now(room, 4096)
+            }
+        }
+        if received < 0 {
+            closed = true
+        }
+    }
+    assert newline
+    return _take_line(newline)
+}
+
+func _read_as_buffer_now(): Buffer {
+    return _chunk(false, 65536)
+}
+
+func _read_exactly(count: Integer): Buffer? {
+    var bytes = Buffer(count)
+    while bytes.count() < count {
+        var wanted = count - bytes.count()
+        var more = _chunk(true, wanted)
+        var more_count = more.count()
+        assert more_count > 0
+        bytes.append_buffer(more, 0, more_count)
+    }
+    return bytes
+}
+
+func _take_line(newline: Integer): String {
+    var line = pending.slice(0, newline)
+    var pending_length = pending.length()
+    pending = pending.slice(newline + 1, pending_length)
+    if line.ends_with("\r") {
+        var line_length = line.length()
+        return line.slice(0, line_length - 1)
+    }
+    return line
+}
+
+func _text_of(room: Buffer, count: Integer): String {
+    var text = String()
+    var index = 0
+    while index < count {
+        var read = room[index]
+        crash read
+        var code = read.to_integer()
+        text.append_code(code)
+        index = index + 1
+    }
+    return text
+}
+
+func _chunk(blocking: Boolean, limit: Integer): Buffer {
+    var taken = _take_pending(limit)
+    if taken.count() > 0 or closed {
+        return taken
+    }
+    var room = Buffer(limit)
+    var received = 0
+    if blocking {
+        _use_blocking_calls()
+        received = _receive_into(room, limit)
+        if received <= 0 {
+            closed = true
+            return room
+        }
+    } else {
+        received = _receive_now(room, limit)
+        if received < 0 {
+            closed = true
+            return room
+        }
+    }
+    room.take_written(received)
+    return room.copy()
+}
+
+func _take_pending(count: Integer): Buffer {
+    var pending_length = pending.length()
+    var taken = pending_length
+    if count < taken {
+        taken = count
+    }
+    var bytes = Buffer(0)
+    var index = 0
+    while index < taken {
+        var code = pending.byte_at(index)
+        bytes.append(code)
+        index = index + 1
+    }
+    if taken > 0 {
+        pending = pending.slice(taken, pending_length)
+    }
+    return bytes
+}
