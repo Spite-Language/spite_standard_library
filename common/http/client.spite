@@ -3,7 +3,7 @@ var largest_idle = 8
 var _idle = List<Socket>()
 var _idle_keys = List<String>()
 
-func send(host: String, port: Integer, request: HttpRequest): HttpResponse? {
+func send(host: String, port: Integer, request: Http.Request): Http.Response? {
     var key = "{host} {port}"
     var reused = _take_idle(key)
     if reused {
@@ -55,8 +55,8 @@ func _take_idle(key: String): Socket? {
     return null
 }
 
-func _ask(connection: Socket, host: String, request: HttpRequest): String? {
-    var body_length = request.body.length()
+func _ask(connection: Socket, host: String, request: Http.Request): String? {
+    var body_length = request._body.count()
     var host_header = host
     if host.contains(":") {
         host_header = "[{host}]"
@@ -77,14 +77,14 @@ func _ask(connection: Socket, host: String, request: HttpRequest): String? {
         index = index + 1
     }
     head = "{head}content-length: {body_length}\r\n\r\n"
-    var whole = head + request.body
-    var bytes = whole.to_bytes()
-    var written = connection.write_bytes(bytes)
+    var bytes = head.to_buffer()
+    bytes.append_buffer(request._body, 0, body_length)
+    var written = connection.write_buffer(bytes)
     assert written
     return connection.read_line()
 }
 
-func _finish(connection: Socket, key: String, request: HttpRequest, first_line: String): HttpResponse? {
+func _finish(connection: Socket, key: String, request: Http.Request, first_line: String): Http.Response? {
     var response = _read_response(connection, request, first_line)
     if not response or connection.closed or _idle.count() >= largest_idle {
         connection.close()
@@ -95,14 +95,14 @@ func _finish(connection: Socket, key: String, request: HttpRequest, first_line: 
     return response
 }
 
-func _read_response(connection: Socket, request: HttpRequest, first_line: String): HttpResponse? {
+func _read_response(connection: Socket, request: Http.Request, first_line: String): Http.Response? {
     assert first_line.starts_with("HTTP/1.")
     var line_length = first_line.length()
     assert line_length >= 12
     var status_text = first_line.slice(9, 12)
     var status = status_text.to_integer()
     assert status
-    var response = HttpResponse()
+    var response = Http.Response()
     response.status = status
     var headers_read = _read_headers(connection, response.headers)
     assert headers_read
@@ -116,23 +116,23 @@ func _read_response(connection: Socket, request: HttpRequest, first_line: String
     var encoding = response.header("transfer-encoding")
     var bodiless = request.method == "HEAD" or status == 204 or status == 304 or status < 200
     if bodiless {
-        response.body = ""
+        response._body = Buffer(0)
     } else if encoding {
         assert encoding.lower_case() == "chunked"
         var chunked = _read_chunks(connection)
         assert chunked
-        response.body = chunked
+        response._body = chunked
     } else if declared {
         var length = declared.to_integer()
         assert length
         assert length >= 0 and length <= largest_body
-        var body = connection.read_text(length)
+        var body = connection._read_exactly(length)
         assert body
-        response.body = body
+        response._body = body
     } else {
         var rest = _read_until_closed(connection)
         assert rest
-        response.body = rest
+        response._body = rest
         keep = false
     }
     if not keep {
@@ -166,23 +166,23 @@ func _read_headers(connection: Socket, headers: Dictionary<String, String>): Boo
     return false
 }
 
-func _read_chunks(connection: Socket): String? {
-    var body = ""
+func _read_chunks(connection: Socket): Buffer? {
+    var body = Buffer(0)
     while true {
         var size_line = connection.read_line()
         assert size_line
         var size = _hex_value(size_line)
         assert size >= 0
-        assert body.length() + size <= largest_body
+        assert body.count() + size <= largest_body
         if size == 0 {
             var trailers = Dictionary<String, String>()
             var trailer_read = _read_headers(connection, trailers)
             assert trailer_read
             return body
         }
-        var chunk = connection.read_text(size)
+        var chunk = connection._read_exactly(size)
         assert chunk
-        body = body + chunk
+        body.append_buffer(chunk, 0, size)
         var ending = connection.read_line()
         assert ending
         assert ending.is_empty()
@@ -204,7 +204,7 @@ func _hex_value(line: String): Integer {
     var value = 0
     var index = 0
     while index < trimmed_length {
-        var code = trimmed.code_at(index)
+        var code = trimmed.byte_at(index)
         var digit = -1
         if code >= 48 and code <= 57 {
             digit = code - 48
@@ -222,12 +222,15 @@ func _hex_value(line: String): Integer {
     return value
 }
 
-func _read_until_closed(connection: Socket): String? {
-    var body = ""
+func _read_until_closed(connection: Socket): Buffer? {
+    var body = Buffer(0)
     while not connection.closed {
-        var piece = connection.read_text_up_to(4096)
-        body = body + piece
-        assert body.length() <= largest_body
+        var piece = connection.read_as_buffer()
+        if piece {
+            var piece_count = piece.count()
+            body.append_buffer(piece, 0, piece_count)
+        }
+        assert body.count() <= largest_body
     }
     return body
 }

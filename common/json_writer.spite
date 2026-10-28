@@ -127,7 +127,7 @@ func quoted(text: String): String {
     var length = text.length()
     var index = 0
     while index < length {
-        var code = text.code_at(index)
+        var code = text.byte_at(index)
         var escape = escape_of(code)
         if escape.is_empty() {
             made.append_code(code)

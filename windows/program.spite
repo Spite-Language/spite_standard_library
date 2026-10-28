@@ -36,7 +36,7 @@ func working_directory(): String {
     var length = kernel.GetCurrentDirectoryA(1024, room)
     crash length > 0 and length < 1024
     room.take_written(length)
-    var text = room.text(0, length)
+    var text = room.read_string_at(0, length)
     crash text
     return text
 }
@@ -46,7 +46,7 @@ func executable_path(): String {
     var length = kernel.GetModuleFileNameA(0, room, 1024)
     crash length > 0 and length < 1024
     room.take_written(length)
-    var text = room.text(0, length)
+    var text = room.read_string_at(0, length)
     crash text
     return text
 }
@@ -57,7 +57,7 @@ func environment(name: String): String? {
     assert length != 0
     crash length < 4096
     room.take_written(length)
-    return room.text(0, length)
+    return room.read_string_at(0, length)
 }
 
 func command_line(): String {
@@ -66,7 +66,7 @@ func command_line(): String {
     var room = Buffer(length + 1)
     kernel.lstrcpynA(room, address, length + 1)
     room.take_written(length)
-    var text = room.text(0, length)
+    var text = room.read_string_at(0, length)
     crash text
     return text
 }
@@ -79,7 +79,7 @@ func command_arguments(): List<String> {
     var started = false
     var index = 0
     while index < line.length() {
-        var code = line.code_at(index)
+        var code = line.byte_at(index)
         if code == 34 {
             quoted = not quoted
             started = true

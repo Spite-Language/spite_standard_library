@@ -758,7 +758,7 @@ func _copy_stored() {
     _position = _position + 4
     _fail_when(size + complement != 65535 or _position + size > _input_length)
     assert not _failed
-    _result.append_bytes(_input, _position, size)
+    _result.append_buffer(_input, _position, size)
     _position = _position + size
 }
 

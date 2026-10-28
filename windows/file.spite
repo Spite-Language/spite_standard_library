@@ -11,7 +11,7 @@ func remove(): Boolean {
     return removed == 0
 }
 
-func rename_to(new_path: String): Boolean {
+func _rename_to(new_path: String): Boolean {
     var copy_across_volumes = 2
     var moved = kernel.MoveFileExA(path, new_path, copy_across_volumes)
     return moved != 0

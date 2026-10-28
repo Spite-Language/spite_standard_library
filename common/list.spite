@@ -36,7 +36,7 @@ func is_empty(): Boolean {
 }
 
 func append(value: $element_type) {
-    make_room()
+    _make_room()
     _write_value(_length, value)
     _length = _length + 1
 }
@@ -47,7 +47,7 @@ func prepend(value: $element_type) {
 
 func insert(index: Integer, value: $element_type) {
     var at = index.clamp(0, _length)
-    make_room()
+    _make_room()
     _move_values_up(at, _length - at)
     _write_value(at, value)
     _length = _length + 1
@@ -373,11 +373,11 @@ func sort_by(measure: Spite.Function<$element_type, Integer>): List<$element_typ
     return sorted
 }
 
-func make_room() {
-    reserve(_length + 1)
+func _make_room() {
+    _reserve(_length + 1)
 }
 
-func reserve(wanted: Integer) {
+func _reserve(wanted: Integer) {
     assert wanted > _capacity
     var grown = _capacity * 2
     if grown < wanted {
@@ -387,7 +387,7 @@ func reserve(wanted: Integer) {
         grown = 4
     }
     var size = _item_size()
-    _buffer.reserve(grown * size)
+    _buffer._reserve(grown * size)
     _capacity = grown
 }
 

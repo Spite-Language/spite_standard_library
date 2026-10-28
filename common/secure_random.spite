@@ -1,6 +1,6 @@
 singleton
 
-func bytes(count: Integer): Buffer {
+func random_buffer(count: Integer): Buffer {
     crash count >= 0
     var filled = Buffer(count)
     if count > 0 {

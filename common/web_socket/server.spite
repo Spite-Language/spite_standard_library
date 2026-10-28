@@ -1,0 +1,42 @@
+var _http = Http.Server()
+
+func Server(http: Http.Server) {
+    _http = http
+}
+
+func asks_to_upgrade(request: Http.Request): Boolean {
+    var upgrade = request.header("upgrade")
+    if not upgrade {
+        return false
+    }
+    var lowered = upgrade.lower_case()
+    return lowered == "websocket"
+}
+
+func accept(request: Http.Request): WebSocket.Connection? {
+    crash asks_to_upgrade(request)
+    var connection = WebSocket.Connection(request._connection, false)
+    var status = connection._refusal(request)
+    if status != 101 {
+        var refused = Http.Response()
+        refused.status = status
+        if status == 426 {
+            refused.set_header("sec-websocket-version", "13")
+        }
+        refused.set_header("connection", "close")
+        _http.respond(request, refused)
+        return null
+    }
+    var key = request.header("sec-websocket-key")
+    crash key
+    var accepted = connection._accept_value(key)
+    var answer = "HTTP/1.1 101 Switching Protocols\r\nupgrade: websocket\r\nconnection: Upgrade\r\n"
+    answer = "{answer}sec-websocket-accept: {accepted}\r\n\r\n"
+    var written = connection._write_string(answer)
+    if not written {
+        request._connection.close()
+        return null
+    }
+    connection._begin()
+    return connection
+}

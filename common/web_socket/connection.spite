@@ -1,15 +1,9 @@
-union Message {
-    WebSocketText
-    WebSocketBinary
-}
-
 var largest_message = 16777216
 var _closed = true
 var _close_code: Integer? = null
 var _close_reason = ""
 var _last_pong: Buffer? = null
 var _connection = Socket()
-var _opened = false
 var _masking = false
 var _close_sent = false
 var _final = false
@@ -19,81 +13,9 @@ var _parts = Buffer(0)
 var _random = SecureRandom()
 var _base64 = Base64()
 
-func connect(host: String, port: Integer, request: HttpRequest): Boolean {
-    crash not _opened
-    crash request.method == "GET" and request.body.is_empty()
-    _opened = true
-    var connected = _connection.connect(host, port)
-    if not connected {
-        return false
-    }
-    var nonce = _random.bytes(16)
-    var key = _base64.encode(nonce)
-    var host_header = host
-    if host.contains(":") {
-        host_header = "[{host}]"
-    }
-    if port != 80 {
-        host_header = "{host_header}:{port}"
-    }
-    var path = request.path
-    var head = "GET {path} HTTP/1.1\r\nhost: {host_header}\r\nupgrade: websocket\r\nconnection: Upgrade\r\n"
-    head = "{head}sec-websocket-key: {key}\r\nsec-websocket-version: 13\r\n"
-    var names = request.headers.keys()
-    var index = 0
-    while index < names.count() {
-        var name = names[index]
-        crash name
-        var value = request.headers[name]
-        crash value
-        var handshake = name.starts_with("sec-websocket-") and name != "sec-websocket-protocol"
-        var reserved = name == "host" or name == "upgrade" or name == "connection" or name == "content-length"
-        crash not handshake and not reserved
-        head = "{head}{name}: {value}\r\n"
-        index = index + 1
-    }
-    head = "{head}\r\n"
-    var written = _write_text(head)
-    var answered = written and _answer_fits(key, request)
-    if not answered {
-        _connection.close()
-        return false
-    }
-    _masking = true
-    _begin()
-    return true
-}
-
-func accept(request: HttpRequest): Boolean {
-    crash not _opened
-    _opened = true
-    _connection = request.connection
-    var status = _refusal(request)
-    if status != 101 {
-        var reason = "Bad Request"
-        var extra = ""
-        if status == 426 {
-            reason = "Upgrade Required"
-            extra = "sec-websocket-version: 13\r\n"
-        }
-        var refused = "HTTP/1.1 {status} {reason}\r\n{extra}content-length: 0\r\nconnection: close\r\n\r\n"
-        _write_text(refused)
-        _connection.close()
-        return false
-    }
-    var key = request.header("sec-websocket-key")
-    crash key
-    var accepted = _accept_value(key)
-    var answer = "HTTP/1.1 101 Switching Protocols\r\nupgrade: websocket\r\nconnection: Upgrade\r\n"
-    answer = "{answer}sec-websocket-accept: {accepted}\r\n\r\n"
-    var written = _write_text(answer)
-    if not written {
-        _connection.close()
-        return false
-    }
-    _masking = false
-    _begin()
-    return true
+func Connection(socket: Socket, masking: Boolean) {
+    _connection = socket
+    _masking = masking
 }
 
 func get_closed(): Boolean {
@@ -112,12 +34,12 @@ func get_last_pong(): Buffer? {
     return _last_pong
 }
 
-func send_text(text: String): Boolean {
-    var bytes = text.to_bytes()
+func send_string(text: String): Boolean {
+    var bytes = text.to_buffer()
     return _send_frame(1, bytes)
 }
 
-func send_bytes(bytes: Buffer): Boolean {
+func send_buffer(bytes: Buffer): Boolean {
     return _send_frame(2, bytes)
 }
 
@@ -127,7 +49,7 @@ func send_ping(bytes: Buffer): Boolean {
     return _send_frame(9, bytes)
 }
 
-func receive(): Message? {
+func receive(): WebSocket.Message? {
     while true {
         assert not _closed
         var already = _parts.count()
@@ -159,7 +81,7 @@ func drop() {
     _closed = true
 }
 
-func _take_data(frame: Buffer): Message? {
+func _take_data(frame: Buffer): WebSocket.Message? {
     var continuing = _opcode == 0
     var started = _message_opcode != 0
     if continuing != started {
@@ -168,7 +90,7 @@ func _take_data(frame: Buffer): Message? {
     assert not _closed
     if started {
         var added = frame.count()
-        _parts.append_bytes(frame, 0, added)
+        _parts.append_buffer(frame, 0, added)
     } else {
         _message_opcode = _opcode
         _parts = frame
@@ -179,21 +101,21 @@ func _take_data(frame: Buffer): Message? {
     _message_opcode = 0
     _parts = Buffer(0)
     if kind == 2 {
-        return WebSocketBinary(whole)
+        return WebSocket.Message(whole, false)
     }
-    var text = whole.to_utf8_text()
+    var text = whole.read_as_string()
     if not text {
         _fail(1007)
     }
     assert text
-    return WebSocketText(text)
+    return WebSocket.Message(whole, true)
 }
 
 func _begin() {
     _closed = false
 }
 
-func _refusal(request: HttpRequest): Integer {
+func _refusal(request: Http.Request): Integer {
     var version = request.header("sec-websocket-version")
     var upgrade = request.header("upgrade")
     var connection = request.header("connection")
@@ -216,7 +138,7 @@ func _refusal(request: HttpRequest): Integer {
     return 101
 }
 
-func _answer_fits(key: String, request: HttpRequest): Boolean {
+func _answer_fits(key: String, request: Http.Request): Boolean {
     var status_line = _connection.read_line()
     if not status_line or not status_line.starts_with("HTTP/1.1 101") {
         return false
@@ -288,14 +210,14 @@ func _has_token(list: String, token: String): Boolean {
 
 func _accept_value(key: String): String {
     var joined = "{key}258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
-    var bytes = joined.to_bytes()
+    var bytes = joined.to_buffer()
     var digest = _sha1(bytes)
     return _base64.encode(digest)
 }
 
-func _write_text(text: String): Boolean {
-    var bytes = text.to_bytes()
-    return _connection.write_bytes(bytes)
+func _write_string(text: String): Boolean {
+    var bytes = text.to_buffer()
+    return _connection.write_buffer(bytes)
 }
 
 func _byte_of(room: Buffer, at: Integer): Integer {
@@ -333,8 +255,8 @@ func _send_frame(opcode: Integer, payload: Buffer): Boolean {
         frame.append_long_big_endian(long_length)
     }
     if _masking {
-        var mask = _random.bytes(4)
-        frame.append_bytes(mask, 0, 4)
+        var mask = _random.random_buffer(4)
+        frame.append_buffer(mask, 0, 4)
         var index = 0
         while index < count {
             var key = _byte_of(mask, index % 4)
@@ -344,9 +266,9 @@ func _send_frame(opcode: Integer, payload: Buffer): Boolean {
             index = index + 1
         }
     } else {
-        frame.append_bytes(payload, 0, count)
+        frame.append_buffer(payload, 0, count)
     }
-    var sent = _connection.write_bytes(frame)
+    var sent = _connection.write_buffer(frame)
     if not sent {
         _lost()
     }
@@ -442,12 +364,12 @@ func _read_length(room: Buffer, count: Integer): Long {
 }
 
 func _read_bytes(count: Integer): Buffer? {
-    var text = _connection.read_text(count)
-    if not text {
+    var bytes = _connection._read_exactly(count)
+    if not bytes {
         _lost()
     }
-    assert text
-    return text.to_bytes()
+    assert bytes
+    return bytes
 }
 
 func _answer_control(frame: Buffer) {
@@ -479,9 +401,9 @@ func _answer_close(frame: Buffer) {
             _fail(1002)
         }
         assert not _closed
-        var rest = frame.read_bytes_at(2, count - 2)
+        var rest = frame.read_buffer_at(2, count - 2)
         crash rest
-        var text = rest.to_utf8_text()
+        var text = rest.read_as_string()
         if not text {
             _fail(1007)
         }
@@ -510,9 +432,9 @@ func _fail(code: Integer) {
 }
 
 func _drain() {
-    var got = _connection.read_bytes_now()
+    var got = _connection.read_as_buffer_now()
     while got.count() > 0 {
-        got = _connection.read_bytes_now()
+        got = _connection.read_as_buffer_now()
     }
 }
 

@@ -7,7 +7,7 @@ func _value(): Byte {
 }
 
 func to_buffer(): Buffer {
-    return _buffer.copy_first_bytes(1)
+    return _buffer._copy_first_bytes(1)
 }
 
 func to_boolean(): Boolean {

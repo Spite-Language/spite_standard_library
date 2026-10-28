@@ -15,9 +15,9 @@ func watch_for_changes(target: Target): Boolean {
 }
 
 func changes(): List<String> {
-    collect()
+    _collect()
     var changed = List<String>()
-    if not pending.is_empty() and quiet_left() <= 0 {
+    if not pending.is_empty() and _quiet_left() <= 0 {
         changed = pending
         pending = List<String>()
     }
@@ -25,30 +25,30 @@ func changes(): List<String> {
 }
 
 func wait_for_changes() {
-    collect()
-    while pending.is_empty() or quiet_left() > 0 {
+    _collect()
+    while pending.is_empty() or _quiet_left() > 0 {
         var waiting: Long = -1
         if not pending.is_empty() {
-            waiting = quiet_left()
+            waiting = _quiet_left()
         }
-        wait_for_event(waiting)
-        collect()
+        _wait_for_event(waiting)
+        _collect()
     }
 }
 
-func quiet_left(): Long {
+func _quiet_left(): Long {
     var now = clock.elapsed_milliseconds()
     return last_change + 100 - now
 }
 
-func note(path: String) {
+func _note(path: String) {
     last_change = clock.elapsed_milliseconds()
     if not pending.contains(path) {
         pending.append(path)
     }
 }
 
-func joined(folder: String, name: String): String {
+func _joined(folder: String, name: String): String {
     if folder.ends_with("/") {
         return "{folder}{name}"
     }

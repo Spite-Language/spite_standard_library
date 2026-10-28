@@ -87,9 +87,9 @@ func hmac(key: Buffer, message: Buffer): Buffer {
     var block = Buffer(64)
     if key_count > 64 {
         var hashed_key = _digest(key, key_count)
-        block.append_bytes(hashed_key, 0, 32)
+        block.append_buffer(hashed_key, 0, 32)
     } else {
-        block.append_bytes(key, 0, key_count)
+        block.append_buffer(key, 0, key_count)
     }
     while block.count() < 64 {
         block.append(0)
@@ -108,10 +108,10 @@ func hmac(key: Buffer, message: Buffer): Buffer {
         outer_input.append(outer_value)
         index = index + 1
     }
-    inner_input.append_bytes(message, 0, message_count)
+    inner_input.append_buffer(message, 0, message_count)
     var inner_length = message_count + 64
     var inner = _digest(inner_input, inner_length)
-    outer_input.append_bytes(inner, 0, 32)
+    outer_input.append_buffer(inner, 0, 32)
     return _digest(outer_input, 96)
 }
 

@@ -12,20 +12,20 @@ func move_to(new_path: String): Boolean {
     if file_exists or folder_exists {
         return false
     }
-    var renamed = rename_to(new_path)
+    var renamed = _rename_to(new_path)
     if renamed {
         path = new_path
     }
     return renamed
 }
 
-func get_name(): String {
+func get_file_name(): String {
     var end = path.length()
-    while end > 1 and path.code_at(end - 1) == 47 {
+    while end > 1 and path.byte_at(end - 1) == 47 {
         end = end - 1
     }
     var start = end
-    while start > 0 and path.code_at(start - 1) != 47 and path.code_at(start - 1) != 92 {
+    while start > 0 and path.byte_at(start - 1) != 47 and path.byte_at(start - 1) != 92 {
         start = start - 1
     }
     return path.slice(start, end)
@@ -35,21 +35,21 @@ func to_string(): String {
     return path
 }
 
-func read(): String? {
-    var bytes = read_bytes()
+func read_as_string(): String? {
+    var bytes = read_as_buffer()
     assert bytes
     return _text_of(bytes)
 }
 
-func write(text: String): Boolean {
+func write_string(text: String): Boolean {
     return _put(text, "wb")
 }
 
-func append(text: String): Boolean {
+func append_string(text: String): Boolean {
     return _put(text, "ab")
 }
 
-func size(): Long? {
+func byte_count(): Long? {
     var handle = _open_handle("rb")
     assert handle != 0
     var sought = _seek(handle, 0, 2)
@@ -59,7 +59,7 @@ func size(): Long? {
     return bytes
 }
 
-func modified(): Instant? {
+func last_written(): Instant? {
     var nanoseconds = _modified_nanoseconds_since_1970()
     assert nanoseconds
     var whole = Duration(nanoseconds / 1000000000, 'seconds')
@@ -68,7 +68,7 @@ func modified(): Instant? {
     return Instant(since_1970)
 }
 
-func read_bytes(): Buffer? {
+func read_as_buffer(): Buffer? {
     var handle = _open_handle("rb")
     assert handle != 0
     var sought = _seek(handle, 0, 2)
@@ -84,7 +84,7 @@ func read_bytes(): Buffer? {
     return bytes
 }
 
-func read_bytes_at(position: Long, count: Integer): Buffer? {
+func read_buffer_at(position: Long, count: Integer): Buffer? {
     crash position >= 0 and count >= 0
     var handle = _open_handle("rb")
     assert handle != 0
@@ -109,7 +109,7 @@ func read_bytes_at(position: Long, count: Integer): Buffer? {
     return bytes
 }
 
-func write_bytes(bytes: Buffer): Boolean {
+func write_buffer(bytes: Buffer): Boolean {
     var handle = _open_handle("wb")
     if handle == 0 {
         return false
@@ -120,7 +120,7 @@ func write_bytes(bytes: Buffer): Boolean {
     return written == counted and closed == 0
 }
 
-func append_bytes(bytes: Buffer): Long? {
+func append_buffer(bytes: Buffer): Long? {
     var handle = _open_handle("ab")
     assert handle != 0
     var sought = _seek(handle, 0, 2)
@@ -130,12 +130,6 @@ func append_bytes(bytes: Buffer): Long? {
     var counted: Long = bytes.count()
     assert sought == 0 and start >= 0 and written == counted and closed == 0
     return start
-}
-
-func map(): MappedFile? {
-    var bytes = read_bytes()
-    assert bytes
-    return MappedFile(bytes)
 }
 
 func _read_into_buffer(handle: Long, wanted: Long): Buffer {

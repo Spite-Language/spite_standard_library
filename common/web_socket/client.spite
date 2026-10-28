@@ -1,0 +1,97 @@
+var _connection: WebSocket.Connection? = null
+var _random = SecureRandom()
+var _base64 = Base64()
+
+func connect(host: String, port: Integer, request: Http.Request): Boolean {
+    crash not _connection
+    var body = request.read_body_as_buffer()
+    crash request.method == "GET" and body.is_empty()
+    var socket = Socket()
+    var connected = socket.connect(host, port)
+    if not connected {
+        return false
+    }
+    var connection = WebSocket.Connection(socket, true)
+    var nonce = _random.random_buffer(16)
+    var key = _base64.encode(nonce)
+    var host_header = host
+    if host.contains(":") {
+        host_header = "[{host}]"
+    }
+    if port != 80 {
+        host_header = "{host_header}:{port}"
+    }
+    var path = request.path
+    var head = "GET {path} HTTP/1.1\r\nhost: {host_header}\r\nupgrade: websocket\r\nconnection: Upgrade\r\n"
+    head = "{head}sec-websocket-key: {key}\r\nsec-websocket-version: 13\r\n"
+    var names = request.headers.keys()
+    var index = 0
+    while index < names.count() {
+        var name = names[index]
+        crash name
+        var value = request.headers[name]
+        crash value
+        var handshake = name.starts_with("sec-websocket-") and name != "sec-websocket-protocol"
+        var reserved = name == "host" or name == "upgrade" or name == "connection" or name == "content-length"
+        crash not handshake and not reserved
+        head = "{head}{name}: {value}\r\n"
+        index = index + 1
+    }
+    head = "{head}\r\n"
+    var written = connection._write_string(head)
+    var answered = written and connection._answer_fits(key, request)
+    if not answered {
+        socket.close()
+        return false
+    }
+    connection._begin()
+    _connection = connection
+    return true
+}
+
+func get_closed(): Boolean {
+    if not _connection {
+        return true
+    }
+    return _connection.closed
+}
+
+func get_close_code(): Integer? {
+    assert _connection
+    return _connection.close_code
+}
+
+func get_close_reason(): String {
+    crash _connection
+    return _connection.close_reason
+}
+
+func get_last_pong(): Buffer? {
+    assert _connection
+    return _connection.last_pong
+}
+
+func send_string(text: String): Boolean {
+    crash _connection
+    return _connection.send_string(text)
+}
+
+func send_buffer(bytes: Buffer): Boolean {
+    crash _connection
+    return _connection.send_buffer(bytes)
+}
+
+func send_ping(bytes: Buffer): Boolean {
+    crash _connection
+    return _connection.send_ping(bytes)
+}
+
+func receive(): WebSocket.Message? {
+    assert _connection
+    return _connection.receive()
+}
+
+func close() {
+    crash _connection
+    _connection.close()
+}

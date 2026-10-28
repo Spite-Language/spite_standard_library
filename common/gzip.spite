@@ -14,7 +14,7 @@ func compress(bytes: Buffer): Buffer {
         index = index + 1
     }
     output.append(255)
-    output.append_bytes(body, 0, body_count)
+    output.append_buffer(body, 0, body_count)
     var total = bytes.count()
     var checksum = _crc32(bytes, 0, total)
     output.append_unsigned_integer_little_endian(checksum)
@@ -57,7 +57,7 @@ func decompress(bytes: Buffer): Buffer? {
     }
     assert position + 8 <= total
     var body_count = total - 8 - position
-    var body = bytes.read_bytes_at(position, body_count)
+    var body = bytes.read_buffer_at(position, body_count)
     assert body
     var deflate = Deflate()
     var output = deflate.decompress(body)

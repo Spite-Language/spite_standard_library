@@ -52,7 +52,7 @@ func _channel_to_standard(channel: Float): Float {
     return 1.055 * raised - 0.055
 }
 
-func to_hex(): String {
+func to_hexadecimal_string(): String {
     var red_text = _byte_hex(red)
     var green_text = _byte_hex(green)
     var blue_text = _byte_hex(blue)
@@ -65,7 +65,7 @@ func to_hex(): String {
     return "{text}{alpha_text}"
 }
 
-func to_rgb_text(): String {
+func to_rgb_string(): String {
     var red_byte = _byte_of(red)
     var green_byte = _byte_of(green)
     var blue_byte = _byte_of(blue)
@@ -77,7 +77,7 @@ func to_rgb_text(): String {
     return "rgba({red_byte}, {green_byte}, {blue_byte}, {alpha_rounded})"
 }
 
-func to_hsl_text(): String {
+func to_hsl_string(): String {
     var highest = red.maximum(green)
     highest = highest.maximum(blue)
     var lowest = red.minimum(green)
@@ -145,7 +145,7 @@ func _rounded(value: Float, steps: Float): Float {
 }
 
 func to_string(): String {
-    return to_hex()
+    return to_hexadecimal_string()
 }
 
 func _four(first: Float, second: Float, third: Float, fourth: Float): List<Float> {
@@ -218,7 +218,7 @@ func _all_hex(digits: String): Boolean {
 }
 
 func _hex_value(digits: String, position: Integer): Integer {
-    var code = digits.code_at(position)
+    var code = digits.byte_at(position)
     if code >= 48 and code <= 57 {
         return code - 48
     }

@@ -51,7 +51,7 @@ func square_root(): Double {
 }
 
 func to_buffer(): Buffer {
-    return _buffer.copy_first_bytes(8)
+    return _buffer._copy_first_bytes(8)
 }
 
 func to_tiny(): Tiny {
@@ -341,7 +341,7 @@ func _rounded_digits(digits: String, count: Long): String {
     codes.append(48)
     var index: Long = 0
     while index < count {
-        var code = digits.code_at(index)
+        var code = digits.byte_at(index)
         codes.append(code)
         index = index + 1
     }
@@ -377,24 +377,24 @@ func _code_in(codes: List<Integer>, position: Integer): Integer {
 }
 
 func _rounds_up(digits: String, count: Long): Boolean {
-    var next = digits.code_at(count)
+    var next = digits.byte_at(count)
     if next != 53 {
         return next > 53
     }
     var index = count + 1
     while index < digits.length() {
-        if digits.code_at(index) != 48 {
+        if digits.byte_at(index) != 48 {
             return true
         }
         index = index + 1
     }
-    var last = digits.code_at(count - 1)
+    var last = digits.byte_at(count - 1)
     return last % 2 == 1
 }
 
 func _without_trailing_zeros(digits: String): String {
     var end = digits.length()
-    while end > 1 and digits.code_at(end - 1) == 48 {
+    while end > 1 and digits.byte_at(end - 1) == 48 {
         end = end - 1
     }
     return digits.slice(0, end)
@@ -428,7 +428,7 @@ func _compared(left: String, left_exponent: Long, right: String, right_exponent:
 
 func _digit_code(digits: String, index: Integer): Integer {
     if index < digits.length() {
-        return digits.code_at(index)
+        return digits.byte_at(index)
     }
     return 48
 }

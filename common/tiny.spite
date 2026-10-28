@@ -7,11 +7,7 @@ func _value(): Tiny {
 }
 
 func to_buffer(): Buffer {
-    return _buffer.copy_first_bytes(1)
-}
-
-func to_boolean(): Boolean {
-    return _value() != 0
+    return _buffer._copy_first_bytes(1)
 }
 
 func to_byte(): Byte {

@@ -177,8 +177,8 @@ var _blake_order: List<Integer> = [
 
 
 func hash(password: String): String {
-    var salt = random.bytes(16)
-    var secret = password.to_bytes()
+    var salt = random.random_buffer(16)
+    var secret = password.to_buffer()
     var tag = derive(secret, salt, 3, 65536, 1, 32)
     return _encoded(salt, tag, 3, 65536, 1)
 }
@@ -214,7 +214,7 @@ func verify(password: String, encoded: String): Boolean? {
     var expected = _unpadded(tag_field)
     assert salt and expected
     assert expected.count() >= 4 and salt.count() >= 8
-    var secret = password.to_bytes()
+    var secret = password.to_buffer()
     var nothing = Buffer(0)
     var tag_length = expected.count()
     var tag = _derived(variant, secret, salt, nothing, nothing, time_cost, memory_cost, lanes, tag_length)
@@ -364,7 +364,7 @@ func _derived(
     var tag = Buffer(tag_length)
     var tag_room = _zeroed(tag_length)
     _long_hash(memory, work_at, 1024, tag_room, 0, tag_length)
-    tag.append_bytes(tag_room, 0, tag_length)
+    tag.append_buffer(tag_room, 0, tag_length)
     return tag
 }
 
@@ -417,7 +417,7 @@ func _copy(source: Buffer, source_at: Integer, target: Buffer, target_at: Intege
 func _append_counted(bytes: Buffer, added: Buffer) {
     var added_count = added.count()
     bytes.append_integer_little_endian(added_count)
-    bytes.append_bytes(added, 0, added_count)
+    bytes.append_buffer(added, 0, added_count)
 }
 
 func _xor_into(memory: Buffer, target_at: Integer, source_at: Integer) {

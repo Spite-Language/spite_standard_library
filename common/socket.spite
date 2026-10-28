@@ -3,50 +3,50 @@ var pending = ""
 var closed = false
 
 func listen_locally(port: Integer): Boolean {
-    var address = local_address(port)
-    return listen_on(address)
+    var address = _local_address(port)
+    return _listen_on(address)
 }
 
 func listen_everywhere(port: Integer): Boolean {
-    var address = any_ipv6_address(port)
-    if listen_on(address) {
+    var address = _any_ipv6_address(port)
+    if _listen_on(address) {
         return true
     }
-    var fallback = any_address(port)
-    return listen_on(fallback)
+    var fallback = _any_address(port)
+    return _listen_on(fallback)
 }
 
 func listen_at(host: String, port: Integer): Boolean {
-    var addresses = resolved_addresses(host, port, 1)
+    var addresses = _resolved_addresses(host, port, 1)
     if addresses.is_empty() {
         return false
     }
     var address = addresses[0]
     crash address
-    return listen_on(address)
+    return _listen_on(address)
 }
 
 func connect_locally(port: Integer): Boolean {
-    var address = local_address(port)
-    return connect_to(address)
+    var address = _local_address(port)
+    return _connect_to(address)
 }
 
 func connect(host: String, port: Integer): Boolean {
-    var addresses = resolved_addresses(host, port, 1)
+    var addresses = _resolved_addresses(host, port, 1)
     var connected = false
     var index = 0
     while not connected and index < addresses.count() {
         var address = addresses[index]
         crash address
-        connected = connect_to(address)
+        connected = _connect_to(address)
         index = index + 1
     }
     return connected
 }
 
 func accept_client(): Socket? {
-    use_blocking_calls()
-    var accepted = accept_handle()
+    _use_blocking_calls()
+    var accepted = _accept_handle()
     assert accepted != -1
     var client = Socket()
     client.handle = accepted
@@ -54,7 +54,7 @@ func accept_client(): Socket? {
 }
 
 func accept_client_now(): Socket? {
-    var accepted = accept_now()
+    var accepted = _accept_now()
     assert accepted != -1
     var client = Socket()
     client.handle = accepted
@@ -64,10 +64,10 @@ func accept_client_now(): Socket? {
 func read_line(): String? {
     var newline = pending.index_of("\n")
     if not newline and not closed {
-        use_blocking_calls()
+        _use_blocking_calls()
         var room = Buffer(4096)
         while not newline and not closed {
-            var received = receive_into(room, 4096)
+            var received = _receive_into(room, 4096)
             if received > 0 {
                 room.take_written(received)
                 var more = _text_of(room, received)
@@ -79,21 +79,21 @@ func read_line(): String? {
         }
     }
     assert newline
-    return take_line(newline)
+    return _take_line(newline)
 }
 
 func read_line_now(): String? {
     var newline = pending.index_of("\n")
     if not newline and not closed {
         var room = Buffer(4096)
-        var received = receive_now(room, 4096)
+        var received = _receive_now(room, 4096)
         while not newline and received > 0 {
             room.take_written(received)
             var more = _text_of(room, received)
             pending = "{pending}{more}"
             newline = pending.index_of("\n")
             if not newline {
-                received = receive_now(room, 4096)
+                received = _receive_now(room, 4096)
             }
         }
         if received < 0 {
@@ -101,50 +101,60 @@ func read_line_now(): String? {
         }
     }
     assert newline
-    return take_line(newline)
+    return _take_line(newline)
 }
 
-func read_bytes(): Buffer? {
+func read_as_buffer(): Buffer? {
     var bytes = _chunk(true, 65536)
     assert bytes.count() > 0
     return bytes
 }
 
-func read_bytes_now(): Buffer {
+func read_as_buffer_now(): Buffer {
     return _chunk(false, 65536)
 }
 
-func read_text_up_to(limit: Integer): String {
-    var bytes = _chunk(true, limit)
-    var counted = bytes.count()
-    return _text_of(bytes, counted)
-}
-
-func read_text_up_to_now(limit: Integer): String {
-    var bytes = _chunk(false, limit)
-    var counted = bytes.count()
-    return _text_of(bytes, counted)
-}
-
-func read_text(count: Integer): String? {
-    var text = ""
-    while text.length() < count {
-        var wanted = count - text.length()
-        var more = read_text_up_to(wanted)
-        assert more.length() > 0
-        text = text + more
+func read_as_string(): String? {
+    var bytes = read_as_buffer()
+    assert bytes
+    var text = bytes.read_as_string()
+    var added = 0
+    while not text and added < 3 and not closed {
+        var more = _chunk(true, 1)
+        var more_count = more.count()
+        assert more_count > 0
+        bytes.append_buffer(more, 0, more_count)
+        text = bytes.read_as_string()
+        added = added + 1
     }
     return text
 }
 
+func write_string(text: String): Boolean {
+    var bytes = text.to_buffer()
+    return write_buffer(bytes)
+}
+
+func _read_exactly(count: Integer): Buffer? {
+    var bytes = Buffer(count)
+    while bytes.count() < count {
+        var wanted = count - bytes.count()
+        var more = _chunk(true, wanted)
+        var more_count = more.count()
+        assert more_count > 0
+        bytes.append_buffer(more, 0, more_count)
+    }
+    return bytes
+}
+
 func write_line(text: String): Boolean {
-    use_blocking_calls()
+    _use_blocking_calls()
     var line = "{text}\n"
     var line_length = line.length()
     var written = 0
     while written < line_length and not closed {
         var rest = line.slice(written, line_length)
-        var sent = send_text(rest)
+        var sent = _send_string(rest)
         if sent > 0 {
             written = written + sent
         } else {
@@ -154,14 +164,14 @@ func write_line(text: String): Boolean {
     return written == line_length
 }
 
-func write_bytes(bytes: Buffer): Boolean {
-    use_blocking_calls()
+func write_buffer(bytes: Buffer): Boolean {
+    _use_blocking_calls()
     var counted = bytes.count()
     var written = 0
     while written < counted and not closed {
         var rest = Buffer(counted - written)
-        rest.append_bytes(bytes, written, counted - written)
-        var sent = send_from(rest, counted - written)
+        rest.append_buffer(bytes, written, counted - written)
+        var sent = _send_from(rest, counted - written)
         if sent > 0 {
             written = written + sent
         } else {
@@ -171,12 +181,12 @@ func write_bytes(bytes: Buffer): Boolean {
     return written == counted
 }
 
-func write_bytes_now(bytes: Buffer): Integer {
+func write_buffer_now(bytes: Buffer): Integer {
     var counted = bytes.count()
     if closed or counted <= 0 {
         return 0
     }
-    var sent = send_now(bytes, counted)
+    var sent = _send_now(bytes, counted)
     if sent < 0 {
         closed = true
         return 0
@@ -187,7 +197,7 @@ func write_bytes_now(bytes: Buffer): Integer {
 func close() {
     closed = true
     if handle != -1 {
-        close_handle()
+        _close_handle()
         handle = -1
     }
 }
@@ -196,31 +206,31 @@ func drop() {
     close()
 }
 
-func listen_on(address: Buffer): Boolean {
-    start_sockets()
-    var family = read_family(address)
-    handle = open_socket(family)
+func _listen_on(address: Buffer): Boolean {
+    _start_sockets()
+    var family = _read_family(address)
+    handle = _open_socket(family)
     closed = false
-    var listening = handle != -1 and bind_address(address) and listen_for_clients()
+    var listening = handle != -1 and _bind_address(address) and _listen_for_clients()
     if not listening {
         close()
     }
     return listening
 }
 
-func connect_to(address: Buffer): Boolean {
-    start_sockets()
-    var family = read_family(address)
-    handle = open_socket(family)
+func _connect_to(address: Buffer): Boolean {
+    _start_sockets()
+    var family = _read_family(address)
+    handle = _open_socket(family)
     closed = false
-    var connected = handle != -1 and connect_address(address)
+    var connected = handle != -1 and _connect_address(address)
     if not connected {
         close()
     }
     return connected
 }
 
-func take_line(newline: Integer): String {
+func _take_line(newline: Integer): String {
     var line = pending.slice(0, newline)
     var pending_length = pending.length()
     pending = pending.slice(newline + 1, pending_length)
@@ -243,21 +253,21 @@ func _text_of(room: Buffer, count: Integer): String {
 }
 
 func _chunk(blocking: Boolean, limit: Integer): Buffer {
-    var taken = take_pending(limit)
+    var taken = _take_pending(limit)
     if taken.count() > 0 or closed {
         return taken
     }
     var room = Buffer(limit)
     var received = 0
     if blocking {
-        use_blocking_calls()
-        received = receive_into(room, limit)
+        _use_blocking_calls()
+        received = _receive_into(room, limit)
         if received <= 0 {
             closed = true
             return room
         }
     } else {
-        received = receive_now(room, limit)
+        received = _receive_now(room, limit)
         if received < 0 {
             closed = true
             return room
@@ -267,7 +277,7 @@ func _chunk(blocking: Boolean, limit: Integer): Buffer {
     return room.copy()
 }
 
-func take_pending(count: Integer): Buffer {
+func _take_pending(count: Integer): Buffer {
     var pending_length = pending.length()
     var taken = pending_length
     if count < taken {
@@ -276,7 +286,7 @@ func take_pending(count: Integer): Buffer {
     var bytes = Buffer(0)
     var index = 0
     while index < taken {
-        var code = pending.code_at(index)
+        var code = pending.byte_at(index)
         bytes.append(code)
         index = index + 1
     }
@@ -320,67 +330,67 @@ func _short_in(room: Buffer, at: Integer): Integer {
     return read.to_integer()
 }
 
-func local_address(port: Integer): Buffer {
-    var address = any_address(port)
+func _local_address(port: Integer): Buffer {
+    var address = _any_address(port)
     address[4] = 127
     address[7] = 1
     return address
 }
 
-func any_address(port: Integer): Buffer {
-    var address = empty_address()
-    var family = ipv4_family()
-    write_family(address, family)
-    write_port(address, port)
+func _any_address(port: Integer): Buffer {
+    var address = _empty_address()
+    var family = _ipv4_family()
+    _write_family(address, family)
+    _write_port(address, port)
     return address
 }
 
-func any_ipv6_address(port: Integer): Buffer {
-    var address = empty_address()
-    var family = ipv6_family()
-    write_family(address, family)
-    write_port(address, port)
+func _any_ipv6_address(port: Integer): Buffer {
+    var address = _empty_address()
+    var family = _ipv6_family()
+    _write_family(address, family)
+    _write_port(address, port)
     return address
 }
 
-func empty_address(): Buffer {
+func _empty_address(): Buffer {
     return _zeroed(28)
 }
 
-func address_length(address: Buffer): Integer {
-    if read_family(address) == ipv6_family() {
+func _address_length(address: Buffer): Integer {
+    if _read_family(address) == _ipv6_family() {
         return 28
     }
     return 16
 }
 
-func write_family(address: Buffer, family: Integer) {
+func _write_family(address: Buffer, family: Integer) {
     var narrow = family.to_unsigned_short()
     address.write_unsigned_short_little_endian_at(0, narrow)
 }
 
-func read_family(address: Buffer): Integer {
+func _read_family(address: Buffer): Integer {
     return _short_in(address, 0)
 }
 
-func write_port(address: Buffer, port: Integer) {
+func _write_port(address: Buffer, port: Integer) {
     var narrow = port.to_unsigned_short()
     address.write_unsigned_short_big_endian_at(2, narrow)
 }
 
-func read_port(address: Buffer): Integer {
+func _read_port(address: Buffer): Integer {
     var port = address.read_unsigned_short_big_endian_at(2)
     crash port
     return port.to_integer()
 }
 
-func resolved_addresses(host: String, port: Integer, kind: Integer): List<Buffer> {
-    start_sockets()
+func _resolved_addresses(host: String, port: Integer, kind: Integer): List<Buffer> {
+    _start_sockets()
     var addresses = List<Buffer>()
     var hints = _zeroed(48)
     hints.write_integer_little_endian_at(8, kind)
     var found = _zeroed(8)
-    var failed = resolve_name(host, hints, found) != 0
+    var failed = _resolve_name(host, hints, found) != 0
     var first = _long_in(found, 0)
     if failed or first == 0 {
         return addresses
@@ -388,41 +398,41 @@ func resolved_addresses(host: String, port: Integer, kind: Integer): List<Buffer
     var ipv4_count = 0
     var entry_place = first
     while entry_place != 0 {
-        var entry = read_foreign(entry_place, 48)
+        var entry = _read_foreign(entry_place, 48)
         var family = _integer_in(entry, 4)
-        if family == ipv4_family() or family == ipv6_family() {
+        if family == _ipv4_family() or family == _ipv6_family() {
             var resolved_length = _integer_in(entry, 16)
             if resolved_length > 28 {
                 resolved_length = 28
             }
-            var offset = resolved_address_offset()
+            var offset = _resolved_address_offset()
             var resolved_place = _long_in(entry, offset)
-            var resolved = read_foreign(resolved_place, resolved_length)
-            var address = empty_address()
+            var resolved = _read_foreign(resolved_place, resolved_length)
+            var address = _empty_address()
             var index = 0
             while index < resolved_length {
                 var code = _byte_in(resolved, index)
                 address[index] = code
                 index = index + 1
             }
-            write_port(address, port)
-            if family == ipv4_family() {
+            _write_port(address, port)
+            if family == _ipv4_family() {
                 addresses.insert(ipv4_count, address)
                 ipv4_count = ipv4_count + 1
             } else {
                 addresses.append(address)
             }
         }
-        var next_offset = next_entry_offset()
+        var next_offset = _next_entry_offset()
         entry_place = _long_in(entry, next_offset)
     }
-    free_resolved(first)
+    _free_resolved(first)
     return addresses
 }
 
-func address_text(address: Buffer): String {
-    if read_family(address) != ipv6_family() {
-        return dotted_text(address, 4)
+func _address_text(address: Buffer): String {
+    if _read_family(address) != _ipv6_family() {
+        return _dotted_text(address, 4)
     }
     var mapped = true
     var index = 8
@@ -436,7 +446,7 @@ func address_text(address: Buffer): String {
         index = index + 1
     }
     if mapped {
-        return dotted_text(address, 20)
+        return _dotted_text(address, 20)
     }
     var groups = List<Integer>()
     index = 0
@@ -447,7 +457,7 @@ func address_text(address: Buffer): String {
         groups.append(high * 256 + low)
         index = index + 1
     }
-    var text = ipv6_groups_text(groups)
+    var text = _ipv6_groups_text(groups)
     var scope = _integer_in(address, 24)
     if scope != 0 {
         return "{text}%{scope}"
@@ -455,7 +465,7 @@ func address_text(address: Buffer): String {
     return text
 }
 
-func dotted_text(address: Buffer, start: Integer): String {
+func _dotted_text(address: Buffer, start: Integer): String {
     var first = _byte_in(address, start)
     var second = _byte_in(address, start + 1)
     var third = _byte_in(address, start + 2)
@@ -463,7 +473,7 @@ func dotted_text(address: Buffer, start: Integer): String {
     return "{first}.{second}.{third}.{fourth}"
 }
 
-func ipv6_groups_text(groups: List<Integer>): String {
+func _ipv6_groups_text(groups: List<Integer>): String {
     var longest_start = -1
     var longest_length = 1
     var run_start = -1
@@ -497,7 +507,7 @@ func ipv6_groups_text(groups: List<Integer>): String {
             }
             var group = groups[index]
             crash group
-            var digits = hex_text(group)
+            var digits = _hex_text(group)
             text = "{text}{digits}"
             index = index + 1
         }
@@ -505,7 +515,7 @@ func ipv6_groups_text(groups: List<Integer>): String {
     return text
 }
 
-func hex_text(value: Integer): String {
+func _hex_text(value: Integer): String {
     var digits = "0123456789abcdef"
     var text = ""
     var rest = value

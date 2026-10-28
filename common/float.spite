@@ -51,7 +51,7 @@ func square_root(): Float {
 }
 
 func to_buffer(): Buffer {
-    return _buffer.copy_first_bytes(4)
+    return _buffer._copy_first_bytes(4)
 }
 
 func to_integer(): Integer {

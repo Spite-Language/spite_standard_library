@@ -1,0 +1,20 @@
+var _bytes = Buffer(0)
+var _text = false
+
+func Message(starting_bytes: Buffer, starting_is_text: Boolean) {
+    _bytes = starting_bytes
+    _text = starting_is_text
+}
+
+func is_text(): Boolean {
+    return _text
+}
+
+func read_as_string(): String? {
+    assert _text
+    return _bytes.read_as_string()
+}
+
+func read_as_buffer(): Buffer {
+    return _bytes
+}

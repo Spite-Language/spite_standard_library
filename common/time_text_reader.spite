@@ -200,7 +200,7 @@ func _code(): Integer {
     if _position >= _text.length() {
         return 0
     }
-    return _text.code_at(_position)
+    return _text.byte_at(_position)
 }
 
 func _read_sign(): Boolean {

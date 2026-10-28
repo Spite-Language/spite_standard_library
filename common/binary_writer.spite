@@ -6,12 +6,8 @@ var _found = 0
 
 func write(value: $value_type): Buffer {
     var bytes = Buffer(16)
-    append_to(value, bytes)
-    return bytes
-}
-
-func append_to(value: $value_type, bytes: Buffer) {
     _append(value, bytes)
+    return bytes
 }
 
 func schema(): Long
@@ -165,10 +161,10 @@ func _write_text(text: String) {
     _write_count(length)
     var target = _target()
     var used = target.count()
-    target.reserve(used + length)
+    target._reserve(used + length)
     var index = 0
     while index < length {
-        var code = text.code_at(index)
+        var code = text.byte_at(index)
         var byte = code.to_byte()
         target.append(byte)
         index = index + 1

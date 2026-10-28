@@ -1,6 +1,6 @@
 var status = 200
 var headers = Dictionary<String, String>()
-var body = ""
+var _body = Buffer(0)
 
 func header(name: String): String? {
     var lowered = name.lower_case()
@@ -10,6 +10,22 @@ func header(name: String): String? {
 func set_header(name: String, value: String) {
     var lowered = name.lower_case()
     headers[lowered] = value
+}
+
+func read_body_as_string(): String? {
+    return _body.read_as_string()
+}
+
+func read_body_as_buffer(): Buffer {
+    return _body
+}
+
+func write_body_string(text: String) {
+    _body = text.to_buffer()
+}
+
+func write_body_buffer(buffer: Buffer) {
+    _body = buffer
 }
 
 func reason(): String {
@@ -27,6 +43,7 @@ func reason(): String {
         405: return "Method Not Allowed"
         409: return "Conflict"
         413: return "Content Too Large"
+        426: return "Upgrade Required"
         429: return "Too Many Requests"
         500: return "Internal Server Error"
         503: return "Service Unavailable"

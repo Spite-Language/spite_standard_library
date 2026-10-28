@@ -127,7 +127,7 @@ func _byte_at(position: Long): Integer {
         return 0
     }
     var index = position.to_integer()
-    return _data.code_at(index)
+    return _data.byte_at(index)
 }
 
 func _peek(): Integer {
@@ -136,7 +136,7 @@ func _peek(): Integer {
         return 0
     }
     var index = _position.to_integer()
-    return _data.code_at(index)
+    return _data.byte_at(index)
 }
 
 func _unsigned_at(position: Long, bytes: Long): Long {

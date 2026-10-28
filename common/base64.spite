@@ -62,14 +62,14 @@ func _byte_at(bytes: Buffer, index: Integer): Integer {
 func _append_digit(text: String, alphabet: String, group: Integer, shift: Integer) {
     var moved = group.shifted_right(shift)
     var value = moved.bits_and(63)
-    var digit = alphabet.code_at(value)
+    var digit = alphabet.byte_at(value)
     text.append_code(digit)
 }
 
 func _decoded(text: String, url: Boolean): Buffer? {
     var written_length = text.length()
     var length = written_length
-    while length > 0 and text.code_at(length - 1) == 61 {
+    while length > 0 and text.byte_at(length - 1) == 61 {
         length = length - 1
     }
     var padding = written_length - length
@@ -82,7 +82,7 @@ func _decoded(text: String, url: Boolean): Buffer? {
     var held = 0
     var index = 0
     while index < length {
-        var code = text.code_at(index)
+        var code = text.byte_at(index)
         var value = _digit_value(code, url)
         assert value >= 0
         var moved = group.shifted_left(6)

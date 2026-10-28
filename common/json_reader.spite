@@ -5,27 +5,19 @@ var _key = ""
 var _text = ""
 var position = 0
 var _expected = ""
-var _crashes = false
 var _matched = false
 
 func read(text: String): $value_type? {
-    var parsed = _continue(text, 0, "", false)
+    var parsed = _continue(text, 0, "")
     _finish()
     assert not _failed()
     return parsed
 }
 
-func read_or_crash(text: String): $value_type {
-    var parsed = _continue(text, 0, "", true)
-    _finish()
-    return parsed
-}
-
-func _continue(text: String, start: Integer, wanted: String, crashes: Boolean): $value_type {
+func _continue(text: String, start: Integer, wanted: String): $value_type {
     _text = text
     position = start
     _expected = wanted
-    _crashes = crashes
     return _parse()
 }
 
@@ -85,7 +77,7 @@ func _parse_present(): $value_type {
         return null
     }
     var inner = JsonReader<$value_type.value_type>()
-    var item = inner._continue(_text, position, _expected, _crashes)
+    var item = inner._continue(_text, position, _expected)
     position = inner.position
     _expected = inner._expected
     return item
@@ -97,7 +89,7 @@ func _parse_list(): $value_type {
     _expect("[")
     var more = not _consume("]")
     while more and not _failed() {
-        var element = element_json._continue(_text, position, _expected, _crashes)
+        var element = element_json._continue(_text, position, _expected)
         position = element_json.position
         _expected = element_json._expected
         list.append(element)
@@ -122,7 +114,7 @@ func _parse_dictionary(): $value_type {
             return dictionary
         }
         _expect(":")
-        var entry = entry_json._continue(_text, position, _expected, _crashes)
+        var entry = entry_json._continue(_text, position, _expected)
         position = entry_json.position
         _expected = entry_json._expected
         dictionary[key] = entry
@@ -170,7 +162,7 @@ func read_attribute(attribute: Spite.AttributeDeclaration, created: $value_type)
     }
     assert _key == key
     var attribute_json = JsonReader<attribute.class>()
-    created[attribute] = attribute_json._continue(_text, position, _expected, _crashes)
+    created[attribute] = attribute_json._continue(_text, position, _expected)
     position = attribute_json.position
     _expected = attribute_json._expected
     _matched = true
@@ -185,7 +177,7 @@ func read_camel_attribute(attribute: Spite.AttributeDeclaration, created: $value
     assert not is_renamed
     assert _key == attribute.camel_case_name or _key == attribute.pascal_case_name
     var attribute_json = JsonReader<attribute.class>()
-    created[attribute] = attribute_json._continue(_text, position, _expected, _crashes)
+    created[attribute] = attribute_json._continue(_text, position, _expected)
     position = attribute_json.position
     _expected = attribute_json._expected
     _matched = true
@@ -209,7 +201,6 @@ func _failed(): Boolean {
 }
 
 func _fail(wanted: String) {
-    crash not _crashes
     if _expected.is_empty() {
         _expected = wanted
     }
@@ -225,7 +216,7 @@ func _finish() {
 func _skip_space() {
     var spacing = true
     while spacing and position < _text.length() {
-        var code = _text.code_at(position)
+        var code = _text.byte_at(position)
         spacing = code == 32 or code == 9 or code == 10 or code == 13
         if spacing {
             position = position + 1
@@ -304,7 +295,7 @@ func _read_text(): String {
     var start = position
     var closed = false
     while not closed and position < _text.length() and _expected.is_empty() {
-        var code = _text.code_at(position)
+        var code = _text.byte_at(position)
         if code == 34 {
             var last_run = _text.slice(start, position)
             made = made + last_run
@@ -329,7 +320,7 @@ func _read_escape(): String {
     position = position + 1
     var code = 0
     if position < _text.length() {
-        code = _text.code_at(position)
+        code = _text.byte_at(position)
     }
     position = position + 1
     if code == 34 or code == 92 or code == 47 {
@@ -378,7 +369,7 @@ func _hexadecimal_digit(at: Integer): Integer {
     if at >= _text.length() {
         return -1
     }
-    var code = _text.code_at(at)
+    var code = _text.byte_at(at)
     if code >= 48 and code <= 57 {
         return code - 48
     }
@@ -419,7 +410,7 @@ func _text_of(code_point: Integer): String {
 }
 
 func _skip_character(code: Integer): Boolean {
-    if position < _text.length() and _text.code_at(position) == code {
+    if position < _text.length() and _text.byte_at(position) == code {
         position = position + 1
         return true
     }
@@ -430,7 +421,7 @@ func _skip_digits(): Integer {
     var start = position
     var digit = true
     while digit and position < _text.length() {
-        var code = _text.code_at(position)
+        var code = _text.byte_at(position)
         digit = code >= 48 and code <= 57
         if digit {
             position = position + 1
@@ -445,7 +436,7 @@ func _skip_value() {
         _fail("a value")
         return
     }
-    var code = _text.code_at(position)
+    var code = _text.byte_at(position)
     if code == 34 {
         _read_text()
     } else if code == 123 {

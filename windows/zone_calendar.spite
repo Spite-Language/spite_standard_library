@@ -63,7 +63,7 @@ func _opened(): Long {
     var characters = Buffer(length * 2 + 2)
     var index = 0
     while index < length {
-        var code = _name.code_at(index)
+        var code = _name.byte_at(index)
         if code > 127 {
             return 0
         }

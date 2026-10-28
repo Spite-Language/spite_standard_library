@@ -35,7 +35,7 @@ func _read_a_line(): String {
     }
     var room_count = library.strlen(room)
     room.take_written(room_count)
-    var text = room.text(0, room_count)
+    var text = room.read_string_at(0, room_count)
     crash text
     return text
 }

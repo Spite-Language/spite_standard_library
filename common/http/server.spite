@@ -14,7 +14,7 @@ func listen_everywhere(port: Integer): Boolean {
     return _listener.listen_everywhere(port)
 }
 
-func next_request(): HttpRequest? {
+func next_request(): Http.Request? {
     while true {
         var client = _next_ready_connection()
         assert client
@@ -25,15 +25,15 @@ func next_request(): HttpRequest? {
         if client.closed {
             client.close()
         } else {
-            var refused = HttpResponse()
+            var refused = Http.Response()
             refused.status = 400
             _write_response(client, refused, true, true)
         }
     }
 }
 
-func respond(request: HttpRequest, response: HttpResponse) {
-    var client = request.connection
+func respond(request: Http.Request, response: Http.Response) {
+    var client = request._connection
     var waiting_count = _waiting.count()
     var keep = _keeps_alive(request) and waiting_count < largest_waiting and not _listener.closed
     var with_body = request.method != "HEAD" and response.status != 204 and response.status != 304
@@ -65,7 +65,7 @@ func drop() {
     close()
 }
 
-func _keeps_alive(request: HttpRequest): Boolean {
+func _keeps_alive(request: Http.Request): Boolean {
     var asked = ""
     var connection_header = request.header("connection")
     if connection_header {
@@ -98,7 +98,7 @@ func _next_ready_connection(): Socket? {
         if patience > 1000 {
             patience = 1000
         }
-        var ready = _listener.first_readable(handles, patience)
+        var ready = _listener._first_readable(handles, patience)
         assert ready != -2
         if ready == 0 {
             var client = _listener.accept_client()
@@ -147,7 +147,7 @@ func _close_idle_connections() {
     }
 }
 
-func _read_request(client: Socket): HttpRequest? {
+func _read_request(client: Socket): Http.Request? {
     var first_line = client.read_line()
     assert first_line
     var parts = first_line.split(" ")
@@ -160,8 +160,8 @@ func _read_request(client: Socket): HttpRequest? {
     crash version
     assert version == "HTTP/1.1" or version == "HTTP/1.0"
     assert not method.is_empty() and path.starts_with("/")
-    var request = HttpRequest()
-    request.connection = client
+    var request = Http.Request()
+    request._connection = client
     request.method = method
     request.path = path
     request.version = version
@@ -172,9 +172,9 @@ func _read_request(client: Socket): HttpRequest? {
         var length = declared.to_integer()
         assert length
         assert length >= 0 and length <= largest_body
-        var body = client.read_text(length)
+        var body = client._read_exactly(length)
         assert body
-        request.body = body
+        request._body = body
     } else {
         var encoding = request.header("transfer-encoding")
         assert not encoding
@@ -207,9 +207,9 @@ func _read_headers(client: Socket, headers: Dictionary<String, String>): Boolean
     return false
 }
 
-func _write_response(client: Socket, response: HttpResponse, with_body: Boolean, closing: Boolean) {
+func _write_response(client: Socket, response: Http.Response, with_body: Boolean, closing: Boolean) {
     var reason = response.reason()
-    var body_length = response.body.length()
+    var body_length = response._body.count()
     var status = response.status
     var head = "HTTP/1.1 {status} {reason}\r\n"
     var names = response.headers.keys()
@@ -229,12 +229,11 @@ func _write_response(client: Socket, response: HttpResponse, with_body: Boolean,
         connection_line = "close"
     }
     head = "{head}content-length: {body_length}\r\nconnection: {connection_line}\r\n\r\n"
-    var whole = head
+    var bytes = head.to_buffer()
     if with_body {
-        whole = head + response.body
+        bytes.append_buffer(response._body, 0, body_length)
     }
-    var bytes = whole.to_bytes()
-    client.write_bytes(bytes)
+    client.write_buffer(bytes)
     if closing {
         client.close()
     }

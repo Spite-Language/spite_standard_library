@@ -17,20 +17,20 @@ func move_to(new_path: String): Boolean {
     if file_exists or folder_exists {
         return false
     }
-    var renamed = rename_to(new_path)
+    var renamed = _rename_to(new_path)
     if renamed {
         path = new_path
     }
     return renamed
 }
 
-func get_name(): String {
+func get_folder_name(): String {
     var end = path.length()
-    while end > 1 and path.code_at(end - 1) == 47 {
+    while end > 1 and path.byte_at(end - 1) == 47 {
         end = end - 1
     }
     var start = end
-    while start > 0 and path.code_at(start - 1) != 47 and path.code_at(start - 1) != 92 {
+    while start > 0 and path.byte_at(start - 1) != 47 and path.byte_at(start - 1) != 92 {
         start = start - 1
     }
     return path.slice(start, end)
@@ -46,7 +46,7 @@ func entries(): List<Entry> {
     var index = 0
     while index < folder_names.count() {
         var folder_name = folder_names[index]
-        var folder_path = inside(folder_name)
+        var folder_path = _inside(folder_name)
         var directory = Directory(folder_path)
         result.append(directory)
         index = index + 1
@@ -55,7 +55,7 @@ func entries(): List<Entry> {
     index = 0
     while index < file_names.count() {
         var file_name = file_names[index]
-        var file_path = inside(file_name)
+        var file_path = _inside(file_name)
         var file = File(file_path)
         result.append(file)
         index = index + 1
@@ -63,7 +63,7 @@ func entries(): List<Entry> {
     return result
 }
 
-func inside(name: String): String {
+func _inside(name: String): String {
     if path.ends_with("/") {
         return "{path}{name}"
     }
@@ -71,7 +71,7 @@ func inside(name: String): String {
 }
 
 func _sorted_names(want_folders: Boolean): List<String> {
-    var names = entry_names(want_folders)
+    var names = _entry_names(want_folders)
     var count = names.count()
     var index = 1
     while index < count {

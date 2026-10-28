@@ -7,7 +7,7 @@ func compress(bytes: Buffer): Buffer {
     var output = Buffer(body_count + 6)
     output.append(120)
     output.append(156)
-    output.append_bytes(body, 0, body_count)
+    output.append_buffer(body, 0, body_count)
     var checksum = _adler32(bytes)
     output.append_unsigned_integer_big_endian(checksum)
     return output
@@ -22,7 +22,7 @@ func decompress(bytes: Buffer): Buffer? {
     assert method.shifted_right(4) <= 7
     assert (method * 256 + flags) % 31 == 0
     assert flags.bits_and(32) == 0
-    var body = bytes.read_bytes_at(2, total - 6)
+    var body = bytes.read_buffer_at(2, total - 6)
     assert body
     var deflate = Deflate()
     var output = deflate.decompress(body)

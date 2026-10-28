@@ -1,13 +1,12 @@
 # ../docs/memory.md#the-buffer
 
 var item_count = 0
-var capacity = 0
-var position = 0
+var _capacity = 0
 
 func Buffer(size: Integer) {
     crash size >= 0
     _resize_room(size)
-    capacity = size
+    _capacity = size
 }
 
 func _resize_room(size: Integer)
@@ -91,21 +90,12 @@ func count(): Integer {
 }
 
 func take_written(written_count: Integer) {
-    crash written_count >= 0 and written_count <= capacity
+    crash written_count >= 0 and written_count <= _capacity
     item_count = written_count
 }
 
 func is_empty(): Boolean {
     return item_count == 0
-}
-
-func remaining(): Integer {
-    return item_count - position
-}
-
-func set_position(at: Integer) {
-    crash at >= 0 and at <= item_count
-    position = at
 }
 
 func get_at(index: Integer): Byte? {
@@ -119,7 +109,7 @@ func set_at(index: Integer, value: Byte) {
 }
 
 func append(value: Byte) {
-    reserve(item_count + 1)
+    _reserve(item_count + 1)
     _write_byte_at(item_count, value)
     item_count = item_count + 1
 }
@@ -128,54 +118,36 @@ func truncate(kept_count: Integer) {
     if kept_count >= 0 and kept_count < item_count {
         item_count = kept_count
     }
-    if position > item_count {
-        position = item_count
-    }
 }
 
 func clear() {
     item_count = 0
-    position = 0
 }
 
-func reserve(wanted: Integer) {
-    assert wanted > capacity
-    var grown = capacity * 2
+func _reserve(wanted: Integer) {
+    assert wanted > _capacity
+    var grown = _capacity * 2
     if grown < wanted {
         grown = wanted
     }
     _resize_room(grown)
-    capacity = grown
+    _capacity = grown
 }
 
 func copy(): Buffer {
     var copied = Buffer(item_count)
-    copied.append_bytes(this, 0, item_count)
+    copied.append_buffer(this, 0, item_count)
     return copied
 }
 
-func copy_first_bytes(width: Integer): Buffer {
+func _copy_first_bytes(width: Integer): Buffer {
     var copied = Buffer(width)
-    copied.append_bytes(this, 0, width)
+    copied.append_buffer(this, 0, width)
     return copied
 }
 
 func _inside(at: Integer, width: Integer): Boolean {
     return at >= 0 and at <= item_count - width
-}
-
-func read_byte(): Byte? {
-    assert _inside(position, 1)
-    var read = _read_byte_at(position)
-    position = position + 1
-    return read
-}
-
-func read_tiny(): Tiny? {
-    assert _inside(position, 1)
-    var read = read_tiny_at(position)
-    position = position + 1
-    return read
 }
 
 func read_tiny_at(at: Integer): Tiny? {
@@ -184,7 +156,7 @@ func read_tiny_at(at: Integer): Tiny? {
 }
 
 func append_tiny(value: Tiny) {
-    reserve(item_count + 1)
+    _reserve(item_count + 1)
     item_count = item_count + 1
     write_tiny_at(item_count - 1, value)
 }
@@ -194,20 +166,13 @@ func write_tiny_at(at: Integer, value: Tiny) {
     _write_tiny_at(at, value)
 }
 
-func read_short_little_endian(): Short? {
-    assert _inside(position, 2)
-    var read = read_short_little_endian_at(position)
-    position = position + 2
-    return read
-}
-
 func read_short_little_endian_at(at: Integer): Short? {
     assert _inside(at, 2)
     return _read_short_at(at)
 }
 
 func append_short_little_endian(value: Short) {
-    reserve(item_count + 2)
+    _reserve(item_count + 2)
     item_count = item_count + 2
     write_short_little_endian_at(item_count - 2, value)
 }
@@ -217,20 +182,13 @@ func write_short_little_endian_at(at: Integer, value: Short) {
     _write_short_at(at, value)
 }
 
-func read_short_big_endian(): Short? {
-    assert _inside(position, 2)
-    var read = read_short_big_endian_at(position)
-    position = position + 2
-    return read
-}
-
 func read_short_big_endian_at(at: Integer): Short? {
     assert _inside(at, 2)
     return _read_short_big_endian_at(at)
 }
 
 func append_short_big_endian(value: Short) {
-    reserve(item_count + 2)
+    _reserve(item_count + 2)
     item_count = item_count + 2
     write_short_big_endian_at(item_count - 2, value)
 }
@@ -240,20 +198,13 @@ func write_short_big_endian_at(at: Integer, value: Short) {
     _write_short_big_endian_at(at, value)
 }
 
-func read_unsigned_short_little_endian(): UnsignedShort? {
-    assert _inside(position, 2)
-    var read = read_unsigned_short_little_endian_at(position)
-    position = position + 2
-    return read
-}
-
 func read_unsigned_short_little_endian_at(at: Integer): UnsignedShort? {
     assert _inside(at, 2)
     return _read_unsigned_short_at(at)
 }
 
 func append_unsigned_short_little_endian(value: UnsignedShort) {
-    reserve(item_count + 2)
+    _reserve(item_count + 2)
     item_count = item_count + 2
     write_unsigned_short_little_endian_at(item_count - 2, value)
 }
@@ -263,20 +214,13 @@ func write_unsigned_short_little_endian_at(at: Integer, value: UnsignedShort) {
     _write_unsigned_short_at(at, value)
 }
 
-func read_unsigned_short_big_endian(): UnsignedShort? {
-    assert _inside(position, 2)
-    var read = read_unsigned_short_big_endian_at(position)
-    position = position + 2
-    return read
-}
-
 func read_unsigned_short_big_endian_at(at: Integer): UnsignedShort? {
     assert _inside(at, 2)
     return _read_unsigned_short_big_endian_at(at)
 }
 
 func append_unsigned_short_big_endian(value: UnsignedShort) {
-    reserve(item_count + 2)
+    _reserve(item_count + 2)
     item_count = item_count + 2
     write_unsigned_short_big_endian_at(item_count - 2, value)
 }
@@ -286,20 +230,13 @@ func write_unsigned_short_big_endian_at(at: Integer, value: UnsignedShort) {
     _write_unsigned_short_big_endian_at(at, value)
 }
 
-func read_integer_little_endian(): Integer? {
-    assert _inside(position, 4)
-    var read = read_integer_little_endian_at(position)
-    position = position + 4
-    return read
-}
-
 func read_integer_little_endian_at(at: Integer): Integer? {
     assert _inside(at, 4)
     return _read_integer_at(at)
 }
 
 func append_integer_little_endian(value: Integer) {
-    reserve(item_count + 4)
+    _reserve(item_count + 4)
     item_count = item_count + 4
     write_integer_little_endian_at(item_count - 4, value)
 }
@@ -309,20 +246,13 @@ func write_integer_little_endian_at(at: Integer, value: Integer) {
     _write_integer_at(at, value)
 }
 
-func read_integer_big_endian(): Integer? {
-    assert _inside(position, 4)
-    var read = read_integer_big_endian_at(position)
-    position = position + 4
-    return read
-}
-
 func read_integer_big_endian_at(at: Integer): Integer? {
     assert _inside(at, 4)
     return _read_integer_big_endian_at(at)
 }
 
 func append_integer_big_endian(value: Integer) {
-    reserve(item_count + 4)
+    _reserve(item_count + 4)
     item_count = item_count + 4
     write_integer_big_endian_at(item_count - 4, value)
 }
@@ -332,20 +262,13 @@ func write_integer_big_endian_at(at: Integer, value: Integer) {
     _write_integer_big_endian_at(at, value)
 }
 
-func read_unsigned_integer_little_endian(): UnsignedInteger? {
-    assert _inside(position, 4)
-    var read = read_unsigned_integer_little_endian_at(position)
-    position = position + 4
-    return read
-}
-
 func read_unsigned_integer_little_endian_at(at: Integer): UnsignedInteger? {
     assert _inside(at, 4)
     return _read_unsigned_integer_at(at)
 }
 
 func append_unsigned_integer_little_endian(value: UnsignedInteger) {
-    reserve(item_count + 4)
+    _reserve(item_count + 4)
     item_count = item_count + 4
     write_unsigned_integer_little_endian_at(item_count - 4, value)
 }
@@ -355,20 +278,13 @@ func write_unsigned_integer_little_endian_at(at: Integer, value: UnsignedInteger
     _write_unsigned_integer_at(at, value)
 }
 
-func read_unsigned_integer_big_endian(): UnsignedInteger? {
-    assert _inside(position, 4)
-    var read = read_unsigned_integer_big_endian_at(position)
-    position = position + 4
-    return read
-}
-
 func read_unsigned_integer_big_endian_at(at: Integer): UnsignedInteger? {
     assert _inside(at, 4)
     return _read_unsigned_integer_big_endian_at(at)
 }
 
 func append_unsigned_integer_big_endian(value: UnsignedInteger) {
-    reserve(item_count + 4)
+    _reserve(item_count + 4)
     item_count = item_count + 4
     write_unsigned_integer_big_endian_at(item_count - 4, value)
 }
@@ -378,20 +294,13 @@ func write_unsigned_integer_big_endian_at(at: Integer, value: UnsignedInteger) {
     _write_unsigned_integer_big_endian_at(at, value)
 }
 
-func read_long_little_endian(): Long? {
-    assert _inside(position, 8)
-    var read = read_long_little_endian_at(position)
-    position = position + 8
-    return read
-}
-
 func read_long_little_endian_at(at: Integer): Long? {
     assert _inside(at, 8)
     return _read_long_at(at)
 }
 
 func append_long_little_endian(value: Long) {
-    reserve(item_count + 8)
+    _reserve(item_count + 8)
     item_count = item_count + 8
     write_long_little_endian_at(item_count - 8, value)
 }
@@ -401,20 +310,13 @@ func write_long_little_endian_at(at: Integer, value: Long) {
     _write_long_at(at, value)
 }
 
-func read_long_big_endian(): Long? {
-    assert _inside(position, 8)
-    var read = read_long_big_endian_at(position)
-    position = position + 8
-    return read
-}
-
 func read_long_big_endian_at(at: Integer): Long? {
     assert _inside(at, 8)
     return _read_long_big_endian_at(at)
 }
 
 func append_long_big_endian(value: Long) {
-    reserve(item_count + 8)
+    _reserve(item_count + 8)
     item_count = item_count + 8
     write_long_big_endian_at(item_count - 8, value)
 }
@@ -424,20 +326,13 @@ func write_long_big_endian_at(at: Integer, value: Long) {
     _write_long_big_endian_at(at, value)
 }
 
-func read_unsigned_long_little_endian(): UnsignedLong? {
-    assert _inside(position, 8)
-    var read = read_unsigned_long_little_endian_at(position)
-    position = position + 8
-    return read
-}
-
 func read_unsigned_long_little_endian_at(at: Integer): UnsignedLong? {
     assert _inside(at, 8)
     return _read_unsigned_long_at(at)
 }
 
 func append_unsigned_long_little_endian(value: UnsignedLong) {
-    reserve(item_count + 8)
+    _reserve(item_count + 8)
     item_count = item_count + 8
     write_unsigned_long_little_endian_at(item_count - 8, value)
 }
@@ -447,20 +342,13 @@ func write_unsigned_long_little_endian_at(at: Integer, value: UnsignedLong) {
     _write_unsigned_long_at(at, value)
 }
 
-func read_unsigned_long_big_endian(): UnsignedLong? {
-    assert _inside(position, 8)
-    var read = read_unsigned_long_big_endian_at(position)
-    position = position + 8
-    return read
-}
-
 func read_unsigned_long_big_endian_at(at: Integer): UnsignedLong? {
     assert _inside(at, 8)
     return _read_unsigned_long_big_endian_at(at)
 }
 
 func append_unsigned_long_big_endian(value: UnsignedLong) {
-    reserve(item_count + 8)
+    _reserve(item_count + 8)
     item_count = item_count + 8
     write_unsigned_long_big_endian_at(item_count - 8, value)
 }
@@ -470,20 +358,13 @@ func write_unsigned_long_big_endian_at(at: Integer, value: UnsignedLong) {
     _write_unsigned_long_big_endian_at(at, value)
 }
 
-func read_float_little_endian(): Float? {
-    assert _inside(position, 4)
-    var read = read_float_little_endian_at(position)
-    position = position + 4
-    return read
-}
-
 func read_float_little_endian_at(at: Integer): Float? {
     assert _inside(at, 4)
     return _read_float_at(at)
 }
 
 func append_float_little_endian(value: Float) {
-    reserve(item_count + 4)
+    _reserve(item_count + 4)
     item_count = item_count + 4
     write_float_little_endian_at(item_count - 4, value)
 }
@@ -493,20 +374,13 @@ func write_float_little_endian_at(at: Integer, value: Float) {
     _write_float_at(at, value)
 }
 
-func read_float_big_endian(): Float? {
-    assert _inside(position, 4)
-    var read = read_float_big_endian_at(position)
-    position = position + 4
-    return read
-}
-
 func read_float_big_endian_at(at: Integer): Float? {
     assert _inside(at, 4)
     return _read_float_big_endian_at(at)
 }
 
 func append_float_big_endian(value: Float) {
-    reserve(item_count + 4)
+    _reserve(item_count + 4)
     item_count = item_count + 4
     write_float_big_endian_at(item_count - 4, value)
 }
@@ -516,20 +390,13 @@ func write_float_big_endian_at(at: Integer, value: Float) {
     _write_float_big_endian_at(at, value)
 }
 
-func read_double_little_endian(): Double? {
-    assert _inside(position, 8)
-    var read = read_double_little_endian_at(position)
-    position = position + 8
-    return read
-}
-
 func read_double_little_endian_at(at: Integer): Double? {
     assert _inside(at, 8)
     return _read_double_at(at)
 }
 
 func append_double_little_endian(value: Double) {
-    reserve(item_count + 8)
+    _reserve(item_count + 8)
     item_count = item_count + 8
     write_double_little_endian_at(item_count - 8, value)
 }
@@ -539,20 +406,13 @@ func write_double_little_endian_at(at: Integer, value: Double) {
     _write_double_at(at, value)
 }
 
-func read_double_big_endian(): Double? {
-    assert _inside(position, 8)
-    var read = read_double_big_endian_at(position)
-    position = position + 8
-    return read
-}
-
 func read_double_big_endian_at(at: Integer): Double? {
     assert _inside(at, 8)
     return _read_double_big_endian_at(at)
 }
 
 func append_double_big_endian(value: Double) {
-    reserve(item_count + 8)
+    _reserve(item_count + 8)
     item_count = item_count + 8
     write_double_big_endian_at(item_count - 8, value)
 }
@@ -562,7 +422,7 @@ func write_double_big_endian_at(at: Integer, value: Double) {
     _write_double_big_endian_at(at, value)
 }
 
-func compare_bytes(other: Buffer, at: Integer, wanted: Integer): Integer {
+func _compare_bytes(other: Buffer, at: Integer, wanted: Integer): Integer {
     crash _inside(at, wanted) and other._inside(at, wanted)
     var index = 0
     while index < wanted {
@@ -579,36 +439,27 @@ func compare_bytes(other: Buffer, at: Integer, wanted: Integer): Integer {
     return 0
 }
 
-func read_bytes(wanted: Integer): Buffer? {
-    crash wanted >= 0
-    assert _inside(position, wanted)
-    var run = Buffer(wanted)
-    run.append_bytes(this, position, wanted)
-    position = position + wanted
-    return run
-}
-
-func read_bytes_at(at: Integer, wanted: Integer): Buffer? {
+func read_buffer_at(at: Integer, wanted: Integer): Buffer? {
     crash wanted >= 0
     assert _inside(at, wanted)
     var run = Buffer(wanted)
-    run.append_bytes(this, at, wanted)
+    run.append_buffer(this, at, wanted)
     return run
 }
 
-func append_bytes(other: Buffer, start: Integer, wanted: Integer) {
+func append_buffer(other: Buffer, start: Integer, wanted: Integer) {
     crash start >= 0 and wanted >= 0 and start <= other.item_count - wanted
     var kept = item_count
-    reserve(kept + wanted)
+    _reserve(kept + wanted)
     _copy_bytes(kept, other, start, wanted)
     item_count = kept + wanted
 }
 
-func to_utf8_text(): String? {
-    return text(0, item_count)
+func read_as_string(): String? {
+    return read_string_at(0, item_count)
 }
 
-func text(at: Integer, wanted: Integer): String? {
+func read_string_at(at: Integer, wanted: Integer): String? {
     crash at >= 0 and wanted >= 0 and at <= item_count - wanted
     var end = at + wanted
     var index = at

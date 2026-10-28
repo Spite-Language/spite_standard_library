@@ -80,7 +80,7 @@ func write_fraction(nanoseconds: Long): String {
     }
     var digits = write_digits(nanoseconds, 9)
     var length = digits.length()
-    while digits.code_at(length - 1) == 48 {
+    while digits.byte_at(length - 1) == 48 {
         length = length - 1
     }
     var kept = digits.slice(0, length)

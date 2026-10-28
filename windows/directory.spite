@@ -10,12 +10,12 @@ func create(): Boolean {
     return created != 0 or exists()
 }
 
-func rename_to(new_path: String): Boolean {
+func _rename_to(new_path: String): Boolean {
     var moved = kernel.MoveFileExA(path, new_path, 0)
     return moved != 0
 }
 
-func entry_names(want_folders: Boolean): List<String> {
+func _entry_names(want_folders: Boolean): List<String> {
     var names = List<String>()
     var found = Buffer(600)
     var pattern = "{path}/*"
