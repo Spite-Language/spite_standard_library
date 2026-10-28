@@ -154,7 +154,8 @@ func _close_handle() {
     sockets.closesocket(handle)
 }
 
-func _first_readable(handles: List<Long>, milliseconds: Integer): Integer {
+func _first_readable(handles: List<Long>, patience: Duration): Integer {
+    var milliseconds = patience.total('milliseconds')
     var count = handles.count()
     var watched = _zeroed(count * 16)
     var index = 0

@@ -175,7 +175,11 @@ func _note_notice(watching: Integer, name: String, action: Integer) {
     }
 }
 
-func _wait_for_event(milliseconds: Long) {
+func _wait_for_event(waiting_at_most: Duration?) {
+    var milliseconds: Long = -1
+    if waiting_at_most {
+        milliseconds = waiting_at_most.total('milliseconds')
+    }
     var watch_count = handles.count()
     var waiting = Buffer(watch_count * 8 + 8)
     var count = 0

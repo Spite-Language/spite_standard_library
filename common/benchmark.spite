@@ -5,12 +5,12 @@ var answer: $answer_type = $answer_type()
 var duration = Duration(0, 'nanoseconds')
 
 func Benchmark(work: Spite.Function<$answer_type>) {
-    var started = _clock.elapsed_nanoseconds()
+    var started = _clock.elapsed()
     if $answer_type == Nothing {
         work()
     } else {
         answer = work()
     }
-    var finished = _clock.elapsed_nanoseconds()
-    duration = Duration(finished - started, 'nanoseconds')
+    var finished = _clock.elapsed()
+    duration = finished - started
 }

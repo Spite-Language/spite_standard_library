@@ -1,9 +1,10 @@
 var largest_body = 1048576
-var idle_limit = 5000
+var idle_limit = Duration(5, 'seconds')
 var largest_waiting = 64
 var _listener = Socket()
 var _waiting = List<Socket>()
-var _waiting_since = List<Long>()
+var _waiting_since = List<Duration>()
+var _longest_patience = Duration(1, 'seconds')
 var _clock = Clock()
 
 func listen_locally(port: Integer): Boolean {
@@ -41,7 +42,7 @@ func respond(request: Http.Request, response: Http.Response) {
     _write_response(client, response, with_body, announce or not keep)
     if keep and not client.closed {
         _waiting.append(client)
-        var now = _clock.elapsed_milliseconds()
+        var now = _clock.elapsed()
         _waiting_since.append(now)
     } else {
         client.close()
@@ -95,8 +96,8 @@ func _next_ready_connection(): Socket? {
             index = index + 1
         }
         var patience = idle_limit
-        if patience > 1000 {
-            patience = 1000
+        if patience > _longest_patience {
+            patience = _longest_patience
         }
         var ready = _listener._first_readable(handles, patience)
         assert ready != -2
@@ -133,12 +134,13 @@ func _take_waiting(index: Integer): Socket {
 }
 
 func _close_idle_connections() {
-    var now = _clock.elapsed_milliseconds()
+    var now = _clock.elapsed()
     var index = 0
     while index < _waiting.count() {
         var since = _waiting_since[index]
         crash since
-        if now - since > idle_limit {
+        var idle_for = now - since
+        if idle_for > idle_limit {
             var idle = _take_waiting(index)
             idle.close()
         } else {

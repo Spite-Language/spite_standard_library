@@ -5,7 +5,8 @@ union Target {
 
 var clock = Clock()
 var pending = List<String>()
-var last_change: Long = 0
+var last_change = Duration(0, 'nanoseconds')
+var _quiet_time = Duration(100, 'milliseconds')
 
 func watch_for_changes(target: Target): Boolean {
     switch target {
@@ -17,7 +18,7 @@ func watch_for_changes(target: Target): Boolean {
 func changes(): List<String> {
     _collect()
     var changed = List<String>()
-    if not pending.is_empty() and _quiet_left() <= 0 {
+    if not pending.is_empty() and _is_quiet() {
         changed = pending
         pending = List<String>()
     }
@@ -26,8 +27,8 @@ func changes(): List<String> {
 
 func wait_for_changes() {
     _collect()
-    while pending.is_empty() or _quiet_left() > 0 {
-        var waiting: Long = -1
+    while pending.is_empty() or not _is_quiet() {
+        var waiting: Duration? = null
         if not pending.is_empty() {
             waiting = _quiet_left()
         }
@@ -36,13 +37,19 @@ func wait_for_changes() {
     }
 }
 
-func _quiet_left(): Long {
-    var now = clock.elapsed_milliseconds()
-    return last_change + 100 - now
+func _is_quiet(): Boolean {
+    var left = _quiet_left()
+    return left.is_negative or left.is_zero
+}
+
+func _quiet_left(): Duration {
+    var now = clock.elapsed()
+    var quiet_from = last_change + _quiet_time
+    return quiet_from - now
 }
 
 func _note(path: String) {
-    last_change = clock.elapsed_milliseconds()
+    last_change = clock.elapsed()
     if not pending.contains(path) {
         pending.append(path)
     }

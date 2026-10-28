@@ -11,11 +11,12 @@ func Clock() {
     _ticks_per_second = frequency
 }
 
-func elapsed_nanoseconds(): Long {
+func elapsed(): Duration {
     kernel.QueryPerformanceCounter(_reading)
     var ticks = _reading.read_long_little_endian_at(0)
     crash ticks
-    return ticks / _ticks_per_second * 1000000000 + ticks % _ticks_per_second * 1000000000 / _ticks_per_second
+    var nanoseconds = ticks / _ticks_per_second * 1000000000 + ticks % _ticks_per_second * 1000000000 / _ticks_per_second
+    return Duration(nanoseconds, 'nanoseconds')
 }
 
 func now(): Instant {

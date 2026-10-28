@@ -1,6 +1,1 @@
 singleton
-
-func elapsed_milliseconds(): Long {
-    var nanoseconds = elapsed_nanoseconds()
-    return nanoseconds / 1000000
-}

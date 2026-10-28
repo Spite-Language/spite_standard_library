@@ -1,8 +1,10 @@
 var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
 
-func sleep(milliseconds: Integer) {
+func sleep(duration: Duration) {
+    var milliseconds = duration.total('milliseconds')
     if milliseconds <= 0 {
-        kernel.Sleep(milliseconds)
+        var no_time: Long = 0
+        kernel.Sleep(no_time)
         return
     }
     var no_value: Long = 0
@@ -17,11 +19,10 @@ func sleep(milliseconds: Integer) {
     kernel.CloseHandle(timer)
 }
 
-func _wait_on_the_timer(timer: Long, milliseconds: Integer) {
+func _wait_on_the_timer(timer: Long, milliseconds: Long) {
     var no_value: Long = 0
-    var hundreds_of_nanoseconds: Long = milliseconds
     var due = Buffer(8)
-    due.append_long_little_endian(hundreds_of_nanoseconds * -10000)
+    due.append_long_little_endian(milliseconds * -10000)
     var set = kernel.SetWaitableTimer(timer, due, 0, no_value, no_value, 0)
     if set == 0 {
         kernel.Sleep(milliseconds)
