@@ -233,18 +233,18 @@ func _shortest_text(value: Double, significand_limit: Long, lowest_exponent: Lon
         }
         precision = precision + 1
     }
-    var fallback = _rounded_digits(digits, most_digits)
-    var fallback_exponent = digits_exponent + fallback.length() - most_digits
-    if most_digits < fallback.length() {
-        var sliced_fallback = fallback.slice(0, most_digits)
-        crash sliced_fallback
-        fallback = sliced_fallback
+    var rounded = _rounded_digits(digits, most_digits)
+    var rounded_exponent = digits_exponent + rounded.length() - most_digits
+    if most_digits < rounded.length() {
+        var sliced_rounded = rounded.slice(0, most_digits)
+        crash sliced_rounded
+        rounded = sliced_rounded
     }
-    fallback = _without_trailing_zeros(fallback)
-    if _is_fixed(fallback_exponent, most_digits) {
-        return _fixed_text(fallback, fallback_exponent)
+    rounded = _without_trailing_zeros(rounded)
+    if _is_fixed(rounded_exponent, most_digits) {
+        return _fixed_text(rounded, rounded_exponent)
     }
-    return _scientific_text(fallback, fallback_exponent)
+    return _scientific_text(rounded, rounded_exponent)
 }
 
 func _exact_digits(multiplier: Long, exponent: Long): String {
