@@ -1,0 +1,33 @@
+func _read_wide_string_at(at: Integer, characters: Integer): String? {
+    if characters == 0 {
+        return ""
+    }
+    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+    var wide = read_buffer_at(at, characters * 2)
+    assert wide and wide.count() == characters * 2
+    var only_valid = 128
+    var no_room: Long = 0
+    var no_value: Long = 0
+    var size = kernel.WideCharToMultiByte(65001, only_valid, wide, characters, no_room, 0, no_value, no_value)
+    assert size > 0
+    var text = Buffer(size)
+    var written = kernel.WideCharToMultiByte(65001, only_valid, wide, characters, text, size, no_value, no_value)
+    assert written == size
+    text.take_written(written)
+    return text.read_string_at(0, written)
+}
+
+func _wide_characters_before_zero(at: Integer, most: Integer): Integer {
+    var found = 0
+    while found < most {
+        var low = this[at + found * 2]
+        var high = this[at + found * 2 + 1]
+        crash low
+        crash high
+        if low == 0 and high == 0 {
+            return found
+        }
+        found = found + 1
+    }
+    return most
+}

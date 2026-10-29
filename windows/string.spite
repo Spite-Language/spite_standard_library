@@ -59,3 +59,17 @@ func resolve_ip_addresses(): List<IpAddress> {
     sockets.freeaddrinfo(first)
     return addresses
 }
+
+func _to_wide(): Buffer {
+    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+    var byte_count = length()
+    var no_room: Long = 0
+    var characters = kernel.MultiByteToWideChar(65001, 0, this, byte_count, no_room, 0)
+    var room = Buffer(characters * 2 + 2)
+    var written = kernel.MultiByteToWideChar(65001, 0, this, byte_count, room, characters)
+    crash written == characters
+    room.take_written(written * 2)
+    room.append(0)
+    room.append(0)
+    return room
+}

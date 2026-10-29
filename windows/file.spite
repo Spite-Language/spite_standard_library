@@ -2,18 +2,22 @@ var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
 var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
 
 func exists(): Boolean {
-    var attributes = kernel.GetFileAttributesA(path)
+    var wide_path = path._to_wide()
+    var attributes = kernel.GetFileAttributesW(wide_path)
     return attributes != -1 and attributes.bits_and(16) == 0
 }
 
 func remove(): Boolean {
-    var removed = library.remove(path)
+    var wide_path = path._to_wide()
+    var removed = library._wremove(wide_path)
     return removed == 0
 }
 
 func _rename_to(new_path: String): Boolean {
     var copy_across_volumes = 2
-    var moved = kernel.MoveFileExA(path, new_path, copy_across_volumes)
+    var wide_path = path._to_wide()
+    var wide_new_path = new_path._to_wide()
+    var moved = kernel.MoveFileExW(wide_path, wide_new_path, copy_across_volumes)
     return moved != 0
 }
 
@@ -23,7 +27,8 @@ func lock(): LockedFile? {
     var open_always = 4
     var normal = 128
     var nothing: Long = 0
-    var handle = kernel.CreateFileA_as_long(path, read_and_write, share_everything, nothing, open_always, normal, nothing)
+    var wide_path = path._to_wide()
+    var handle = kernel.CreateFileW_as_long(wide_path, read_and_write, share_everything, nothing, open_always, normal, nothing)
     assert handle != -1
     var locked = LockedFile(handle)
     var held = locked._is_held()
@@ -32,7 +37,9 @@ func lock(): LockedFile? {
 }
 
 func _open_handle(mode: String): Long {
-    return library.fopen_as_long(path, mode)
+    var wide_path = path._to_wide()
+    var wide_mode = mode._to_wide()
+    return library._wfopen_as_long(wide_path, wide_mode)
 }
 
 func _close_handle(handle: Long): Integer {
@@ -71,7 +78,8 @@ func _modified_nanoseconds_since_1970(): Long? {
         index = index + 1
     }
     var standard_information = 0
-    var found = kernel.GetFileAttributesExA(path, standard_information, data)
+    var wide_path = path._to_wide()
+    var found = kernel.GetFileAttributesExW(wide_path, standard_information, data)
     assert found != 0
     var written = data.read_long_little_endian_at(20)
     assert written

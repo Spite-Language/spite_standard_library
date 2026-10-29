@@ -36,53 +36,54 @@ func _wait_on_the_timer(timer: Long, milliseconds: Long) {
 
 func working_directory(): String? {
     var size = 1024
-    var room = Buffer(size)
-    var length = kernel.GetCurrentDirectoryA(size, room)
+    var room = Buffer(size * 2)
+    var length = kernel.GetCurrentDirectoryW(size, room)
     while length >= size {
         size = length
-        room = Buffer(size)
-        length = kernel.GetCurrentDirectoryA(size, room)
+        room = Buffer(size * 2)
+        length = kernel.GetCurrentDirectoryW(size, room)
     }
     assert length > 0
-    room.take_written(length)
-    return room.read_string_at(0, length)
+    room.take_written(length * 2)
+    return room._read_wide_string_at(0, length)
 }
 
 func executable_path(): String? {
     var size = 1024
-    var room = Buffer(size)
-    var length = kernel.GetModuleFileNameA(0, room, size)
+    var room = Buffer(size * 2)
+    var length = kernel.GetModuleFileNameW(0, room, size)
     while length >= size and size < 32768 {
         size = size * 2
-        room = Buffer(size)
-        length = kernel.GetModuleFileNameA(0, room, size)
+        room = Buffer(size * 2)
+        length = kernel.GetModuleFileNameW(0, room, size)
     }
     assert length > 0 and length < size
-    room.take_written(length)
-    return room.read_string_at(0, length)
+    room.take_written(length * 2)
+    return room._read_wide_string_at(0, length)
 }
 
 func environment(name: String): String? {
+    var wide_name = name._to_wide()
     var size = 4096
-    var room = Buffer(size)
-    var length = kernel.GetEnvironmentVariableA(name, room, size)
+    var room = Buffer(size * 2)
+    var length = kernel.GetEnvironmentVariableW(wide_name, room, size)
     while length >= size {
         size = length
-        room = Buffer(size)
-        length = kernel.GetEnvironmentVariableA(name, room, size)
+        room = Buffer(size * 2)
+        length = kernel.GetEnvironmentVariableW(wide_name, room, size)
     }
     assert length != 0
-    room.take_written(length)
-    return room.read_string_at(0, length)
+    room.take_written(length * 2)
+    return room._read_wide_string_at(0, length)
 }
 
 func command_line(): String {
-    var address = kernel.GetCommandLineA_as_long()
-    var length = kernel.lstrlenA(address)
-    var room = Buffer(length + 1)
-    kernel.lstrcpynA(room, address, length + 1)
-    room.take_written(length)
-    var text = room.read_string_at(0, length)
+    var address = kernel.GetCommandLineW_as_long()
+    var length = kernel.lstrlenW(address)
+    var room = Buffer(length * 2 + 2)
+    kernel.lstrcpynW(room, address, length + 1)
+    room.take_written(length * 2)
+    var text = room._read_wide_string_at(0, length)
     crash text
     return text
 }

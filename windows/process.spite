@@ -1,12 +1,28 @@
 var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
 
-func run_attached(): Integer {
+func run_attached(): Integer? {
     var command_text = _command_line()
-    return library.system(command_text)
+    var wide_command = command_text._to_wide()
+    library._set_errno(0)
+    var code = library._wsystem(wide_command)
+    assert code != -1 or _system_error() == 0
+    return code
+}
+
+func _system_error(): Integer {
+    var room = Buffer(4)
+    room.append_integer_little_endian(0)
+    library._get_errno(room)
+    var error = room.read_integer_little_endian_at(0)
+    crash error
+    return error
 }
 
 func _open_process(line: String): Long {
-    return library._popen_as_long(line, "r")
+    var wide_line = line._to_wide()
+    var mode = "r"
+    var wide_mode = mode._to_wide()
+    return library._wpopen_as_long(wide_line, wide_mode)
 }
 
 func _read_into(room: Buffer, bytes: Long, handle: Long): Long {

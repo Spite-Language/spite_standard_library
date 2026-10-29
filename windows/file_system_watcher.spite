@@ -49,12 +49,13 @@ func _zeroed(size: Integer): Buffer {
 
 func _open_watch(folder: String, root: String, file_name: String): Boolean {
     var no_value: Long = 0
-    var handle = kernel.CreateFileA_as_long(folder, 1, 7, no_value, 3, 1107296256, no_value)
+    var wide_folder = folder._to_wide()
+    var handle = kernel.CreateFileW_as_long(wide_folder, 1, 7, no_value, 3, 1107296256, no_value)
     if handle == -1 {
         return false
     }
     var overlap = _zeroed(32)
-    var event = kernel.CreateEventA_as_long(no_value, 1, 0, no_value)
+    var event = kernel.CreateEventW_as_long(no_value, 1, 0, no_value)
     overlap.write_long_little_endian_at(24, event)
     var buffer = Buffer(65536)
     handles.append(handle)
@@ -144,17 +145,15 @@ func _read_notices(watching: Integer, length: Integer) {
         crash next
         crash action
         crash name_bytes
-        var wide_name = buffer.read_buffer_at(offset + 12, name_bytes)
-        crash wide_name
-        var wide_length = name_bytes / 2
-        var text = Buffer(1024)
-        var no_value: Long = 0
-        var written = kernel.WideCharToMultiByte(65001, 0, wide_name, wide_length, text, 1024, no_value, no_value)
-        text.take_written(written)
-        var written_name = text.read_string_at(0, written)
-        crash written_name
-        var name = written_name.replace("\\", "/")
-        _note_notice(watching, name, action)
+        var read_name = buffer._read_wide_string_at(offset + 12, name_bytes / 2)
+        if read_name {
+            var name = read_name.replace("\\", "/")
+            _note_notice(watching, name, action)
+        } else {
+            var root = roots[watching]
+            crash root
+            _note(root)
+        }
         offset = offset + next
         more = next != 0
     }
@@ -173,7 +172,8 @@ func _note_notice(watching: Integer, name: String, action: Integer) {
         return
     }
     var path = _joined(root, name)
-    var attributes = kernel.GetFileAttributesA(path)
+    var wide_path = path._to_wide()
+    var attributes = kernel.GetFileAttributesW(wide_path)
     var is_folder = attributes != -1 and attributes.bits_and(16) != 0
     if action != 3 or not is_folder {
         _note(path)

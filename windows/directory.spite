@@ -1,54 +1,52 @@
 var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
 
 func exists(): Boolean {
-    var attributes = kernel.GetFileAttributesA(path)
+    var wide_path = path._to_wide()
+    var attributes = kernel.GetFileAttributesW(wide_path)
     return attributes != -1 and attributes.bits_and(16) != 0
 }
 
 func create(): Boolean {
-    var created = kernel.CreateDirectoryA(path, 0)
+    var wide_path = path._to_wide()
+    var created = kernel.CreateDirectoryW(wide_path, 0)
     return created != 0 or exists()
 }
 
 func _rename_to(new_path: String): Boolean {
-    var moved = kernel.MoveFileExA(path, new_path, 0)
+    var wide_path = path._to_wide()
+    var wide_new_path = new_path._to_wide()
+    var moved = kernel.MoveFileExW(wide_path, wide_new_path, 0)
     return moved != 0
 }
 
 func _entry_names(want_folders: Boolean): List<String>? {
     var names = List<String>()
-    var found = Buffer(600)
+    var found = Buffer(592)
     var pattern = "{path}/*"
-    var search = kernel.FindFirstFileA_as_long(pattern, found)
+    var wide_pattern = pattern._to_wide()
+    var search = kernel.FindFirstFileW_as_long(wide_pattern, found)
     assert search != -1
+    var readable = true
     var more = true
-    while more {
-        found.take_written(600)
+    while more and readable {
+        found.take_written(592)
         var attributes = found.read_integer_little_endian_at(0)
         crash attributes
         var is_folder = attributes.bits_and(16) != 0
-        var name = _name_in(found)
-        var listed = name != "." and name != ".."
-        if is_folder == want_folders and listed {
-            names.append(name)
+        var characters = found._wide_characters_before_zero(44, 260)
+        var name = found._read_wide_string_at(44, characters)
+        if name {
+            var listed = name != "." and name != ".."
+            if is_folder == want_folders and listed {
+                names.append(name)
+            }
+        } else {
+            readable = false
         }
-        var next = kernel.FindNextFileA(search, found)
+        var next = kernel.FindNextFileW(search, found)
         more = next != 0
     }
     kernel.FindClose(search)
+    assert readable
     return names
-}
-
-func _name_in(found: Buffer): String {
-    var name = String()
-    var index = 44
-    var code = found[index]
-    crash code
-    while code != 0 and index < 304 {
-        name.append_code(code)
-        index = index + 1
-        code = found[index]
-        crash code
-    }
-    return name
 }
