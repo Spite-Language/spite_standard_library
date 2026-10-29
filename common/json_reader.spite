@@ -10,7 +10,7 @@ var _matched = false
 func read(text: String): $value_type? {
     var parsed = _continue(text, 0, "")
     _finish()
-    assert not _failed()
+    fallback not _failed()
     return parsed
 }
 
@@ -155,14 +155,14 @@ func _parse_object(): $value_type {
 
 func read_attribute(attribute: Spite.AttributeDeclaration, created: $value_type) {
     var name = attribute.name
-    assert not name.starts_with("_")
-    assert not attribute.class.is_singleton
+    fallback not name.starts_with("_")
+    fallback not attribute.class.is_singleton
     var key = name
     var given = keys[attribute]
     if given and not keys.is_empty() {
         key = given
     }
-    assert _key == key
+    fallback _key == key
     var attribute_json = JsonReader<attribute.class>()
     created[attribute] = attribute_json._continue(_text, position, _expected)
     position = attribute_json.position
@@ -172,12 +172,12 @@ func read_attribute(attribute: Spite.AttributeDeclaration, created: $value_type)
 
 func read_camel_attribute(attribute: Spite.AttributeDeclaration, created: $value_type) {
     var name = attribute.name
-    assert not name.starts_with("_")
-    assert not attribute.class.is_singleton
+    fallback not name.starts_with("_")
+    fallback not attribute.class.is_singleton
     var given = keys[attribute]
     var is_renamed = given and not keys.is_empty()
-    assert not is_renamed
-    assert _key == attribute.camel_case_name or _key == attribute.pascal_case_name
+    fallback not is_renamed
+    fallback _key == attribute.camel_case_name or _key == attribute.pascal_case_name
     var attribute_json = JsonReader<attribute.class>()
     created[attribute] = attribute_json._continue(_text, position, _expected)
     position = attribute_json.position
@@ -229,9 +229,7 @@ func _skip_space() {
 func _consume(token: String): Boolean {
     _skip_space()
     var end = position + token.length()
-    if end > _text.length() {
-        return false
-    }
+    fallback end <= _text.length()
     var found = _text.slice(position, end)
     crash found
     if found == token {
@@ -302,7 +300,7 @@ func _skip_number() {
 
 func _skip_text() {
     var skipped = _read_text()
-    assert not skipped.is_empty()
+    fallback not skipped.is_empty()
 }
 
 func _read_text(): String {
@@ -434,7 +432,7 @@ func _text_of(code_point: Integer): String {
 }
 
 func _skip_if(code: Integer) {
-    assert _skip_character(code)
+    fallback _skip_character(code)
 }
 
 func _skip_character(code: Integer): Boolean {

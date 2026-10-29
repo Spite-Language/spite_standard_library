@@ -16,9 +16,7 @@ func _read_settings() {
 func load_from_file(path: String): Boolean {
     var file = File(path)
     var text = file.read_as_string()
-    if not text {
-        return false
-    }
+    fallback text
     var lines = text.lines()
     var index = 0
     while index < lines.count() {
@@ -86,9 +84,9 @@ func text_setting(name: String, declared: String): String {
 
 func _load_line(line: String) {
     var trimmed = line.trim()
-    assert not trimmed.is_empty() and not trimmed.starts_with("#")
+    fallback not trimmed.is_empty() and not trimmed.starts_with("#")
     var equals = trimmed.index_of("=")
-    assert equals
+    fallback equals
     var end = trimmed.length()
     var start = equals + 1
     var named = trimmed.slice(0, equals)
@@ -147,9 +145,7 @@ func _written(flag: String): String? {
 }
 
 func _is_bare(written: String?, flag: String): Boolean {
-    if not written {
-        return false
-    }
+    fallback written
     return written == "--{flag}"
 }
 

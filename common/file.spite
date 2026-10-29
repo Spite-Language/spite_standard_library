@@ -9,9 +9,7 @@ func move_to(new_path: String): Boolean {
     var folder_there = Directory(new_path)
     var file_exists = file_there.exists()
     var folder_exists = folder_there.exists()
-    if file_exists or folder_exists {
-        return false
-    }
+    fallback not file_exists and not folder_exists
     var renamed = _rename_to(new_path)
     if renamed {
         path = new_path
@@ -39,7 +37,7 @@ func to_string(): String {
 
 func read_as_string(): String? {
     var bytes = read_as_buffer()
-    assert bytes
+    fallback bytes
     return bytes.read_as_string()
 }
 
@@ -53,17 +51,17 @@ func append_string(text: String): Boolean {
 
 func byte_count(): Long? {
     var handle = _open_handle("rb")
-    assert handle != 0
+    fallback handle != 0
     var sought = _seek(handle, 0, 2)
     var bytes = _tell(handle)
     var closed = _close_handle(handle)
-    assert sought == 0 and bytes >= 0 and closed == 0
+    fallback sought == 0 and bytes >= 0 and closed == 0
     return bytes
 }
 
 func last_written(): Instant? {
     var nanoseconds = _modified_nanoseconds_since_1970()
-    assert nanoseconds
+    fallback nanoseconds
     var whole = Duration(nanoseconds / 1000000000, 'seconds')
     var part = Duration(nanoseconds % 1000000000, 'nanoseconds')
     var since_1970 = whole + part
@@ -72,25 +70,25 @@ func last_written(): Instant? {
 
 func read_as_buffer(): Buffer? {
     var handle = _open_handle("rb")
-    assert handle != 0
+    fallback handle != 0
     var sought = _seek(handle, 0, 2)
     var length = _tell(handle)
     var rewound = _seek(handle, 0, 0)
     if sought != 0 or rewound != 0 or length < 0 or length > 2147483647 {
-        assert _close_handle(handle) == 0
+        fallback _close_handle(handle) == 0
         return null
     }
     var bytes = _read_into_buffer(handle, length)
     var closed = _close_handle(handle)
-    assert bytes
-    assert closed == 0 and length == bytes.count()
+    fallback bytes
+    fallback closed == 0 and length == bytes.count()
     return bytes
 }
 
 func read_buffer_at(position: Long, count: Integer): Buffer? {
     crash position >= 0 and count >= 0
     var handle = _open_handle("rb")
-    assert handle != 0
+    fallback handle != 0
     var sought_end = _seek(handle, 0, 2)
     var end = _tell(handle)
     var available = end - position
@@ -102,22 +100,20 @@ func read_buffer_at(position: Long, count: Integer): Buffer? {
     }
     var sought = _seek(handle, position, 0)
     if sought_end != 0 or end < 0 or sought != 0 {
-        assert _close_handle(handle) == 0
+        fallback _close_handle(handle) == 0
         return null
     }
     var bytes = _read_into_buffer(handle, available)
     var closed = _close_handle(handle)
-    assert bytes
+    fallback bytes
     var got_count: Long = bytes.count()
-    assert closed == 0 and got_count == available
+    fallback closed == 0 and got_count == available
     return bytes
 }
 
 func write_buffer(bytes: Buffer): Boolean {
     var handle = _open_handle("wb")
-    if handle == 0 {
-        return false
-    }
+    fallback handle != 0
     var written = _write_buffer(bytes, handle)
     var closed = _close_handle(handle)
     var counted: Long = bytes.count()
@@ -126,13 +122,13 @@ func write_buffer(bytes: Buffer): Boolean {
 
 func append_buffer(bytes: Buffer): Long? {
     var handle = _open_handle("ab")
-    assert handle != 0
+    fallback handle != 0
     var sought = _seek(handle, 0, 2)
     var start = _tell(handle)
     var written = _write_buffer(bytes, handle)
     var closed = _close_handle(handle)
     var counted: Long = bytes.count()
-    assert sought == 0 and start >= 0 and written == counted and closed == 0
+    fallback sought == 0 and start >= 0 and written == counted and closed == 0
     return start
 }
 
@@ -141,7 +137,7 @@ func _read_into_buffer(handle: Long, wanted: Long): Buffer? {
     var bytes = Buffer(counted)
     if wanted > 0 {
         var got = _read_into(bytes, wanted, handle)
-        assert got >= 0 and got <= wanted
+        fallback got >= 0 and got <= wanted
         var got_count = got.to_integer()
         bytes.take_written(got_count)
     }
@@ -150,17 +146,13 @@ func _read_into_buffer(handle: Long, wanted: Long): Buffer? {
 
 func _write_buffer(bytes: Buffer, handle: Long): Long {
     var counted: Long = bytes.count()
-    if counted == 0 {
-        return 0
-    }
+    fallback counted != 0
     return _write_from(bytes, counted, handle)
 }
 
 func _put(text: String, mode: String): Boolean {
     var handle = _open_handle(mode)
-    if handle == 0 {
-        return false
-    }
+    fallback handle != 0
     var written = _write_text(text, handle)
     var closed = _close_handle(handle)
     var length: Long = text.length()

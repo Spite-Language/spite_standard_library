@@ -95,9 +95,7 @@ func bits_inverted(): Integer {
 
 func shifted_left(count: Integer): Integer {
     crash count >= 0
-    if count >= 32 {
-        return 0
-    }
+    fallback count < 32
     return _shifted_left(count)
 }
 
@@ -240,9 +238,7 @@ func _written_with_digits(width: Integer): String {
 
 func _written_as_fraction(): String {
     var nanoseconds = _value()
-    if nanoseconds == 0 {
-        return ""
-    }
+    fallback nanoseconds != 0
     var digits = nanoseconds._written_with_digits(9)
     var length = digits.length()
     while digits.byte_at(length - 1) == 48 {

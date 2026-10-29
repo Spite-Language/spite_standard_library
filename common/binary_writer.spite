@@ -95,8 +95,8 @@ func _write_dictionary(value: $value_type) {
 
 func write_attribute(attribute: Spite.AttributeDeclaration, value: $value_type) {
     var name = attribute.name
-    assert not name.starts_with("_")
-    assert not attribute.class.is_singleton
+    fallback not name.starts_with("_")
+    fallback not attribute.class.is_singleton
     var writer = BinaryWriter<attribute.class>()
     var target = _target()
     writer._append(value[attribute], target)

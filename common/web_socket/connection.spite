@@ -52,10 +52,10 @@ func send_ping(bytes: Buffer): Boolean {
 func receive(): WebSocket.Message? {
     var message: WebSocket.Message? = null
     while not message {
-        assert not _closed
+        fallback not _closed
         var already = _parts.count()
         var frame = _read_frame(already)
-        assert frame
+        fallback frame
         if _opcode >= 8 {
             _answer_control(frame)
         } else {
@@ -66,12 +66,12 @@ func receive(): WebSocket.Message? {
 }
 
 func close() {
-    assert not _closed and not _close_sent
+    fallback not _closed and not _close_sent
     _send_close(1000)
 }
 
 func drop() {
-    assert not _closed
+    fallback not _closed
     if not _close_sent {
         _send_close(1001)
     }
@@ -86,7 +86,7 @@ func _take_data(frame: Buffer): WebSocket.Message? {
     if continuing != started {
         _fail(1002)
     }
-    assert not _closed
+    fallback not _closed
     if started {
         var added = frame.count()
         _parts.append_buffer(frame, 0, added)
@@ -94,7 +94,7 @@ func _take_data(frame: Buffer): WebSocket.Message? {
         _message_opcode = _opcode
         _parts = frame
     }
-    assert _final
+    fallback _final
     var kind = _message_opcode
     var whole = _parts
     _message_opcode = 0
@@ -106,7 +106,7 @@ func _take_data(frame: Buffer): WebSocket.Message? {
     if not text {
         _fail(1007)
     }
-    assert text
+    fallback text
     return WebSocket.Message(whole, true)
 }
 
@@ -139,24 +139,18 @@ func _refusal(request: Http.Request): Integer {
 
 func _answer_fits(key: String, request: Http.Request): Boolean {
     var status_line = _connection.read_line()
-    if not status_line or not status_line.starts_with("HTTP/1.1 101") {
-        return false
-    }
+    fallback status_line and status_line.starts_with("HTTP/1.1 101")
     var headers = Dictionary<String, String>()
     var count = 0
     var ended = false
     while not ended {
         var line = _connection.read_line()
-        if not line or count >= 200 {
-            return false
-        }
+        fallback line and count < 200
         if line.is_empty() {
             ended = true
         } else {
             var colon = line.index_of(":")
-            if not colon or colon <= 0 {
-                return false
-            }
+            fallback colon and colon > 0
             var name = line.slice(0, colon)
             crash name
             var line_length = line.length()
@@ -172,23 +166,17 @@ func _answer_fits(key: String, request: Http.Request): Boolean {
     var connection = headers["connection"]
     var accepted = headers["sec-websocket-accept"]
     var extensions = headers["sec-websocket-extensions"]
-    if not upgrade or not connection or not accepted {
-        return false
-    }
+    fallback upgrade and connection and accepted
     var upgrade_lowered = upgrade.lower_case()
     var upgrading = _has_token(connection, "upgrade")
     var expected = _accept_value(key)
-    if upgrade_lowered != "websocket" or not upgrading or accepted != expected or extensions {
-        return false
-    }
+    fallback upgrade_lowered == "websocket" and upgrading and accepted == expected and not extensions
     var chosen = headers["sec-websocket-protocol"]
     if not chosen {
         return true
     }
     var offered = request.header("sec-websocket-protocol")
-    if not offered {
-        return false
-    }
+    fallback offered
     return _has_token(offered, chosen)
 }
 
@@ -227,13 +215,11 @@ func _byte_of(room: Buffer, at: Integer): Integer {
 }
 
 func _send_control(opcode: Integer, payload: Buffer) {
-    assert _send_frame(opcode, payload)
+    fallback _send_frame(opcode, payload)
 }
 
 func _send_frame(opcode: Integer, payload: Buffer): Boolean {
-    if _closed or _close_sent {
-        return false
-    }
+    fallback not _closed and not _close_sent
     var count = payload.count()
     var length_mark = count
     var extended = 0
@@ -260,9 +246,7 @@ func _send_frame(opcode: Integer, payload: Buffer): Boolean {
     }
     if _masking {
         var mask = _random.random_buffer(4)
-        if not mask {
-            return false
-        }
+        fallback mask
         frame.append_buffer(mask, 0, 4)
         var index = 0
         while index < count {
@@ -296,7 +280,7 @@ func _send_close(code: Integer) {
 
 func _read_frame(already: Integer): Buffer? {
     var head = _read_bytes(2)
-    assert head
+    fallback head
     var first = _byte_of(head, 0)
     var second = _byte_of(head, 1)
     _final = first.bits_and(128) != 0
@@ -310,41 +294,41 @@ func _read_frame(already: Integer): Buffer? {
     if reserved_bits or masked == _masking or not known or not control_fits {
         _fail(1002)
     }
-    assert not _closed
+    fallback not _closed
     if length == 126 {
         var extended = _read_bytes(2)
-        assert extended
+        fallback extended
         length = _read_length(extended, 2)
         if length < 126 {
             _fail(1002)
         }
     } else if length == 127 {
         var extended = _read_bytes(8)
-        assert extended
+        fallback extended
         var top = _byte_of(extended, 0)
         if top >= 128 {
             _fail(1002)
         }
-        assert not _closed
+        fallback not _closed
         length = _read_length(extended, 8)
         if length < 65536 {
             _fail(1002)
         }
     }
-    assert not _closed
+    fallback not _closed
     var room: Long = largest_message - already
     if not control and length > room {
         _fail(1009)
     }
-    assert not _closed
+    fallback not _closed
     var mask: Buffer? = null
     if masked {
         mask = _read_bytes(4)
-        assert mask
+        fallback mask
     }
     var count: Integer = length
     var payload = _read_bytes(count)
-    assert payload
+    fallback payload
     if masked {
         crash mask
         var index = 0
@@ -375,7 +359,7 @@ func _read_bytes(count: Integer): Buffer? {
     if not bytes {
         _lost()
     }
-    assert bytes
+    fallback bytes
     return bytes
 }
 
@@ -398,7 +382,7 @@ func _answer_close(frame: Buffer) {
     if count == 1 {
         _fail(1002)
     }
-    assert not _closed
+    fallback not _closed
     if count >= 2 {
         var high = _byte_of(frame, 0)
         var low = _byte_of(frame, 1)
@@ -407,14 +391,14 @@ func _answer_close(frame: Buffer) {
         if not allowed {
             _fail(1002)
         }
-        assert not _closed
+        fallback not _closed
         var rest = frame.read_buffer_at(2, count - 2)
         crash rest
         var text = rest.read_as_string()
         if not text {
             _fail(1007)
         }
-        assert text
+        fallback text
         reason = text
     }
     if not _close_sent {
@@ -428,7 +412,7 @@ func _answer_close(frame: Buffer) {
 }
 
 func _fail(code: Integer) {
-    assert not _closed
+    fallback not _closed
     if not _close_sent {
         _send_close(code)
     }
@@ -446,7 +430,7 @@ func _drain() {
 }
 
 func _lost() {
-    assert not _closed
+    fallback not _closed
     _connection.close()
     _closed = true
     _close_code = 1006

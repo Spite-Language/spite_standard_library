@@ -15,6 +15,6 @@ func fixed_offset(offset: Duration): TimeZone {
 func read_tzif(identifier: String, data: Buffer): TimeZone? {
     var zone = TimeZone(identifier, _no_offset)
     var read = zone._read_tzif(data)
-    assert read
+    fallback read
     return zone
 }

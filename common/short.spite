@@ -95,9 +95,7 @@ func bits_inverted(): Short {
 
 func shifted_left(count: Integer): Short {
     crash count >= 0
-    if count >= 16 {
-        return 0
-    }
+    fallback count < 16
     return _shifted_left(count)
 }
 

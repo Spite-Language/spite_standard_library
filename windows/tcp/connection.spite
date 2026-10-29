@@ -64,9 +64,7 @@ func _receive_now(room: Buffer, bytes: Integer): Integer {
     if received > 0 {
         return received
     }
-    if received < 0 and sockets.WSAGetLastError() == 10035 {
-        return 0
-    }
+    fallback received >= 0 or sockets.WSAGetLastError() != 10035
     return -1
 }
 

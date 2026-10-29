@@ -53,16 +53,12 @@ func _host_text(): String {
 
 func _names_a_host(text: String): Boolean {
     var length = text.length()
-    if length == 0 or length > 253 {
-        return false
-    }
+    fallback length != 0 and length <= 253
     var labels = text.split(".")
     var index = 0
     while index < labels.count() {
         var label = labels[index]
-        if not _is_host_label(label) {
-            return false
-        }
+        fallback _is_host_label(label)
         index = index + 1
     }
     var last = labels.last()
@@ -72,20 +68,14 @@ func _names_a_host(text: String): Boolean {
 
 func _is_host_label(label: String): Boolean {
     var length = label.length()
-    if length == 0 or length > 63 {
-        return false
-    }
-    if label.starts_with("-") or label.ends_with("-") {
-        return false
-    }
+    fallback length != 0 and length <= 63
+    fallback not label.starts_with("-") and not label.ends_with("-")
     var index = 0
     while index < length {
         var code = label.byte_at(index)
         var letter = code >= 97 and code <= 122 or code >= 65 and code <= 90
         var digit = code >= 48 and code <= 57
-        if not letter and not digit and code != 45 {
-            return false
-        }
+        fallback letter or digit or code == 45
         index = index + 1
     }
     return true
@@ -104,25 +94,17 @@ func _read_text(text: String): Boolean {
         crash scope_text
         scope = _decimal_value(scope_text, 10)
     }
-    if scope < 0 {
-        return false
-    }
+    fallback scope >= 0
     if not address_text.contains(":") {
-        if percent {
-            return false
-        }
+        fallback not percent
         var ipv4_parts = _ipv4_parts(address_text)
-        if ipv4_parts.count() != 4 {
-            return false
-        }
+        fallback ipv4_parts.count() == 4
         _parts = ipv4_parts
         _scope = 0
         return true
     }
     var groups = _ipv6_text_groups(address_text)
-    if not groups {
-        return false
-    }
+    fallback groups
     _parts = groups
     _scope = scope
     _unmap()
@@ -132,18 +114,18 @@ func _read_text(text: String): Boolean {
 func _ipv6_text_groups(text: String): List<Integer>? {
     var halves = text.split("::")
     var halves_count = halves.count()
-    assert halves_count <= 2
+    fallback halves_count <= 2
     var head_text = halves[0]
     crash head_text
     var head_ends = halves_count == 1
     var groups = _ipv6_groups(head_text, head_ends)
-    assert groups
+    fallback groups
     if halves_count == 2 {
         var tail_text = halves[1]
         crash tail_text
         var tail = _ipv6_groups(tail_text, true)
-        assert tail
-        assert groups.count() + tail.count() <= 7
+        fallback tail
+        fallback groups.count() + tail.count() <= 7
         while groups.count() + tail.count() < 8 {
             groups.append(0)
         }
@@ -155,7 +137,7 @@ func _ipv6_text_groups(text: String): List<Integer>? {
             index = index + 1
         }
     }
-    assert groups.count() == 8
+    fallback groups.count() == 8
     return groups
 }
 
@@ -185,7 +167,7 @@ func _unmap() {
 func _ipv4_parts(text: String): List<Integer> {
     var parts = List<Integer>()
     var pieces = text.split(".")
-    assert pieces.count() == 4
+    fallback pieces.count() == 4
     var index = 0
     while index < 4 {
         var piece = pieces[index]
@@ -193,7 +175,7 @@ func _ipv4_parts(text: String): List<Integer> {
         var piece_length = piece.length()
         var leading_zero = piece_length > 1 and piece.starts_with("0")
         var value = _decimal_value(piece, 3)
-        assert not leading_zero and value >= 0 and value <= 255
+        fallback not leading_zero and value >= 0 and value <= 255
         parts.append(value)
         index = index + 1
     }
@@ -213,7 +195,7 @@ func _ipv6_groups(text: String, ends_the_address: Boolean): List<Integer>? {
         var is_last = index == count - 1
         if is_last and ends_the_address and piece.contains(".") {
             var bytes = _ipv4_parts(piece)
-            assert bytes.count() == 4
+            fallback bytes.count() == 4
             var first = bytes[0]
             var second = bytes[1]
             var third = bytes[2]
@@ -223,7 +205,7 @@ func _ipv6_groups(text: String, ends_the_address: Boolean): List<Integer>? {
             groups.append(third * 256 + fourth)
         } else {
             var group = _hex_value(piece)
-            assert group >= 0
+            fallback group >= 0
             groups.append(group)
         }
         index = index + 1
@@ -410,9 +392,7 @@ func _read_system_address(address: Buffer): Boolean {
         _scope = 0
         return true
     }
-    if family != _ipv6_family() {
-        return false
-    }
+    fallback family == _ipv6_family()
     var groups = List<Integer>()
     var index = 0
     while index < 8 {

@@ -99,7 +99,7 @@ func is_empty(): Boolean {
 }
 
 func get_at(index: Integer): Byte? {
-    assert _inside(index, 1)
+    fallback _inside(index, 1)
     return _read_byte_at(index)
 }
 
@@ -125,7 +125,7 @@ func clear() {
 }
 
 func _reserve(wanted: Integer) {
-    assert wanted > _capacity
+    fallback wanted > _capacity
     var grown = _capacity * 2
     if grown < wanted {
         grown = wanted
@@ -151,7 +151,7 @@ func _inside(at: Integer, width: Integer): Boolean {
 }
 
 func read_tiny_at(at: Integer): Tiny? {
-    assert _inside(at, 1)
+    fallback _inside(at, 1)
     return _read_tiny_at(at)
 }
 
@@ -167,7 +167,7 @@ func write_tiny_at(at: Integer, value: Tiny) {
 }
 
 func read_short_little_endian_at(at: Integer): Short? {
-    assert _inside(at, 2)
+    fallback _inside(at, 2)
     return _read_short_at(at)
 }
 
@@ -183,7 +183,7 @@ func write_short_little_endian_at(at: Integer, value: Short) {
 }
 
 func read_short_big_endian_at(at: Integer): Short? {
-    assert _inside(at, 2)
+    fallback _inside(at, 2)
     return _read_short_big_endian_at(at)
 }
 
@@ -199,7 +199,7 @@ func write_short_big_endian_at(at: Integer, value: Short) {
 }
 
 func read_unsigned_short_little_endian_at(at: Integer): UnsignedShort? {
-    assert _inside(at, 2)
+    fallback _inside(at, 2)
     return _read_unsigned_short_at(at)
 }
 
@@ -215,7 +215,7 @@ func write_unsigned_short_little_endian_at(at: Integer, value: UnsignedShort) {
 }
 
 func read_unsigned_short_big_endian_at(at: Integer): UnsignedShort? {
-    assert _inside(at, 2)
+    fallback _inside(at, 2)
     return _read_unsigned_short_big_endian_at(at)
 }
 
@@ -231,7 +231,7 @@ func write_unsigned_short_big_endian_at(at: Integer, value: UnsignedShort) {
 }
 
 func read_integer_little_endian_at(at: Integer): Integer? {
-    assert _inside(at, 4)
+    fallback _inside(at, 4)
     return _read_integer_at(at)
 }
 
@@ -247,7 +247,7 @@ func write_integer_little_endian_at(at: Integer, value: Integer) {
 }
 
 func read_integer_big_endian_at(at: Integer): Integer? {
-    assert _inside(at, 4)
+    fallback _inside(at, 4)
     return _read_integer_big_endian_at(at)
 }
 
@@ -263,7 +263,7 @@ func write_integer_big_endian_at(at: Integer, value: Integer) {
 }
 
 func read_unsigned_integer_little_endian_at(at: Integer): UnsignedInteger? {
-    assert _inside(at, 4)
+    fallback _inside(at, 4)
     return _read_unsigned_integer_at(at)
 }
 
@@ -279,7 +279,7 @@ func write_unsigned_integer_little_endian_at(at: Integer, value: UnsignedInteger
 }
 
 func read_unsigned_integer_big_endian_at(at: Integer): UnsignedInteger? {
-    assert _inside(at, 4)
+    fallback _inside(at, 4)
     return _read_unsigned_integer_big_endian_at(at)
 }
 
@@ -295,7 +295,7 @@ func write_unsigned_integer_big_endian_at(at: Integer, value: UnsignedInteger) {
 }
 
 func read_long_little_endian_at(at: Integer): Long? {
-    assert _inside(at, 8)
+    fallback _inside(at, 8)
     return _read_long_at(at)
 }
 
@@ -311,7 +311,7 @@ func write_long_little_endian_at(at: Integer, value: Long) {
 }
 
 func read_long_big_endian_at(at: Integer): Long? {
-    assert _inside(at, 8)
+    fallback _inside(at, 8)
     return _read_long_big_endian_at(at)
 }
 
@@ -327,7 +327,7 @@ func write_long_big_endian_at(at: Integer, value: Long) {
 }
 
 func read_unsigned_long_little_endian_at(at: Integer): UnsignedLong? {
-    assert _inside(at, 8)
+    fallback _inside(at, 8)
     return _read_unsigned_long_at(at)
 }
 
@@ -343,7 +343,7 @@ func write_unsigned_long_little_endian_at(at: Integer, value: UnsignedLong) {
 }
 
 func read_unsigned_long_big_endian_at(at: Integer): UnsignedLong? {
-    assert _inside(at, 8)
+    fallback _inside(at, 8)
     return _read_unsigned_long_big_endian_at(at)
 }
 
@@ -359,7 +359,7 @@ func write_unsigned_long_big_endian_at(at: Integer, value: UnsignedLong) {
 }
 
 func read_float_little_endian_at(at: Integer): Float? {
-    assert _inside(at, 4)
+    fallback _inside(at, 4)
     return _read_float_at(at)
 }
 
@@ -375,7 +375,7 @@ func write_float_little_endian_at(at: Integer, value: Float) {
 }
 
 func read_float_big_endian_at(at: Integer): Float? {
-    assert _inside(at, 4)
+    fallback _inside(at, 4)
     return _read_float_big_endian_at(at)
 }
 
@@ -391,7 +391,7 @@ func write_float_big_endian_at(at: Integer, value: Float) {
 }
 
 func read_double_little_endian_at(at: Integer): Double? {
-    assert _inside(at, 8)
+    fallback _inside(at, 8)
     return _read_double_at(at)
 }
 
@@ -407,7 +407,7 @@ func write_double_little_endian_at(at: Integer, value: Double) {
 }
 
 func read_double_big_endian_at(at: Integer): Double? {
-    assert _inside(at, 8)
+    fallback _inside(at, 8)
     return _read_double_big_endian_at(at)
 }
 
@@ -441,7 +441,7 @@ func _compare_bytes(other: Buffer, at: Integer, wanted: Integer): Integer {
 
 func read_buffer_at(at: Integer, wanted: Integer): Buffer? {
     crash wanted >= 0
-    assert _inside(at, wanted)
+    fallback _inside(at, wanted)
     var run = Buffer(wanted)
     run.append_buffer(this, at, wanted)
     return run
@@ -465,7 +465,7 @@ func read_string_at(at: Integer, wanted: Integer): String? {
     var index = at
     while index < end {
         var sequence_length = _utf8_length_before(index, end)
-        assert sequence_length != 0
+        fallback sequence_length != 0
         index = index + sequence_length
     }
     var made = String()
@@ -479,19 +479,13 @@ func _utf8_length_before(index: Integer, limit: Integer): Integer {
     if length <= 1 {
         return length
     }
-    if index + length > limit {
-        return 0
-    }
+    fallback index + length <= limit
     var second: Integer = _read_byte_at(index + 1)
-    if second < _utf8_lowest_second(lead) or second > _utf8_highest_second(lead) {
-        return 0
-    }
+    fallback second >= _utf8_lowest_second(lead) and second <= _utf8_highest_second(lead)
     var place = 2
     while place < length {
         var following: Integer = _read_byte_at(index + place)
-        if following < 128 or following > 191 {
-            return 0
-        }
+        fallback following >= 128 and following <= 191
         place = place + 1
     }
     return length

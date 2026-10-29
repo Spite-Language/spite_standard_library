@@ -63,7 +63,7 @@ func set_at(key: $key_type, value: $value_type) {
 func remove_at(key: $key_type) {
     var tag = _tag_of(key)
     var slot = _find_slot(key, tag)
-    assert slot >= 0
+    fallback slot >= 0
     var stored = _slots._read_integer_at(slot * 8)
     _close_slot(slot)
     _renumber_after(stored)
@@ -150,9 +150,7 @@ func _decimal_bits(key: $key_type): UnsignedLong {
     if key != key {
         return 9221120237041090560
     }
-    if key == 0.0 {
-        return 0
-    }
+    fallback key != 0.0
     return _key_bits(key)
 }
 
@@ -181,26 +179,20 @@ func _text_hash(text: String): UnsignedLong {
 
 func _same_text(left: String, right: String): Boolean {
     var length = left._length
-    if length != right._length {
-        return false
-    }
+    fallback length == right._length
     var left_bytes = left._buffer
     var right_bytes = right._buffer
     var at = 0
     while at + 8 <= length {
         var left_word = left_bytes._read_unsigned_long_at(at)
         var right_word = right_bytes._read_unsigned_long_at(at)
-        if left_word != right_word {
-            return false
-        }
+        fallback left_word == right_word
         at = at + 8
     }
     while at < length {
         var left_code = left_bytes._read_byte_at(at)
         var right_code = right_bytes._read_byte_at(at)
-        if left_code != right_code {
-            return false
-        }
+        fallback left_code == right_code
         at = at + 1
     }
     return true

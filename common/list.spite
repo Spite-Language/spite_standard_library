@@ -275,9 +275,7 @@ func all(test: Spite.Function<$element_type, Boolean>): Boolean {
     var index = 0
     while index < _length {
         var item = _read_value(index)
-        if not test(item) {
-            return false
-        }
+        fallback test(item)
         index = index + 1
     }
     return true
@@ -383,7 +381,7 @@ func _make_room() {
 }
 
 func _reserve(wanted: Integer) {
-    assert wanted > _capacity
+    fallback wanted > _capacity
     var grown = _capacity * 2
     if grown < wanted {
         grown = wanted
@@ -428,7 +426,7 @@ func reverse() {
 }
 
 func swap(first_index: Integer, second_index: Integer) {
-    assert first_index >= 0 and first_index < _length and second_index >= 0 and second_index < _length
+    fallback first_index >= 0 and first_index < _length and second_index >= 0 and second_index < _length
     var front = _read_value(first_index)
     var second = _read_value(second_index)
     _write_value(first_index, second)
@@ -504,9 +502,7 @@ func all_member(member: Spite.AttributeDeclaration): Boolean {
     var index = 0
     while index < _length {
         var item = _read_value(index)
-        if not item[member] {
-            return false
-        }
+        fallback item[member]
         index = index + 1
     }
     return true

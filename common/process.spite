@@ -14,7 +14,7 @@ func run(): Integer? {
     _output = null
     var command_text = _command_line()
     var handle = _open_process(command_text)
-    assert handle != 0
+    fallback handle != 0
     var output_bytes = Buffer(0)
     var chunk = Buffer(4096)
     var got = _read_into(chunk, 4096, handle)
@@ -29,7 +29,7 @@ func run(): Integer? {
 }
 
 func read_output_as_string(): String? {
-    assert _output
+    fallback _output
     return _output.read_as_string()
 }
 

@@ -63,9 +63,7 @@ func in_out_sine(amount: Float): Float {
 }
 
 func in_exponential(amount: Float): Float {
-    if amount <= 0.0 {
-        return 0.0
-    }
+    fallback amount > 0.0
     var two: Float = 2.0
     var exponent = 10.0 * amount - 10.0
     return two.power(exponent)
@@ -93,9 +91,7 @@ func out_back(amount: Float): Float {
 }
 
 func out_elastic(amount: Float): Float {
-    if amount <= 0.0 {
-        return 0.0
-    }
+    fallback amount > 0.0
     if amount >= 1.0 {
         return 1.0
     }

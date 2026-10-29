@@ -42,9 +42,7 @@ func open_at(address: IpAddress, port: Integer): Boolean {
 
 func send_to(address: IpAddress, port: Integer, bytes: Buffer): Boolean {
     crash handle != -1
-    if address.is_ipv6() and not _as_ipv6 {
-        return false
-    }
+    fallback not address.is_ipv6() or _as_ipv6
     var system_address = address._system_address(port, _as_ipv6)
     var length = address._system_address_length(_as_ipv6)
     var counted = bytes.count()
@@ -53,7 +51,7 @@ func send_to(address: IpAddress, port: Integer, bytes: Buffer): Boolean {
 }
 
 func receive(): Udp.Datagram? {
-    assert handle != -1
+    fallback handle != -1
     var room = Buffer(65536)
     var sender = Buffer(28)
     var index = 0
@@ -62,11 +60,11 @@ func receive(): Udp.Datagram? {
         index = index + 1
     }
     var received = _receive_from(room, 65536, sender)
-    assert received >= 0
+    fallback received >= 0
     room.take_written(received)
     var sender_address = IpAddress()
     var read = sender_address._read_system_address(sender)
-    assert read
+    fallback read
     var sender_port = sender_address._system_port(sender)
     var bytes = room.copy()
     return Udp.Datagram(bytes, sender_address, sender_port)

@@ -15,22 +15,22 @@ func compress(bytes: Buffer): Buffer {
 
 func decompress(bytes: Buffer): Buffer? {
     var total = bytes.count()
-    assert total >= 6
+    fallback total >= 6
     var method = _byte_at(bytes, 0)
     var flags = _byte_at(bytes, 1)
-    assert method.bits_and(15) == 8
-    assert method.shifted_right(4) <= 7
-    assert (method * 256 + flags) % 31 == 0
-    assert flags.bits_and(32) == 0
+    fallback method.bits_and(15) == 8
+    fallback method.shifted_right(4) <= 7
+    fallback (method * 256 + flags) % 31 == 0
+    fallback flags.bits_and(32) == 0
     var body = bytes.read_buffer_at(2, total - 6)
-    assert body
+    fallback body
     var deflate = Deflate()
     var output = deflate.decompress(body)
-    assert output
+    fallback output
     var expected = bytes.read_unsigned_integer_big_endian_at(total - 4)
-    assert expected
+    fallback expected
     var computed = _adler32(output)
-    assert expected == computed
+    fallback expected == computed
     return output
 }
 

@@ -79,7 +79,7 @@ func determinant(): $number_type {
 func inverse(): Matrix3<$number_type>? {
     var one: $number_type = 1.0
     var whole = determinant()
-    assert whole != 0.0
+    fallback whole != 0.0
     var scale = one / whole
     var inverted = Matrix3<$number_type>()
     inverted.column_0_row_0 = (column_1_row_1 * column_2_row_2 - column_2_row_1 * column_1_row_2) * scale

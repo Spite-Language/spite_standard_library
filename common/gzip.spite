@@ -25,16 +25,16 @@ func compress(bytes: Buffer): Buffer {
 
 func decompress(bytes: Buffer): Buffer? {
     var total = bytes.count()
-    assert total >= 18
+    fallback total >= 18
     var first = _byte_at(bytes, 0)
     var second = _byte_at(bytes, 1)
     var method = _byte_at(bytes, 2)
     var flags = _byte_at(bytes, 3)
-    assert first == 31 and second == 139 and method == 8
-    assert flags.bits_and(224) == 0
+    fallback first == 31 and second == 139 and method == 8
+    fallback flags.bits_and(224) == 0
     var position = 10
     if flags.bits_and(4) != 0 {
-        assert position + 2 <= total
+        fallback position + 2 <= total
         var low = _byte_at(bytes, position)
         var high = _byte_at(bytes, position + 1)
         position = position + 2 + high * 256 + low
@@ -46,31 +46,31 @@ func decompress(bytes: Buffer): Buffer? {
         position = _skip_text(bytes, position, total)
     }
     if flags.bits_and(2) != 0 {
-        assert position + 2 <= total
+        fallback position + 2 <= total
         var header_crc = _crc32(bytes, 0, position)
         var header_check = header_crc.bits_and(65535)
         var stored_value = bytes.read_unsigned_short_little_endian_at(position)
-        assert stored_value
+        fallback stored_value
         var stored: UnsignedInteger = stored_value
-        assert header_check == stored
+        fallback header_check == stored
         position = position + 2
     }
-    assert position + 8 <= total
+    fallback position + 8 <= total
     var body_count = total - 8 - position
     var body = bytes.read_buffer_at(position, body_count)
-    assert body
+    fallback body
     var deflate = Deflate()
     var output = deflate.decompress(body)
-    assert output
+    fallback output
     var expected = bytes.read_unsigned_integer_little_endian_at(total - 8)
-    assert expected
+    fallback expected
     var output_count = output.count()
     var computed = _crc32(output, 0, output_count)
-    assert expected == computed
+    fallback expected == computed
     var expected_size = bytes.read_unsigned_integer_little_endian_at(total - 4)
-    assert expected_size
+    fallback expected_size
     var size: UnsignedInteger = output_count
-    assert expected_size == size
+    fallback expected_size == size
     return output
 }
 

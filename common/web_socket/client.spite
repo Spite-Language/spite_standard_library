@@ -8,9 +8,7 @@ func connect(address: IpAddress, port: Integer, request: Http.Request): Boolean 
     crash request.method == "GET" and body.is_empty()
     var client = Tcp.Client()
     var connected = client.connect(address, port)
-    if not connected {
-        return false
-    }
+    fallback connected
     var connection = WebSocket.Connection(client._connection, true)
     var nonce = _random.random_buffer(16)
     if not nonce {
@@ -57,7 +55,7 @@ func get_closed(): Boolean {
 }
 
 func get_close_code(): Integer? {
-    assert _connection
+    fallback _connection
     return _connection.close_code
 }
 
@@ -67,7 +65,7 @@ func get_close_reason(): String {
 }
 
 func get_last_pong(): Buffer? {
-    assert _connection
+    fallback _connection
     return _connection.last_pong
 }
 
@@ -87,7 +85,7 @@ func send_ping(bytes: Buffer): Boolean {
 }
 
 func receive(): WebSocket.Message? {
-    assert _connection
+    fallback _connection
     return _connection.receive()
 }
 

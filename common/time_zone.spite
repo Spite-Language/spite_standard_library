@@ -147,22 +147,16 @@ func _change_day_since_1970(year: Integer, letter: Integer, number: Integer, wee
 }
 
 func _read_tzif(data: Buffer): Boolean {
-    if not _is_tzif_header_at(data, 0) {
-        return false
-    }
+    fallback _is_tzif_header_at(data, 0)
     var header = 0
     var time_bytes = 4
     var version = _tzif_byte_at(data, 4)
     if version != 0 {
         var first_block = _tzif_block_bytes(data, 0, 4)
-        if first_block > 100000000 {
-            return false
-        }
+        fallback first_block <= 100000000
         header = first_block.to_integer() + 44
         time_bytes = 8
-        if not _is_tzif_header_at(data, header) {
-            return false
-        }
+        fallback _is_tzif_header_at(data, header)
     }
     var time_count = _tzif_unsigned_at(data, header + 32, 4)
     var type_count = _tzif_unsigned_at(data, header + 36, 4)
@@ -170,30 +164,22 @@ func _read_tzif(data: Buffer): Boolean {
     var header_long: Long = header
     var block_end_long = block + header_long + 44
     var length: Long = data.count()
-    if type_count == 0 or block_end_long > length {
-        return false
-    }
+    fallback type_count != 0 and block_end_long <= length
     var block_end = block_end_long.to_integer()
     var times = header + 44
     var indices = time_count.to_integer() * time_bytes + times
     var types = time_count.to_integer() + indices
     var first_offset = _tzif_offset_of_type(data, types)
-    if not first_offset {
-        return false
-    }
+    fallback first_offset
     _first_offset = first_offset
     var index = 0
     while time_count > index {
         var time = _tzif_signed_at(data, times + index * time_bytes, time_bytes)
         var type_index = _tzif_byte_at(data, indices + index)
-        if type_count <= type_index {
-            return false
-        }
+        fallback type_count > type_index
         var type_start = types + type_index * 6
         var offset = _tzif_offset_of_type(data, type_start)
-        if not offset {
-            return false
-        }
+        fallback offset
         _times.append(time)
         _offsets.append(offset)
         index = index + 1
@@ -201,9 +187,7 @@ func _read_tzif(data: Buffer): Boolean {
     if time_bytes == 4 {
         return true
     }
-    if block_end >= data.count() or _tzif_byte_at(data, block_end) != 10 {
-        return false
-    }
+    fallback block_end < data.count() and _tzif_byte_at(data, block_end) == 10
     var footer_start = block_end + 1
     var footer_end = footer_start
     while footer_end < data.count() and _tzif_byte_at(data, footer_end) != 10 {
@@ -213,16 +197,12 @@ func _read_tzif(data: Buffer): Boolean {
         return true
     }
     var footer = data.read_string_at(footer_start, footer_end - footer_start)
-    if not footer {
-        return false
-    }
+    fallback footer
     return _read_posix_rule(footer)
 }
 
 func _is_tzif_header_at(data: Buffer, position: Integer): Boolean {
-    if position < 0 or position + 44 > data.count() {
-        return false
-    }
+    fallback position >= 0 and position + 44 <= data.count()
     return _tzif_byte_at(data, position) == 84 and _tzif_byte_at(data, position + 1) == 90 and _tzif_byte_at(data, position + 2) == 105 and _tzif_byte_at(data, position + 3) == 102
 }
 
@@ -241,7 +221,7 @@ func _tzif_block_bytes(data: Buffer, header: Integer, time_bytes: Integer): Long
 
 func _tzif_offset_of_type(data: Buffer, type_start: Integer): Integer? {
     var offset = _tzif_signed_at(data, type_start, 4)
-    assert offset > -100000 and offset < 100000
+    fallback offset > -100000 and offset < 100000
     return offset.to_integer()
 }
 
@@ -273,20 +253,14 @@ func _tzif_signed_at(data: Buffer, position: Integer, bytes: Integer): Long {
 
 func _read_posix_rule(rule: String): Boolean {
     var parts = rule.split(",")
-    if parts.count() != 1 and parts.count() != 3 {
-        return false
-    }
+    fallback parts.count() == 1 or parts.count() == 3
     var head = parts[0]
     crash head
     var standard_name_end = _posix_name_end(head, 0)
-    if not standard_name_end {
-        return false
-    }
+    fallback standard_name_end
     var standard_offset_end = _posix_offset_end(head, standard_name_end)
     var standard_offset = _posix_offset_between(head, standard_name_end, standard_offset_end)
-    if not standard_offset {
-        return false
-    }
+    fallback standard_offset
     _follows_yearly_rule = true
     _standard_offset = -standard_offset
     _daylight_offset = -standard_offset
@@ -294,29 +268,21 @@ func _read_posix_rule(rule: String): Boolean {
         return parts.count() == 1
     }
     var daylight_name_end = _posix_name_end(head, standard_offset_end)
-    if not daylight_name_end {
-        return false
-    }
+    fallback daylight_name_end
     var daylight_offset = _standard_offset + 3600
     if daylight_name_end < head.length() {
         var daylight_offset_end = _posix_offset_end(head, daylight_name_end)
         var read_offset = _posix_offset_between(head, daylight_name_end, daylight_offset_end)
-        if not read_offset or daylight_offset_end != head.length() {
-            return false
-        }
+        fallback read_offset and daylight_offset_end == head.length()
         daylight_offset = -read_offset
     }
-    if parts.count() != 3 {
-        return false
-    }
+    fallback parts.count() == 3
     var start = parts[1]
     var end = parts[2]
     crash start and end
     var start_read = _read_posix_change(start, true)
     var end_read = _read_posix_change(end, false)
-    if not start_read or not end_read {
-        return false
-    }
+    fallback start_read and end_read
     _daylight_offset = daylight_offset
     _observes_daylight = true
     return true
@@ -324,13 +290,13 @@ func _read_posix_rule(rule: String): Boolean {
 
 func _posix_name_end(text: String, start: Integer): Integer? {
     var length = text.length()
-    assert start < length
+    fallback start < length
     var position = start
     if text.byte_at(start) == 60 {
         while position < length and text.byte_at(position) != 62 {
             position = position + 1
         }
-        assert position < length
+        fallback position < length
         return position + 1
     }
     var letter = text._code_at(position)
@@ -338,7 +304,7 @@ func _posix_name_end(text: String, start: Integer): Integer? {
         position = position + 1
         letter = text._code_at(position)
     }
-    assert position > start
+    fallback position > start
     return position
 }
 
@@ -357,7 +323,7 @@ func _posix_offset_end(text: String, start: Integer): Integer {
 }
 
 func _posix_offset_between(text: String, start: Integer, end: Integer): Integer? {
-    assert end > start
+    fallback end > start
     var sign = 1
     var position = start
     var first = text.byte_at(start)
@@ -370,14 +336,14 @@ func _posix_offset_between(text: String, start: Integer, end: Integer): Integer?
     var written = text.slice(position, end)
     crash written
     var pieces = written.split(":")
-    assert pieces.count() <= 3
+    fallback pieces.count() <= 3
     var seconds = 0
     var scale = 3600
     var index = 0
     while index < pieces.count() {
         var piece = pieces[index]
         var number = _posix_number(piece)
-        assert number
+        fallback number
         seconds = seconds + number * scale
         scale = scale / 60
         index = index + 1
@@ -387,9 +353,7 @@ func _posix_offset_between(text: String, start: Integer, end: Integer): Integer?
 
 func _read_posix_change(text: String, is_start: Boolean): Boolean {
     var pieces = text.split("/")
-    if pieces.count() > 2 {
-        return false
-    }
+    fallback pieces.count() <= 2
     var day = pieces[0]
     crash day
     var time_seconds = 7200
@@ -397,14 +361,10 @@ func _read_posix_change(text: String, is_start: Boolean): Boolean {
         var time = pieces[1]
         var time_end = _posix_offset_end(time, 0)
         var read_time = _posix_offset_between(time, 0, time_end)
-        if not read_time or time_end != time.length() {
-            return false
-        }
+        fallback read_time and time_end == time.length()
         time_seconds = read_time
     }
-    if day.is_empty() {
-        return false
-    }
+    fallback not day.is_empty()
     var letter = day.byte_at(0)
     var number_start = 0
     if letter == 77 or letter == 74 {
@@ -420,9 +380,7 @@ func _read_posix_change(text: String, is_start: Boolean): Boolean {
     var number: Integer? = null
     if letter == 77 {
         var fields = number_text.split(".")
-        if fields.count() != 3 {
-            return false
-        }
+        fallback fields.count() == 3
         var month_text = fields[0]
         var week_text = fields[1]
         var weekday_text = fields[2]
@@ -430,26 +388,16 @@ func _read_posix_change(text: String, is_start: Boolean): Boolean {
         var month = _posix_number(month_text)
         var read_week = _posix_number(week_text)
         var read_weekday = _posix_number(weekday_text)
-        if not month or not read_week or not read_weekday {
-            return false
-        }
-        if month < 1 or month > 12 or read_week < 1 or read_week > 5 or read_weekday > 6 {
-            return false
-        }
+        fallback month and read_week and read_weekday
+        fallback month >= 1 and month <= 12 and read_week >= 1 and read_week <= 5 and read_weekday <= 6
         number = month
         week = read_week
         weekday = read_weekday
     } else {
         var day_number = _posix_number(number_text)
-        if not day_number {
-            return false
-        }
-        if letter == 74 and (day_number < 1 or day_number > 365) {
-            return false
-        }
-        if day_number > 365 {
-            return false
-        }
+        fallback day_number
+        fallback letter != 74 or day_number >= 1 and day_number <= 365
+        fallback day_number <= 365
         number = day_number
     }
     crash number
@@ -471,12 +419,12 @@ func _read_posix_change(text: String, is_start: Boolean): Boolean {
 
 func _posix_number(text: String): Integer? {
     var length = text.length()
-    assert length >= 1 and length <= 6
+    fallback length >= 1 and length <= 6
     var value = 0
     var index = 0
     while index < length {
         var code = text.byte_at(index)
-        assert _is_posix_digit(code)
+        fallback _is_posix_digit(code)
         value = value * 10 + code - 48
         index = index + 1
     }

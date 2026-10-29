@@ -16,13 +16,13 @@ func send(address: IpAddress, port: Integer, request: Http.Request): Http.Respon
     }
     var client = Tcp.Client()
     var connected = client.connect(address, port)
-    assert connected
+    fallback connected
     var connection = client._connection
     var answer = _ask(connection, host, request)
     if not answer {
         connection.close()
     }
-    assert answer
+    fallback answer
     return _finish(connection, key, request, answer)
 }
 
@@ -77,7 +77,7 @@ func _ask(connection: Tcp.Connection, host: String, request: Http.Request): Stri
     var bytes = head.to_buffer()
     bytes.append_buffer(request._body, 0, body_length)
     var written = connection.write_buffer(bytes)
-    assert written
+    fallback written
     return connection.read_line()
 }
 
@@ -93,17 +93,17 @@ func _finish(connection: Tcp.Connection, key: String, request: Http.Request, fir
 }
 
 func _read_response(connection: Tcp.Connection, request: Http.Request, first_line: String): Http.Response? {
-    assert first_line.starts_with("HTTP/1.")
+    fallback first_line.starts_with("HTTP/1.")
     var line_length = first_line.length()
-    assert line_length >= 12
+    fallback line_length >= 12
     var status_text = first_line.slice(9, 12)
     crash status_text
     var status = status_text.to_integer()
-    assert status
+    fallback status
     var response = Http.Response()
     response.status = status
     var headers_read = _read_headers(connection, response.headers)
-    assert headers_read
+    fallback headers_read
     var asked = ""
     var connection_header = response.header("connection")
     if connection_header {
@@ -116,20 +116,20 @@ func _read_response(connection: Tcp.Connection, request: Http.Request, first_lin
     if bodiless {
         response._body = Buffer(0)
     } else if encoding {
-        assert encoding.lower_case() == "chunked"
+        fallback encoding.lower_case() == "chunked"
         var chunked = _read_chunks(connection)
-        assert chunked
+        fallback chunked
         response._body = chunked
     } else if declared {
         var length = declared.to_integer()
-        assert length
-        assert length >= 0 and length <= largest_body
+        fallback length
+        fallback length >= 0 and length <= largest_body
         var body = connection._read_exactly(length)
-        assert body
+        fallback body
         response._body = body
     } else {
         var rest = _read_until_closed(connection)
-        assert rest
+        fallback rest
         response._body = rest
         keep = false
     }
@@ -143,16 +143,12 @@ func _read_headers(connection: Tcp.Connection, headers: Dictionary<String, Strin
     var count = 0
     while count < 200 {
         var line = connection.read_line()
-        if not line {
-            return false
-        }
+        fallback line
         if line.is_empty() {
             return true
         }
         var colon = line.index_of(":")
-        if not colon or colon <= 0 {
-            return false
-        }
+        fallback colon and colon > 0
         var name = line.slice(0, colon)
         crash name
         var line_length = line.length()
@@ -171,23 +167,23 @@ func _read_chunks(connection: Tcp.Connection): Buffer? {
     var finished = false
     while not finished {
         var size_line = connection.read_line()
-        assert size_line
+        fallback size_line
         var size = _hex_value(size_line)
-        assert size >= 0
-        assert body.count() + size <= largest_body
+        fallback size >= 0
+        fallback body.count() + size <= largest_body
         finished = size == 0
         if not finished {
             var chunk = connection._read_exactly(size)
-            assert chunk
+            fallback chunk
             body.append_buffer(chunk, 0, size)
             var ending = connection.read_line()
-            assert ending
-            assert ending.is_empty()
+            fallback ending
+            fallback ending.is_empty()
         }
     }
     var trailers = Dictionary<String, String>()
     var trailer_read = _read_headers(connection, trailers)
-    assert trailer_read
+    fallback trailer_read
     return body
 }
 
@@ -233,7 +229,7 @@ func _read_until_closed(connection: Tcp.Connection): Buffer? {
             var piece_count = piece.count()
             body.append_buffer(piece, 0, piece_count)
         }
-        assert body.count() <= largest_body
+        fallback body.count() <= largest_body
     }
     return body
 }

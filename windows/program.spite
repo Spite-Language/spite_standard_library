@@ -43,7 +43,7 @@ func working_directory(): String? {
         room = Buffer(size * 2)
         length = kernel.GetCurrentDirectoryW(size, room)
     }
-    assert length > 0
+    fallback length > 0
     room.take_written(length * 2)
     return room._read_wide_string_at(0, length)
 }
@@ -57,7 +57,7 @@ func executable_path(): String? {
         room = Buffer(size * 2)
         length = kernel.GetModuleFileNameW(0, room, size)
     }
-    assert length > 0 and length < size
+    fallback length > 0 and length < size
     room.take_written(length * 2)
     return room._read_wide_string_at(0, length)
 }
@@ -72,7 +72,7 @@ func environment(name: String): String? {
         room = Buffer(size * 2)
         length = kernel.GetEnvironmentVariableW(wide_name, room, size)
     }
-    assert length != 0
+    fallback length != 0
     room.take_written(length * 2)
     return room._read_wide_string_at(0, length)
 }
@@ -115,7 +115,7 @@ func arguments(): List<String> {
     if started {
         pieces.append(piece)
     }
-    assert pieces.remove_first()
+    fallback pieces.remove_first()
     return pieces
 }
 

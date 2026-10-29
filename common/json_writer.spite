@@ -95,8 +95,8 @@ func written_object(shown: $value_type): String {
 
 func write_attribute(attribute: Spite.AttributeDeclaration, shown: $value_type) {
     var name = attribute.name
-    assert not name.starts_with("_")
-    assert not attribute.class.is_singleton
+    fallback not name.starts_with("_")
+    fallback not attribute.class.is_singleton
     var attribute_json = JsonWriter<attribute.class>()
     var class_name = $value_type.name
     attribute_json.path = "{class_name}.{name}"
@@ -151,9 +151,7 @@ func escape_of(code: Integer): String {
 }
 
 func control_escape_of(code: Integer): String {
-    if code >= 32 {
-        return ""
-    }
+    fallback code < 32
     var digits = "0123456789abcdef"
     var high = digits[code / 16]
     var low = digits[code % 16]

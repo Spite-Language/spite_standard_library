@@ -192,7 +192,7 @@ func conjugate(): Quaternion<$number_type> {
 func inverse(): Quaternion<$number_type>? {
     var one: $number_type = 1.0
     var squared = x * x + y * y + z * z + w * w
-    assert squared != 0.0
+    fallback squared != 0.0
     var scale = one / squared
     var inverted = Quaternion<$number_type>()
     var inverted_x = -x * scale

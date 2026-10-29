@@ -1,14 +1,14 @@
 func find(identifier: String): TimeZone? {
-    assert not identifier.is_empty()
+    fallback not identifier.is_empty()
     var zone = TimeZone(identifier, _no_offset)
     var opened = zone._open_calendar()
-    assert opened
+    fallback opened
     return zone
 }
 
 func system(): TimeZone? {
     var zone = TimeZone("", _no_offset)
     var opened = zone._open_calendar()
-    assert opened
+    fallback opened
     return zone
 }

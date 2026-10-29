@@ -73,10 +73,10 @@ func _decoded(text: String, url: Boolean): Buffer? {
         length = length - 1
     }
     var padding = written_length - length
-    assert padding <= 2
-    assert padding == 0 or written_length % 4 == 0
-    assert length % 4 != 1
-    assert url or length % 4 == 0 or padding > 0
+    fallback padding <= 2
+    fallback padding == 0 or written_length % 4 == 0
+    fallback length % 4 != 1
+    fallback url or length % 4 == 0 or padding > 0
     var bytes = Buffer(length / 4 * 3 + 2)
     var group = 0
     var held = 0
@@ -84,7 +84,7 @@ func _decoded(text: String, url: Boolean): Buffer? {
     while index < length {
         var code = text.byte_at(index)
         var value = _digit_value(code, url)
-        assert value >= 0
+        fallback value >= 0
         var moved = group.shifted_left(6)
         group = moved.bits_or(value)
         held = held + 1
@@ -99,11 +99,11 @@ func _decoded(text: String, url: Boolean): Buffer? {
     }
     if held == 2 {
         var unused = group.bits_and(15)
-        assert unused == 0
+        fallback unused == 0
         _append_byte(bytes, group, 4)
     } else if held == 3 {
         var unused = group.bits_and(3)
-        assert unused == 0
+        fallback unused == 0
         _append_byte(bytes, group, 10)
         _append_byte(bytes, group, 2)
     }

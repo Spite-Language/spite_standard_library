@@ -5,7 +5,7 @@ func random_buffer(count: Integer): Buffer? {
     var filled = Buffer(count)
     if count > 0 {
         var given = _fill(filled, count)
-        assert given
+        fallback given
         filled.take_written(count)
     }
     return filled

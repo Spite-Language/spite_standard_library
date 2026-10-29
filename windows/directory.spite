@@ -25,7 +25,7 @@ func _entry_names(want_folders: Boolean): List<String>? {
     var pattern = "{path}/*"
     var wide_pattern = pattern._to_wide()
     var search = kernel.FindFirstFileW_as_long(wide_pattern, found)
-    assert search != -1
+    fallback search != -1
     var readable = true
     var more = true
     while more and readable {
@@ -47,6 +47,6 @@ func _entry_names(want_folders: Boolean): List<String>? {
         more = next != 0
     }
     kernel.FindClose(search)
-    assert readable
+    fallback readable
     return names
 }

@@ -90,9 +90,7 @@ func bits_inverted(): UnsignedInteger {
 
 func shifted_left(count: Integer): UnsignedInteger {
     crash count >= 0
-    if count >= 32 {
-        return 0
-    }
+    fallback count < 32
     return _shifted_left(count)
 }
 

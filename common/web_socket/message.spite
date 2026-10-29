@@ -11,7 +11,7 @@ func is_text(): Boolean {
 }
 
 func read_as_string(): String? {
-    assert _text
+    fallback _text
     return _bytes.read_as_string()
 }
 

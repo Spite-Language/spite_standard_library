@@ -6,9 +6,7 @@ func Server(http: Http.Server) {
 
 func asks_to_upgrade(request: Http.Request): Boolean {
     var upgrade = request.header("upgrade")
-    if not upgrade {
-        return false
-    }
+    fallback upgrade
     var lowered = upgrade.lower_case()
     return lowered == "websocket"
 }
@@ -24,7 +22,7 @@ func accept(request: Http.Request): WebSocket.Connection? {
             refused.set_header("sec-websocket-version", "13")
         }
         refused.set_header("connection", "close")
-        assert _http.respond(request, refused)
+        fallback _http.respond(request, refused)
         return null
     }
     var key = request.header("sec-websocket-key")

@@ -14,9 +14,7 @@ func move_to(new_path: String): Boolean {
     var folder_there = Directory(new_path)
     var file_exists = file_there.exists()
     var folder_exists = folder_there.exists()
-    if file_exists or folder_exists {
-        return false
-    }
+    fallback not file_exists and not folder_exists
     var renamed = _rename_to(new_path)
     if renamed {
         path = new_path
@@ -45,7 +43,7 @@ func to_string(): String {
 func entries(): List<Entry>? {
     var result = List<Entry>()
     var folder_names = _sorted_names(true)
-    assert folder_names
+    fallback folder_names
     var index = 0
     while index < folder_names.count() {
         var folder_name = folder_names[index]
@@ -55,7 +53,7 @@ func entries(): List<Entry>? {
         index = index + 1
     }
     var file_names = _sorted_names(false)
-    assert file_names
+    fallback file_names
     index = 0
     while index < file_names.count() {
         var file_name = file_names[index]
@@ -76,7 +74,7 @@ func _inside(name: String): String {
 
 func _sorted_names(want_folders: Boolean): List<String>? {
     var names = _entry_names(want_folders)
-    assert names
+    fallback names
     var count = names.count()
     var index = 1
     while index < count {

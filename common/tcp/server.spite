@@ -34,10 +34,10 @@ func listen_at(address: IpAddress, port: Integer): Boolean {
 }
 
 func accept(): Tcp.Connection? {
-    assert not closed
+    fallback not closed
     _use_blocking_calls()
     var accepted = _accept_handle()
-    assert accepted != -1
+    fallback accepted != -1
     var connection = Tcp.Connection()
     connection._take_over(accepted)
     return connection
@@ -56,9 +56,9 @@ func drop() {
 }
 
 func _accept_now(): Tcp.Connection? {
-    assert not closed
+    fallback not closed
     var accepted = _accept_handle_now()
-    assert accepted != -1
+    fallback accepted != -1
     var connection = Tcp.Connection()
     connection._take_over(accepted)
     return connection

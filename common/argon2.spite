@@ -178,7 +178,7 @@ var _blake_order: List<Integer> = [
 
 func hash(password: String): String? {
     var salt = random.random_buffer(16)
-    assert salt
+    fallback salt
     var secret = password.to_buffer()
     var tag = derive(secret, salt, 3, 65536, 1, 32)
     return _encoded(salt, tag, 3, 65536, 1)
@@ -186,35 +186,35 @@ func hash(password: String): String? {
 
 func verify(password: String, encoded: String): Boolean? {
     var fields = encoded.split("$")
-    assert fields.count() == 6
+    fallback fields.count() == 6
     var empty_field = fields[0]
     var version_field = fields[2]
     var type_field = fields[1]
     var costs_field = fields[3]
     var salt_field = fields[4]
     var tag_field = fields[5]
-    assert empty_field == "" and version_field == "v=19"
+    fallback empty_field == "" and version_field == "v=19"
     var variant = _type_named(type_field)
-    assert variant >= 0
+    fallback variant >= 0
     var costs = costs_field.split(",")
-    assert costs.count() == 3
+    fallback costs.count() == 3
     var memory_field = costs[0]
     var time_field = costs[1]
     var lanes_field = costs[2]
     var found_memory_cost = _cost(memory_field, "m=")
     var found_time_cost = _cost(time_field, "t=")
     var found_lanes = _cost(lanes_field, "p=")
-    assert found_memory_cost and found_time_cost and found_lanes
+    fallback found_memory_cost and found_time_cost and found_lanes
     var memory_cost: Integer = found_memory_cost
     var time_cost: Integer = found_time_cost
     var lanes: Integer = found_lanes
-    assert memory_cost > 0 and time_cost > 0 and lanes > 0
-    assert memory_cost <= 1048576 and time_cost <= 1000 and lanes <= 255
-    assert memory_cost >= 8 * lanes
+    fallback memory_cost > 0 and time_cost > 0 and lanes > 0
+    fallback memory_cost <= 1048576 and time_cost <= 1000 and lanes <= 255
+    fallback memory_cost >= 8 * lanes
     var salt = _unpadded(salt_field)
     var expected = _unpadded(tag_field)
-    assert salt and expected
-    assert expected.count() >= 4 and salt.count() >= 8
+    fallback salt and expected
+    fallback expected.count() >= 4 and salt.count() >= 8
     var secret = password.to_buffer()
     var nothing = Buffer(0)
     var tag_length = expected.count()
@@ -244,13 +244,13 @@ func _type_named(name: String): Integer {
 }
 
 func _cost(field: String, prefix: String): Integer? {
-    assert field.starts_with(prefix)
+    fallback field.starts_with(prefix)
     var field_length = field.length()
     var digits = field.slice(2, field_length)
     crash digits
     var parsed = digits.to_long()
-    assert parsed
-    assert parsed >= 0 and parsed <= 2147483647
+    fallback parsed
+    fallback parsed >= 0 and parsed <= 2147483647
     var plain: Long = parsed
     return plain.to_integer()
 }

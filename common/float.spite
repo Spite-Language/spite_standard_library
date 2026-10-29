@@ -289,9 +289,7 @@ func _half_special(mantissa: Long): Long {
 
 func _half_subnormal(exponent: Long, mantissa: Long): Long {
     var shift = 126 - exponent
-    if shift > 25 {
-        return 0
-    }
+    fallback shift <= 25
     var one: Long = 1
     var divisor = one.shifted_left(shift)
     return _rounded_to_even(mantissa + 8388608, divisor)

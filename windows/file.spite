@@ -29,10 +29,10 @@ func lock(): LockedFile? {
     var nothing: Long = 0
     var wide_path = path._to_wide()
     var handle = kernel.CreateFileW_as_long(wide_path, read_and_write, share_everything, nothing, open_always, normal, nothing)
-    assert handle != -1
+    fallback handle != -1
     var locked = LockedFile(handle)
     var held = locked._is_held()
-    assert held
+    fallback held
     return locked
 }
 
@@ -80,9 +80,9 @@ func _modified_nanoseconds_since_1970(): Long? {
     var standard_information = 0
     var wide_path = path._to_wide()
     var found = kernel.GetFileAttributesExW(wide_path, standard_information, data)
-    assert found != 0
+    fallback found != 0
     var written = data.read_long_little_endian_at(20)
-    assert written
+    fallback written
     var since_1970 = written - 116444736000000000
     return since_1970 * 100
 }

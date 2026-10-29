@@ -168,7 +168,7 @@ func _channels_of(text: String): List<Float>? {
     }
     var named = named_hex(cleaned)
     var unnamed = named.is_empty()
-    assert not unnamed
+    fallback not unnamed
     return _read_hex(named)
 }
 
@@ -177,9 +177,9 @@ func _read_hex(text: String): List<Float>? {
     var digits = text.slice(1, text_length)
     crash digits
     var count = digits.length()
-    assert count == 3 or count == 4 or count == 6 or count == 8
+    fallback count == 3 or count == 4 or count == 6 or count == 8
     var valid = _all_hex(digits)
-    assert valid
+    fallback valid
     if count <= 4 {
         var short_red = _hex_value(digits, 0) * 17
         var short_green = _hex_value(digits, 1) * 17
@@ -239,13 +239,13 @@ func _from_bytes(red_byte: Integer, green_byte: Integer, blue_byte: Integer, alp
 
 func _read_function(text: String): List<Float>? {
     var open = text.index_of("(")
-    assert open
+    fallback open
     var closed = text.ends_with(")")
-    assert closed
+    fallback closed
     var function_name = text.slice(0, open)
     crash function_name
     var is_hue = function_name == "hsl" or function_name == "hsla"
-    assert is_hue or function_name == "rgb" or function_name == "rgba"
+    fallback is_hue or function_name == "rgb" or function_name == "rgba"
     var text_length = text.length()
     var inside = text.slice(open + 1, text_length - 1)
     crash inside
@@ -253,7 +253,7 @@ func _read_function(text: String): List<Float>? {
     var spaced = commas_removed.replace("/", " ")
     var parts = _pieces(spaced)
     var part_count = parts.count()
-    assert part_count == 3 or part_count == 4
+    fallback part_count == 3 or part_count == 4
     var first = parts[0]
     var second = parts[1]
     var third = parts[2]
@@ -265,7 +265,7 @@ func _read_function(text: String): List<Float>? {
         var fourth = parts[3]
         crash fourth
         var alpha_share = _fraction(fourth, 1.0)
-        assert alpha_share
+        fallback alpha_share
         var alpha_value: Float = alpha_share
         alpha_read = alpha_value
     }
@@ -273,9 +273,9 @@ func _read_function(text: String): List<Float>? {
         var hue = _number_of(first)
         var saturation = _fraction(second, 100.0)
         var lightness = _fraction(third, 100.0)
-        assert hue
-        assert saturation
-        assert lightness
+        fallback hue
+        fallback saturation
+        fallback lightness
         var hue_degrees: Float = hue
         var saturation_share: Float = saturation
         var lightness_share: Float = lightness
@@ -284,9 +284,9 @@ func _read_function(text: String): List<Float>? {
     var red_read = _fraction(first, 255.0)
     var green_read = _fraction(second, 255.0)
     var blue_read = _fraction(third, 255.0)
-    assert red_read
-    assert green_read
-    assert blue_read
+    fallback red_read
+    fallback green_read
+    fallback blue_read
     var red_share: Float = red_read
     var green_share: Float = green_read
     var blue_share: Float = blue_read
@@ -330,7 +330,7 @@ func _number_of(part: String): Float? {
 
 func _fraction(part: String, whole: Float): Float? {
     var value = _number_of(part)
-    assert value
+    fallback value
     var share = value / whole
     if part.ends_with("%") {
         share = value / 100.0

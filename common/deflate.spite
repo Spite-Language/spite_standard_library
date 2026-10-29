@@ -111,7 +111,7 @@ func decompress(bytes: Buffer): Buffer? {
     _input = Buffer(0)
     var result = _result
     _result = Buffer(0)
-    assert not _failed
+    fallback not _failed
     return result
 }
 
@@ -732,7 +732,7 @@ func _inflate_blocks() {
         var overrun = _overrun()
         _fail_when(overrun)
     }
-    assert not _failed
+    fallback not _failed
     _rewind_to_byte()
     _fail_when(_position != _input_length)
 }
@@ -748,7 +748,7 @@ func _rewind_to_byte() {
 func _copy_stored() {
     _rewind_to_byte()
     _fail_when(_position + 4 > _input_length)
-    assert not _failed
+    fallback not _failed
     var low = _byte_of(_input, _position)
     var high = _byte_of(_input, _position + 1)
     var complement_low = _byte_of(_input, _position + 2)
@@ -757,17 +757,17 @@ func _copy_stored() {
     var complement = complement_high * 256 + complement_low
     _position = _position + 4
     _fail_when(size + complement != 65535 or _position + size > _input_length)
-    assert not _failed
+    fallback not _failed
     _result.append_buffer(_input, _position, size)
     _position = _position + size
 }
 
 func _decode_symbols() {
-    assert not _failed
+    fallback not _failed
     var symbol = 0
     while symbol != 256 and not _failed {
         symbol = _decode_symbol(_literal_table, _literal_mask)
-        assert not _failed
+        fallback not _failed
         if symbol < 256 {
             var literal = symbol.to_byte()
             _result.append(literal)
@@ -782,21 +782,21 @@ func _decode_symbols() {
 func _copy_match(symbol: Integer) {
     var index = symbol - 257
     _fail_when(index >= 29)
-    assert not _failed
+    fallback not _failed
     var length_bits = _entry(_length_extra, index)
     var length_base = _entry(_length_bases, index)
     var extra = _read_bits(length_bits)
     var match_length = length_base + extra
     var distance_symbol = _decode_symbol(_distance_table, _distance_mask)
     _fail_when(distance_symbol >= 30)
-    assert not _failed
+    fallback not _failed
     var distance_bits = _entry(_distance_extra, distance_symbol)
     var distance_base = _entry(_distance_bases, distance_symbol)
     var distance_more = _read_bits(distance_bits)
     var distance = distance_base + distance_more
     var at = _result.count()
     _fail_when(distance > at)
-    assert not _failed
+    fallback not _failed
     var from = at - distance
     var copied = 0
     while copied < match_length {
@@ -871,7 +871,7 @@ func _read_dynamic_tables() {
             filled = filled + repeat
         }
     }
-    assert not _failed
+    fallback not _failed
     var end_bits = _get(_table_lengths, 256 + 256)
     _fail_when(end_bits == 0)
     _literal_mask = _build_table(_literal_table, 256, literal_count)

@@ -19,7 +19,7 @@ func next_request(): Http.Request? {
     var request: Http.Request? = null
     while not request {
         var client = _next_ready_connection()
-        assert client
+        fallback client
         request = _read_request(client)
         if not request {
             _let_go(client)
@@ -75,9 +75,7 @@ func _keeps_alive(request: Http.Request): Boolean {
     if connection_header {
         asked = connection_header.lower_case()
     }
-    if asked.contains("close") {
-        return false
-    }
+    fallback not asked.contains("close")
     return request.version == "HTTP/1.1" or asked.contains("keep-alive")
 }
 
@@ -89,7 +87,7 @@ func _next_ready_connection(): Tcp.Connection? {
         if pipelined >= 0 {
             return _take_waiting(pipelined)
         }
-        assert not _listener.closed
+        fallback not _listener.closed
         var handles = List<Long>()
         handles.append(_listener.handle)
         var index = 0
@@ -103,7 +101,7 @@ func _next_ready_connection(): Tcp.Connection? {
             patience = _longest_patience
         }
         var ready = _listener._first_readable(handles, patience)
-        assert ready != -2
+        fallback ready != -2
         if ready > 0 {
             return _take_waiting(ready - 1)
         }
@@ -152,32 +150,32 @@ func _close_idle_connections() {
 
 func _read_request(client: Tcp.Connection): Http.Request? {
     var first_line = client.read_line()
-    assert first_line
+    fallback first_line
     var parts = first_line.split(" ")
-    assert parts.count() == 3
+    fallback parts.count() == 3
     var method = parts[0]
     var path = parts[1]
     var version = parts[2]
-    assert version == "HTTP/1.1" or version == "HTTP/1.0"
-    assert not method.is_empty() and path.starts_with("/")
+    fallback version == "HTTP/1.1" or version == "HTTP/1.0"
+    fallback not method.is_empty() and path.starts_with("/")
     var request = Http.Request()
     request._connection = client
     request.method = method
     request.path = path
     request.version = version
     var headers_read = _read_headers(client, request.headers)
-    assert headers_read
+    fallback headers_read
     var declared = request.header("content-length")
     if declared {
         var length = declared.to_integer()
-        assert length
-        assert length >= 0 and length <= largest_body
+        fallback length
+        fallback length >= 0 and length <= largest_body
         var body = client._read_exactly(length)
-        assert body
+        fallback body
         request._body = body
     } else {
         var encoding = request.header("transfer-encoding")
-        assert not encoding
+        fallback not encoding
     }
     return request
 }
@@ -186,16 +184,12 @@ func _read_headers(client: Tcp.Connection, headers: Dictionary<String, String>):
     var count = 0
     while count < 200 {
         var line = client.read_line()
-        if not line {
-            return false
-        }
+        fallback line
         if line.is_empty() {
             return true
         }
         var colon = line.index_of(":")
-        if not colon or colon <= 0 {
-            return false
-        }
+        fallback colon and colon > 0
         var name = line.slice(0, colon)
         crash name
         var line_length = line.length()
@@ -212,7 +206,7 @@ func _read_headers(client: Tcp.Connection, headers: Dictionary<String, String>):
 func _refuse(client: Tcp.Connection) {
     var refused = Http.Response()
     refused.status = 400
-    assert _write_response(client, refused, true, true)
+    fallback _write_response(client, refused, true, true)
 }
 
 func _write_response(client: Tcp.Connection, response: Http.Response, with_body: Boolean, closing: Boolean): Boolean {

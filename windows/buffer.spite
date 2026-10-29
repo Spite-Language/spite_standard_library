@@ -4,15 +4,15 @@ func _read_wide_string_at(at: Integer, characters: Integer): String? {
     }
     var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
     var wide = read_buffer_at(at, characters * 2)
-    assert wide and wide.count() == characters * 2
+    fallback wide and wide.count() == characters * 2
     var only_valid = 128
     var no_room: Long = 0
     var no_value: Long = 0
     var size = kernel.WideCharToMultiByte(65001, only_valid, wide, characters, no_room, 0, no_value, no_value)
-    assert size > 0
+    fallback size > 0
     var text = Buffer(size)
     var written = kernel.WideCharToMultiByte(65001, only_valid, wide, characters, text, size, no_value, no_value)
-    assert written == size
+    fallback written == size
     text.take_written(written)
     return text.read_string_at(0, written)
 }

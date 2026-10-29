@@ -16,9 +16,7 @@ func _open_calendar(): Boolean {
     _status.append_integer_little_endian(0)
     if _identifier.is_empty() {
         var default_identifier = _default_identifier()
-        if not default_identifier {
-            return false
-        }
+        fallback default_identifier
         _identifier = default_identifier
     }
     _calendar = _opened_calendar()
@@ -74,9 +72,7 @@ func _opened_calendar(): Long {
     var index = 0
     while index < length {
         var code = _identifier.byte_at(index)
-        if code > 127 {
-            return 0
-        }
+        fallback code <= 127
         var unit = code.to_unsigned_short()
         characters.append_unsigned_short_little_endian(unit)
         index = index + 1
@@ -106,7 +102,7 @@ func _default_identifier(): String? {
     _clear_status()
     var length = icu.ucal_getDefaultTimeZone(characters, 256, _status)
     var status = _status_value()
-    assert status <= 0 and length >= 0 and length <= 256
+    fallback status <= 0 and length >= 0 and length <= 256
     var identifier = String()
     var index = 0
     while index < length {

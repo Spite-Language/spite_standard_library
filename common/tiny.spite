@@ -95,9 +95,7 @@ func bits_inverted(): Tiny {
 
 func shifted_left(count: Integer): Tiny {
     crash count >= 0
-    if count >= 8 {
-        return 0
-    }
+    fallback count < 8
     return _shifted_left(count)
 }
 

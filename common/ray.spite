@@ -31,10 +31,10 @@ func point_at(along: Float): Vector3<Float> {
 
 func hit_plane(plane: Plane): Float? {
     var facing = plane.normal_x * direction_x + plane.normal_y * direction_y + plane.normal_z * direction_z
-    assert facing != 0.0
+    fallback facing != 0.0
     var height = plane.normal_x * origin_x + plane.normal_y * origin_y + plane.normal_z * origin_z + plane.distance
     var along = (0.0 - height) / facing
-    assert along >= 0.0
+    fallback along >= 0.0
     return along
 }
 
@@ -58,7 +58,7 @@ func hit_box(box: AxisAlignedBox): Float? {
     entering = entering.maximum(enter_z)
     var leaving = leave_x.minimum(leave_y)
     leaving = leaving.minimum(leave_z)
-    assert leaving >= 0.0 and entering <= leaving
+    fallback leaving >= 0.0 and entering <= leaving
     if entering >= 0.0 {
         return entering
     }
@@ -72,17 +72,17 @@ func hit_triangle(first: Vector3<Float>, second: Vector3<Float>, third: Vector3<
     var across = ray_direction.cross(second_edge)
     var facing = first_edge.dot(across)
     var facing_size = facing.absolute()
-    assert facing_size > 0.0000001
+    fallback facing_size > 0.0000001
     var inverse_facing = 1.0 / facing
     var ray_origin = Vector3<Float>(origin_x, origin_y, origin_z)
     var from_corner = ray_origin - first
     var first_weight = from_corner.dot(across) * inverse_facing
-    assert first_weight >= 0.0 and first_weight <= 1.0
+    fallback first_weight >= 0.0 and first_weight <= 1.0
     var turned = from_corner.cross(first_edge)
     var second_weight = ray_direction.dot(turned) * inverse_facing
-    assert second_weight >= 0.0 and first_weight + second_weight <= 1.0
+    fallback second_weight >= 0.0 and first_weight + second_weight <= 1.0
     var along = second_edge.dot(turned) * inverse_facing
-    assert along >= 0.0
+    fallback along >= 0.0
     return along
 }
 

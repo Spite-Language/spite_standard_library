@@ -9,8 +9,8 @@ var _found = 0
 
 func read(bytes: Buffer): $value_type? {
     var read_value = _read_from(bytes, 0)
-    assert read_value
-    assert _position == bytes.count()
+    fallback read_value
+    fallback _position == bytes.count()
     return read_value
 }
 
@@ -18,7 +18,7 @@ func _read_from(bytes: Buffer, start: Integer): $value_type? {
     crash start >= 0
     crash start <= bytes.count()
     var read_value = _continue(bytes, start, false)
-    assert not _failed
+    fallback not _failed
     _position = _at
     return read_value
 }
@@ -151,8 +151,8 @@ func _read_dictionary(): $value_type {
 
 func read_attribute(attribute: Spite.AttributeDeclaration, created: $value_type) {
     var name = attribute.name
-    assert not name.starts_with("_")
-    assert not attribute.class.is_singleton
+    fallback not name.starts_with("_")
+    fallback not attribute.class.is_singleton
     var reader = BinaryReader<attribute.class>()
     var held = _buffer()
     created[attribute] = reader._continue(held, _at, _failed)
@@ -250,9 +250,7 @@ func _read_count(): Integer {
 
 func _read_text(): String {
     var length = _read_count()
-    if not _take(length) {
-        return ""
-    }
+    fallback _take(length)
     var held = _buffer()
     var start = _at - length
     var text = held.read_string_at(start, length)

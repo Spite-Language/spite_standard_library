@@ -5,7 +5,7 @@ func run_attached(): Integer? {
     var wide_command = command_text._to_wide()
     library._set_errno(0)
     var code = library._wsystem(wide_command)
-    assert code != -1 or _system_error() == 0
+    fallback code != -1 or _system_error() == 0
     return code
 }
 
