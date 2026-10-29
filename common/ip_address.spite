@@ -60,7 +60,6 @@ func _names_a_host(text: String): Boolean {
     var index = 0
     while index < labels.count() {
         var label = labels[index]
-        crash label
         if not _is_host_label(label) {
             return false
         }
@@ -211,7 +210,6 @@ func _ipv6_groups(text: String, ends_the_address: Boolean): List<Integer>? {
     var index = 0
     while index < count {
         var piece = pieces[index]
-        crash piece
         var is_last = index == count - 1
         if is_last and ends_the_address and piece.contains(".") {
             var bytes = _ipv4_parts(piece)

@@ -725,7 +725,6 @@ func to_ip_address(): IpAddress? {
     var addresses = resolve_ip_addresses()
     assert not addresses.is_empty()
     var first = addresses[0]
-    crash first
     first._name = this
     return first
 }

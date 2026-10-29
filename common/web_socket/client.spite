@@ -29,7 +29,6 @@ func connect(address: IpAddress, port: Integer, request: Http.Request): Boolean 
     var index = 0
     while index < names.count() {
         var name = names[index]
-        crash name
         var value = request.headers[name]
         crash value
         var handshake = name.starts_with("sec-websocket-") and name != "sec-websocket-protocol"

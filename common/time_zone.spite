@@ -376,7 +376,6 @@ func _posix_offset_between(text: String, start: Integer, end: Integer): Integer?
     var index = 0
     while index < pieces.count() {
         var piece = pieces[index]
-        crash piece
         var number = _posix_number(piece)
         assert number
         seconds = seconds + number * scale
@@ -396,7 +395,6 @@ func _read_posix_change(text: String, is_start: Boolean): Boolean {
     var time_seconds = 7200
     if pieces.count() == 2 {
         var time = pieces[1]
-        crash time
         var time_end = _posix_offset_end(time, 0)
         var read_time = _posix_offset_between(time, 0, time_end)
         if not read_time or time_end != time.length() {

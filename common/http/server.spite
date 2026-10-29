@@ -53,7 +53,6 @@ func close() {
     var index = 0
     while index < _waiting.count() {
         var waiting = _waiting[index]
-        crash waiting
         waiting.close()
         index = index + 1
     }
@@ -90,7 +89,6 @@ func _next_ready_connection(): Tcp.Connection? {
         var index = 0
         while index < _waiting.count() {
             var waiting = _waiting[index]
-            crash waiting
             handles.append(waiting.handle)
             index = index + 1
         }
@@ -116,7 +114,6 @@ func _first_pipelined(): Integer {
     var index = 0
     while index < _waiting.count() {
         var waiting = _waiting[index]
-        crash waiting
         if not waiting.pending.is_empty() {
             return index
         }
@@ -157,9 +154,6 @@ func _read_request(client: Tcp.Connection): Http.Request? {
     var method = parts[0]
     var path = parts[1]
     var version = parts[2]
-    crash method
-    crash path
-    crash version
     assert version == "HTTP/1.1" or version == "HTTP/1.0"
     assert not method.is_empty() and path.starts_with("/")
     var request = Http.Request()
@@ -226,7 +220,6 @@ func _write_response(client: Tcp.Connection, response: Http.Response, with_body:
     var index = 0
     while index < names.count() {
         var name = names[index]
-        crash name
         var value = response.headers[name]
         crash value
         if name != "content-length" and name != "connection" {
