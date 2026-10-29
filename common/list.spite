@@ -46,7 +46,14 @@ func prepend(value: $element_type) {
 func insert(index: Integer, value: $element_type) {
     var at = index.clamp(0, _length)
     _make_room()
-    _move_values_up(at, _length - at)
+    if at == _length {
+        _write_value(_length, value)
+        _length = _length + 1
+        return
+    }
+    var final_item = _read_value(_length - 1)
+    _write_value(_length, final_item)
+    _move_values_up(at, _length - 1 - at)
     _write_value(at, value)
     _length = _length + 1
 }
