@@ -2,12 +2,37 @@ singleton
 
 var _program = Program()
 var _given: List<String> = _program.arguments()
+var _loaded = Dictionary<String, String>()
+var _read_names = List<String>()
 
 func Environment() {
     _given = _program.arguments()
+    _read_settings()
+}
+
+func _read_settings() {
+}
+
+func load_from_file(path: String): Boolean {
+    var file = File(path)
+    var text = file.read_as_string()
+    if not text {
+        return false
+    }
+    var lines = text.lines()
+    var index = 0
+    while index < lines.count() {
+        var line = lines[index]
+        _load_line(line)
+        index = index + 1
+    }
+    _read_settings()
+    _report_unknown(path)
+    return true
 }
 
 func boolean_setting(name: String, declared: Boolean): Boolean {
+    _note_read(name)
     var flag = _flag_of(name)
     var written = _written(flag)
     var is_bare = _is_bare(written, flag)
@@ -18,34 +43,83 @@ func boolean_setting(name: String, declared: Boolean): Boolean {
     if not text {
         return declared
     }
-    crash text == "true" or text == "false"
+    if text != "true" and text != "false" {
+        _stop_on_malformed(name, text, "'true' or 'false'", "true")
+    }
     return text == "true"
 }
 
 func integer_setting(name: String, declared: Integer): Integer {
+    _note_read(name)
     var flag = _flag_of(name)
     var written = _written(flag)
     var is_bare = _is_bare(written, flag)
-    crash not is_bare
+    if is_bare {
+        _stop_on_malformed(name, "--{flag}", "a whole number", "4")
+    }
     var text = _setting(name, flag, written)
     if not text {
         return declared
     }
     var number = text.to_integer()
+    if not number {
+        _stop_on_malformed(name, text, "a whole number", "4")
+    }
     crash number
     return number
 }
 
 func text_setting(name: String, declared: String): String {
+    _note_read(name)
     var flag = _flag_of(name)
     var written = _written(flag)
     var is_bare = _is_bare(written, flag)
-    crash not is_bare
+    if is_bare {
+        _stop_on_malformed(name, "--{flag}", "a text after '='", "value")
+    }
     var text = _setting(name, flag, written)
     if not text {
         return declared
     }
     return text
+}
+
+func _load_line(line: String) {
+    var trimmed = line.trim()
+    assert not trimmed.is_empty() and not trimmed.starts_with("#")
+    var equals = trimmed.index_of("=")
+    assert equals
+    var end = trimmed.length()
+    var start = equals + 1
+    var named = trimmed.slice(0, equals)
+    var valued = trimmed.slice(start, end)
+    crash named
+    crash valued
+    var key = named.trim()
+    var value = valued.trim()
+    _loaded[key] = value
+}
+
+func _report_unknown(path: String) {
+    var keys = _loaded.keys()
+    var index = 0
+    while index < keys.count() {
+        var key = keys[index]
+        var name = key.lower_case()
+        var is_known = _read_names.contains(name)
+        if not is_known {
+            var console = Console()
+            console.error("warning: '{key}' in {path} names no setting of Environment, so it was not read")
+        }
+        index = index + 1
+    }
+}
+
+func _note_read(name: String) {
+    var noted = _read_names.contains(name)
+    if not noted {
+        _read_names.append(name)
+    }
 }
 
 func _flag_of(name: String): String {
@@ -88,7 +162,21 @@ func _setting(name: String, flag: String, written: String?): String? {
         return sliced
     }
     var variable = name.upper_case()
-    return _program.environment(variable)
+    var from_the_process = _program.environment(variable)
+    if from_the_process {
+        return from_the_process
+    }
+    return _loaded[variable]
+}
+
+func _stop_on_malformed(name: String, given: String, form: String, example: String) {
+    var flag = name.replace("_", "-")
+    var variable = name.upper_case()
+    var console = Console()
+    var first = "error: the setting Environment.{name} was given '{given}', which is not {form}"
+    var second = "write --{flag}={example} on the command line, or {variable}={example} in the environment or a .env file"
+    console.error("{first}: {second}")
+    _program.exit(1)
 }
 
 func _stop_on_snake_case(name: String) {
