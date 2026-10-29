@@ -529,7 +529,8 @@ func each_member(member: Spite.AttributeDeclaration) {
 
 func parallel_each_member(member: Spite.AttributeDeclaration) {
     if _length < 2 {
-        _each_range_member(member, 0, _length)
+        var walked = _each_range_member(member, 0, _length)
+        crash walked == _length
         return
     }
     var piece_count = 4
@@ -577,7 +578,8 @@ func _each_in_bands_member(member: Spite.AttributeDeclaration, least: Integer) {
         band_count = _length
     }
     if _length < least or band_count < 2 or not _items_held_once() {
-        _each_range_member(member, 0, _length)
+        var walked = _each_range_member(member, 0, _length)
+        crash walked == _length
         return
     }
     var length: Long = _length
@@ -615,7 +617,8 @@ func _each_in_bands_repeated_member(member: Spite.AttributeDeclaration, least: I
     if _length < least or band_count < 2 or not _items_held_once() {
         var round = 0
         while round < times {
-            _each_range_member(member, 0, _length)
+            var walked = _each_range_member(member, 0, _length)
+            crash walked == _length
             round = round + 1
         }
         return

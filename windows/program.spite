@@ -114,7 +114,7 @@ func arguments(): List<String> {
     if started {
         pieces.append(piece)
     }
-    pieces.remove_first()
+    assert pieces.remove_first()
     return pieces
 }
 

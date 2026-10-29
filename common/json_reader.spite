@@ -267,11 +267,21 @@ func _read_boolean(): Boolean {
 func _read_number(): String {
     _skip_space()
     var start = position
-    _skip_character(45)
+    _skip_number()
+    if _failed() {
+        return "0"
+    }
+    var sliced = _text.slice(start, position)
+    crash sliced
+    return sliced
+}
+
+func _skip_number() {
+    _skip_if(45)
     var whole_digits = _skip_digits()
     if whole_digits == 0 {
         _fail("a number")
-        return "0"
+        return
     }
     if _skip_character(46) {
         var fraction_digits = _skip_digits()
@@ -281,16 +291,18 @@ func _read_number(): String {
     }
     if _skip_character(101) or _skip_character(69) {
         if not _skip_character(43) {
-            _skip_character(45)
+            _skip_if(45)
         }
         var exponent_digits = _skip_digits()
         if exponent_digits == 0 {
             _fail("a digit in the exponent")
         }
     }
-    var sliced = _text.slice(start, position)
-    crash sliced
-    return sliced
+}
+
+func _skip_text() {
+    var skipped = _read_text()
+    assert not skipped.is_empty()
 }
 
 func _read_text(): String {
@@ -421,6 +433,10 @@ func _text_of(code_point: Integer): String {
     return result
 }
 
+func _skip_if(code: Integer) {
+    assert _skip_character(code)
+}
+
 func _skip_character(code: Integer): Boolean {
     if position < _text.length() and _text.byte_at(position) == code {
         position = position + 1
@@ -450,7 +466,7 @@ func _skip_value() {
     }
     var code = _text.byte_at(position)
     if code == 34 {
-        _read_text()
+        _skip_text()
     } else if code == 123 {
         _skip_members()
     } else if code == 91 {
@@ -465,7 +481,8 @@ func _skip_word() {
     var is_false = _consume("false")
     var is_null = _read_null()
     if not is_true and not is_false and not is_null {
-        _read_number()
+        _skip_space()
+        _skip_number()
     }
 }
 
@@ -473,7 +490,7 @@ func _skip_members() {
     _expect("\{")
     var more = not _consume("}")
     while more and _expected.is_empty() {
-        _read_text()
+        _skip_text()
         _expect(":")
         _skip_value()
         more = _consume(",")

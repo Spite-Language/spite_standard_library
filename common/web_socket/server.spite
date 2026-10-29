@@ -24,7 +24,7 @@ func accept(request: Http.Request): WebSocket.Connection? {
             refused.set_header("sec-websocket-version", "13")
         }
         refused.set_header("connection", "close")
-        _http.respond(request, refused)
+        assert _http.respond(request, refused)
         return null
     }
     var key = request.header("sec-websocket-key")

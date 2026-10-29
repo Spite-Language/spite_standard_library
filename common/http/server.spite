@@ -26,9 +26,7 @@ func next_request(): Http.Request? {
         if client.closed {
             client.close()
         } else {
-            var refused = Http.Response()
-            refused.status = 400
-            _write_response(client, refused, true, true)
+            _refuse(client)
         }
     }
 }
@@ -211,6 +209,12 @@ func _read_headers(client: Tcp.Connection, headers: Dictionary<String, String>):
         count = count + 1
     }
     return false
+}
+
+func _refuse(client: Tcp.Connection) {
+    var refused = Http.Response()
+    refused.status = 400
+    assert _write_response(client, refused, true, true)
 }
 
 func _write_response(client: Tcp.Connection, response: Http.Response, with_body: Boolean, closing: Boolean): Boolean {

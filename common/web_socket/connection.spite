@@ -228,6 +228,10 @@ func _byte_of(room: Buffer, at: Integer): Integer {
     return held.to_integer()
 }
 
+func _send_control(opcode: Integer, payload: Buffer) {
+    assert _send_frame(opcode, payload)
+}
+
 func _send_frame(opcode: Integer, payload: Buffer): Boolean {
     if _closed or _close_sent {
         return false
@@ -288,7 +292,7 @@ func _send_close(code: Integer) {
         payload.append(high)
         payload.append(low)
     }
-    _send_frame(8, payload)
+    _send_control(8, payload)
     _close_sent = true
 }
 
@@ -380,7 +384,7 @@ func _read_bytes(count: Integer): Buffer? {
 func _answer_control(frame: Buffer) {
     if _opcode == 9 {
         if not _close_sent {
-            _send_frame(10, frame)
+            _send_control(10, frame)
         }
     } else if _opcode == 10 {
         _last_pong = frame
