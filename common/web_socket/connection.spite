@@ -50,7 +50,8 @@ func send_ping(bytes: Buffer): Boolean {
 }
 
 func receive(): WebSocket.Message? {
-    while true {
+    var message: WebSocket.Message? = null
+    while not message {
         assert not _closed
         var already = _parts.count()
         var frame = _read_frame(already)
@@ -58,12 +59,10 @@ func receive(): WebSocket.Message? {
         if _opcode >= 8 {
             _answer_control(frame)
         } else {
-            var message = _take_data(frame)
-            if message {
-                return message
-            }
+            message = _take_data(frame)
         }
     }
+    return message
 }
 
 func close() {

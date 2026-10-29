@@ -16,18 +16,23 @@ func listen_everywhere(port: Integer): Boolean {
 }
 
 func next_request(): Http.Request? {
-    while true {
+    var request: Http.Request? = null
+    while not request {
         var client = _next_ready_connection()
         assert client
-        var request = _read_request(client)
-        if request {
-            return request
+        request = _read_request(client)
+        if not request {
+            _let_go(client)
         }
-        if client.closed {
-            client.close()
-        } else {
-            _refuse(client)
-        }
+    }
+    return request
+}
+
+func _let_go(client: Tcp.Connection) {
+    if client.closed {
+        client.close()
+    } else {
+        _refuse(client)
     }
 }
 
@@ -77,7 +82,8 @@ func _keeps_alive(request: Http.Request): Boolean {
 }
 
 func _next_ready_connection(): Tcp.Connection? {
-    while true {
+    var accepted: Tcp.Connection? = null
+    while not accepted {
         _close_idle_connections()
         var pipelined = _first_pipelined()
         if pipelined >= 0 {
@@ -98,16 +104,14 @@ func _next_ready_connection(): Tcp.Connection? {
         }
         var ready = _listener._first_readable(handles, patience)
         assert ready != -2
-        if ready == 0 {
-            var client = _listener.accept()
-            if client {
-                return client
-            }
-        }
         if ready > 0 {
             return _take_waiting(ready - 1)
         }
+        if ready == 0 {
+            accepted = _listener.accept()
+        }
     }
+    return accepted
 }
 
 func _first_pipelined(): Integer {

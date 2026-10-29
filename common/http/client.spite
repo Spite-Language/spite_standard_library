@@ -168,25 +168,27 @@ func _read_headers(connection: Tcp.Connection, headers: Dictionary<String, Strin
 
 func _read_chunks(connection: Tcp.Connection): Buffer? {
     var body = Buffer(0)
-    while true {
+    var finished = false
+    while not finished {
         var size_line = connection.read_line()
         assert size_line
         var size = _hex_value(size_line)
         assert size >= 0
         assert body.count() + size <= largest_body
-        if size == 0 {
-            var trailers = Dictionary<String, String>()
-            var trailer_read = _read_headers(connection, trailers)
-            assert trailer_read
-            return body
+        finished = size == 0
+        if not finished {
+            var chunk = connection._read_exactly(size)
+            assert chunk
+            body.append_buffer(chunk, 0, size)
+            var ending = connection.read_line()
+            assert ending
+            assert ending.is_empty()
         }
-        var chunk = connection._read_exactly(size)
-        assert chunk
-        body.append_buffer(chunk, 0, size)
-        var ending = connection.read_line()
-        assert ending
-        assert ending.is_empty()
     }
+    var trailers = Dictionary<String, String>()
+    var trailer_read = _read_headers(connection, trailers)
+    assert trailer_read
+    return body
 }
 
 func _hex_value(line: String): Integer {
