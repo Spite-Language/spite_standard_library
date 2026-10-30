@@ -2,6 +2,8 @@ var _name = ""
 var _class = Spite.Class("Nothing")
 var _value: Anything? = null
 var _index = 0
+var _declaration: Spite.AttributeDeclaration? = null
+var _owner: Anything? = null
 
 func Attribute(starting_name: String, starting_index: Integer) {
     _name = starting_name
@@ -22,6 +24,16 @@ func get_value(): Anything? {
 
 func get_index(): Integer {
     return _index
+}
+
+func get_declaration(): Spite.AttributeDeclaration {
+    crash _declaration
+    return _declaration
+}
+
+func get_owner(): Anything {
+    crash _owner
+    return _owner
 }
 
 func get_is_singleton(): Boolean {

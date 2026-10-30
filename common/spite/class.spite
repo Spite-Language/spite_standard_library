@@ -9,8 +9,8 @@ var _is_dictionary = false
 var _is_stateful = false
 var _is_fixed_size = false
 var _element_type: Spite.Class? = null
-var _attributes = List<Spite.AttributeDeclaration>()
-var _functions = List<Spite.Function>()
+var _attributes = Dictionary<String, Spite.AttributeDeclaration>()
+var _functions = Dictionary<String, Spite.Function>()
 var _has_no_stand_in = false
 var _values = List<String>()
 var _source_folder = ""
@@ -33,11 +33,11 @@ func get_namespace(): Spite.Namespace? {
     return _namespace
 }
 
-func get_attributes(): List<Spite.AttributeDeclaration> {
+func get_attributes(): Dictionary<String, Spite.AttributeDeclaration> {
     return _attributes
 }
 
-func get_functions(): List<Spite.Function> {
+func get_functions(): Dictionary<String, Spite.Function> {
     return _functions
 }
 
@@ -91,9 +91,10 @@ func fits_vector(): Boolean {
 
 func has_function(name: String): Boolean {
     crash not _has_no_stand_in
+    var functions = _functions.values()
     var index = 0
-    while index < _functions.count() {
-        var function = _functions[index]
+    while index < functions.count() {
+        var function = functions[index]
         if function.name_fits(name) {
             return true
         }
@@ -104,9 +105,10 @@ func has_function(name: String): Boolean {
 
 func argument_count(name: String): Integer {
     crash has_function(name)
+    var functions = _functions.values()
     var index = 0
-    while index < _functions.count() {
-        var function = _functions[index]
+    while index < functions.count() {
+        var function = functions[index]
         if function.name_fits(name) {
             return function.argument_count()
         }
@@ -117,9 +119,10 @@ func argument_count(name: String): Integer {
 
 func function_waits(name: String): Boolean {
     crash not _has_no_stand_in
+    var functions = _functions.values()
     var index = 0
-    while index < _functions.count() {
-        var function = _functions[index]
+    while index < functions.count() {
+        var function = functions[index]
         if function.name_fits(name) and function.is_resumable {
             return true
         }

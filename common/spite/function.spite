@@ -3,12 +3,12 @@ var _arguments = List<Spite.Argument>()
 var _returns: Spite.Class? = null
 var _is_resumable = false
 var _has_facts = false
-var _has_accesses = false
+var _has_reach = false
 var _returned_literal: String? = null
 var _called: Spite.Function<Nothing>? = null
 var _called_on: Spite.Function<Anything, Dictionary<String, Anything>, Nothing>? = null
-var _accesses = List<Spite.Access>()
-var _accessed_names = List<String>()
+var _reads = List<Spite.AttributeDeclaration>()
+var _writes = List<Spite.AttributeDeclaration>()
 
 func Function(starting_name: String) {
     _name = starting_name
@@ -36,20 +36,14 @@ func get_returned_literal(): String {
     return _returned_literal
 }
 
-func get_accesses(): Dictionary<String, Spite.Access> {
-    crash _has_accesses
-    var accesses = Dictionary<String, Spite.Access>()
-    var index = 0
-    while index < _accesses.count() {
-        var access = _accesses[index]
-        var name = _accessed_names[index]
-        crash name
-        if access.is_read or access.is_written {
-            accesses[name] = access
-        }
-        index = index + 1
-    }
-    return accesses
+func get_reads(): List<Spite.AttributeDeclaration> {
+    crash _has_reach
+    return _reads
+}
+
+func get_writes(): List<Spite.AttributeDeclaration> {
+    crash _has_reach
+    return _writes
 }
 
 func call_function() {

@@ -29,6 +29,10 @@ func each(callback: Spite.Function<$value_type, Nothing>) {
     _values.each(callback)
 }
 
+func filter(test: Spite.Function<$value_type, Boolean>): List<$value_type> {
+    return _values.filter(test)
+}
+
 func sum(measure: Spite.Function<$value_type, Integer>): Integer {
     return _values.sum(measure)
 }
