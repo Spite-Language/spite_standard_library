@@ -1,0 +1,29 @@
+var _name = ""
+var _number = 0
+var _index = 0
+
+func EnumValue(starting_name: String, starting_number: Integer, starting_index: Integer) {
+    _name = starting_name
+    _number = starting_number
+    _index = starting_index
+}
+
+func get_name(): String {
+    return _name
+}
+
+func get_number(): Integer {
+    return _number
+}
+
+func get_index(): Integer {
+    return _index
+}
+
+func to_string(): String {
+    return _name
+}
+
+func to_debug(): String {
+    return _name
+}

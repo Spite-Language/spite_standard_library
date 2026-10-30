@@ -12,7 +12,6 @@ var _element_type: Spite.Class? = null
 var _attributes = Dictionary<String, Spite.AttributeDeclaration>()
 var _functions = Dictionary<String, Spite.Function>()
 var _has_no_stand_in = false
-var _values = List<String>()
 var _source_folder = ""
 var _source_files = List<File>()
 
@@ -51,10 +50,6 @@ func get_source_files(): List<File> {
 
 func source_folder(): String {
     return _source_folder
-}
-
-func get_values(): List<String> {
-    return _values
 }
 
 func get_is_optional(): Boolean {
