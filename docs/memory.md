@@ -152,7 +152,8 @@ so a dictionary answers `get_at` and `set_at` with a key and a value.
 ## The copy table
 
 A deep copy of a structure whose references can lead back to an object already being copied
-remembers every object it copies in a `Spite.Internal.CopyTable`, so each object is copied once.
+remembers every object it copies in a `Spite.CopyTable`, so each object is copied once. The table, and the
+copy of a `List` or a `Dictionary` through it, are written by the compiler, not by this library (D1754).
 A reference the compiler keeps uncounted, such as a child's `parent`, is copied as the original
 object first, and the table settles it with `later` and `settle` once every object is copied: it
 then holds the copy when the same deep copy made one, and the original object otherwise.

@@ -107,16 +107,6 @@ func deep_copy(): Dictionary<$key_type, $value_type> {
     return copied
 }
 
-func _deep_copy_in(table: Spite.CopyTable): Dictionary<$key_type, $value_type> {
-    var copied = Dictionary<$key_type, $value_type>()
-    copied._keys = _keys.copy()
-    copied._values = _values._deep_copy_in(table)
-    copied._slots = _slots.copy()
-    copied._slot_count = _slot_count
-    copied._shift = _shift
-    return copied
-}
-
 func keys(): List<$key_type> {
     return _keys.copy()
 }
