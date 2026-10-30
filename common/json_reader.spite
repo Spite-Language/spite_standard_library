@@ -36,41 +36,21 @@ func _parse(): $value_type {
         return _parse_list()
     } else if $value_type == Dictionary {
         return _parse_dictionary()
-    } else {
+    } else if $value_type.is_made_plainly {
         return _parse_object()
+    } else {
+        return _parse_converted()
     }
 }
 
 func _parse_number(): $value_type {
     var number_text = _read_number()
     var number: $value_type? = number_text
-    if number {
-        return number
-    }
-    var whole_text = _whole_part(number_text)
-    var whole: $value_type? = whole_text
-    if not whole {
+    if not number {
         _fail("a number that fits")
         return 0
     }
-    return whole
-}
-
-func _whole_part(number_text: String): String {
-    var written = number_text
-    var has_exponent = written.contains("e") or written.contains("E")
-    if has_exponent {
-        var decimal: Double? = written
-        crash decimal
-        written = decimal.to_string()
-    }
-    var point = written.index_of(".")
-    if not point {
-        return written
-    }
-    var sliced = written.slice(0, point)
-    crash sliced
-    return sliced
+    return number
 }
 
 func _parse_present(): $value_type {
@@ -152,6 +132,24 @@ func _parse_object(): $value_type {
     return created
 }
 
+func _parse_converted(): $value_type {
+    var source_json = JsonReader<$value_type.converted_type>()
+    var source = source_json._continue(_text, position, _expected)
+    position = source_json.position
+    _expected = source_json._expected
+    if not _failed() {
+        var converted: $value_type? = source
+        if converted {
+            return converted
+        }
+        _fail("a value its conversion takes")
+    }
+    return _placeholder()
+}
+
+func _placeholder(): $value_type {
+    return $value_type()
+}
 
 func read_attribute(attribute: Spite.AttributeDeclaration, created: $value_type) {
     var name = attribute.name
