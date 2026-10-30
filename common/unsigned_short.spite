@@ -2,52 +2,26 @@
 
 var _buffer = Buffer(2)
 
+func UnsignedShort(from: String): UnsignedShort? {
+    var value: Long? = from
+    fallback value and value >= 0 and value <= UnsignedShort.Largest()
+    return value
+}
+
+func Largest(): UnsignedShort {
+    return 65535
+}
+
+func Smallest(): UnsignedShort {
+    return 0
+}
+
 func _value(): UnsignedShort {
     return _buffer._read_unsigned_short_at(0)
 }
 
 func to_buffer(): Buffer {
     return _buffer._copy_first_bytes(2)
-}
-
-func to_byte(): Byte {
-    return _value()
-}
-
-func to_tiny(): Tiny {
-    return _value()
-}
-
-func to_short(): Short {
-    return _value()
-}
-
-func to_unsigned_short(): UnsignedShort {
-    return _value()
-}
-
-func to_integer(): Integer {
-    return _value()
-}
-
-func to_unsigned_integer(): UnsignedInteger {
-    return _value()
-}
-
-func to_long(): Long {
-    return _value()
-}
-
-func to_unsigned_long(): UnsignedLong {
-    return _value()
-}
-
-func to_float(): Float {
-    return _value()
-}
-
-func to_double(): Double {
-    return _value()
 }
 
 func half_precision_to_float(): Float {
@@ -60,10 +34,12 @@ func half_precision_to_float(): Float {
         result = _half_special(mantissa)
     } else if exponent == 0 {
         var scale: UnsignedInteger = 864026624
-        result = mantissa.to_float() * scale.bits_as_float()
+        var mantissa_float: Float = mantissa
+        result = mantissa_float * scale.bits_as_float()
     } else {
         var wide: Long = (exponent + 112) * 8388608 + mantissa * 8192
-        result = wide.to_unsigned_integer().bits_as_float()
+        var wide_unsigned_integer: UnsignedInteger = wide
+        result = wide_unsigned_integer.bits_as_float()
     }
     if sign == 1 {
         return -result
@@ -160,14 +136,6 @@ func _bits_as_signed(): Short
 
 func bits_as_signed(): Short {
     return _bits_as_signed()
-}
-
-func get_largest(): UnsignedShort {
-    return 65535
-}
-
-func get_smallest(): UnsignedShort {
-    return 0
 }
 
 func sum(other: UnsignedShort): UnsignedShort {
@@ -281,4 +249,44 @@ func _bit_at(index: Integer): Boolean {
     var moved = _shifted_right(index)
     var lowest = moved._bits_and(1)
     return lowest == 1
+}
+
+func _as_byte(): Byte {
+    return _value()
+}
+
+func _as_tiny(): Tiny {
+    return _value()
+}
+
+func _as_short(): Short {
+    return _value()
+}
+
+func _as_unsigned_short(): UnsignedShort {
+    return _value()
+}
+
+func _as_integer(): Integer {
+    return _value()
+}
+
+func _as_unsigned_integer(): UnsignedInteger {
+    return _value()
+}
+
+func _as_long(): Long {
+    return _value()
+}
+
+func _as_unsigned_long(): UnsignedLong {
+    return _value()
+}
+
+func _as_float(): Float {
+    return _value()
+}
+
+func _as_double(): Double {
+    return _value()
 }

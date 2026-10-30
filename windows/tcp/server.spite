@@ -94,7 +94,8 @@ func _first_readable(handles: List<Long>, patience: Duration): Integer {
     while ready > 0 and found < 0 and index < count {
         var returned = watched.read_unsigned_short_little_endian_at(index * 16 + 10)
         crash returned
-        if returned.to_integer() != 0 {
+        var returned_integer: Integer? = returned
+        if returned_integer != 0 {
             found = index
         }
         index = index + 1

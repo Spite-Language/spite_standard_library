@@ -2,52 +2,26 @@
 
 var _buffer = Buffer(2)
 
+func Short(from: String): Short? {
+    var value: Long? = from
+    fallback value and value >= Short.Smallest() and value <= Short.Largest()
+    return value
+}
+
+func Largest(): Short {
+    return 32767
+}
+
+func Smallest(): Short {
+    return -32768
+}
+
 func _value(): Short {
     return _buffer._read_short_at(0)
 }
 
 func to_buffer(): Buffer {
     return _buffer._copy_first_bytes(2)
-}
-
-func to_byte(): Byte {
-    return _value()
-}
-
-func to_tiny(): Tiny {
-    return _value()
-}
-
-func to_short(): Short {
-    return _value()
-}
-
-func to_unsigned_short(): UnsignedShort {
-    return _value()
-}
-
-func to_integer(): Integer {
-    return _value()
-}
-
-func to_unsigned_integer(): UnsignedInteger {
-    return _value()
-}
-
-func to_long(): Long {
-    return _value()
-}
-
-func to_unsigned_long(): UnsignedLong {
-    return _value()
-}
-
-func to_float(): Float {
-    return _value()
-}
-
-func to_double(): Double {
-    return _value()
 }
 
 func absolute(): Short {
@@ -135,14 +109,6 @@ func _bits_as_unsigned(): UnsignedShort
 
 func bits_as_unsigned(): UnsignedShort {
     return _bits_as_unsigned()
-}
-
-func get_largest(): Short {
-    return 32767
-}
-
-func get_smallest(): Short {
-    return -32768
 }
 
 func sum(other: Short): Short {
@@ -256,4 +222,44 @@ func _bit_at(index: Integer): Boolean {
     var moved = _shifted_right(index)
     var lowest = moved._bits_and(1)
     return lowest == 1
+}
+
+func _as_byte(): Byte {
+    return _value()
+}
+
+func _as_tiny(): Tiny {
+    return _value()
+}
+
+func _as_short(): Short {
+    return _value()
+}
+
+func _as_unsigned_short(): UnsignedShort {
+    return _value()
+}
+
+func _as_integer(): Integer {
+    return _value()
+}
+
+func _as_unsigned_integer(): UnsignedInteger {
+    return _value()
+}
+
+func _as_long(): Long {
+    return _value()
+}
+
+func _as_unsigned_long(): UnsignedLong {
+    return _value()
+}
+
+func _as_float(): Float {
+    return _value()
+}
+
+func _as_double(): Double {
+    return _value()
 }

@@ -2,52 +2,47 @@
 
 var _buffer = Buffer(8)
 
+func Long(from: String): Long? {
+    var text = from.trim()
+    var size = text._length
+    var index = 0
+    var negative = false
+    if size > 0 and (text.byte_at(0) == 45 or text.byte_at(0) == 43) {
+        negative = text.byte_at(0) == 45
+        index = 1
+    }
+    var digits_start = index
+    var value: Long = 0
+    while index < size and text.byte_at(index) >= 48 and text.byte_at(index) <= 57 {
+        var digit: Long? = text.byte_at(index) - 48
+        var long_smallest = Long.Smallest()
+        fallback value >= (long_smallest + digit) / 10
+        value = value * 10 - digit
+        index = index + 1
+    }
+    fallback index > digits_start and index == size
+    if negative {
+        return value
+    }
+    fallback value != Long.Smallest()
+    return 0 - value
+}
+
+func Largest(): Long {
+    return 9223372036854775807
+}
+
+func Smallest(): Long {
+    var almost: Long = -9223372036854775807
+    return almost - 1
+}
+
 func _value(): Long {
     return _buffer._read_long_at(0)
 }
 
 func to_buffer(): Buffer {
     return _buffer._copy_first_bytes(8)
-}
-
-func to_byte(): Byte {
-    return _value()
-}
-
-func to_tiny(): Tiny {
-    return _value()
-}
-
-func to_short(): Short {
-    return _value()
-}
-
-func to_unsigned_short(): UnsignedShort {
-    return _value()
-}
-
-func to_integer(): Integer {
-    return _value()
-}
-
-func to_unsigned_integer(): UnsignedInteger {
-    return _value()
-}
-
-func to_long(): Long {
-    return _value()
-}
-
-func to_unsigned_long(): UnsignedLong {
-    return _value()
-}
-
-func to_float(): Float {
-    return _value()
-}
-
-func to_double(): Double {
-    return _value()
 }
 
 func absolute(): Long {
@@ -135,15 +130,6 @@ func _bits_as_unsigned(): UnsignedLong
 
 func bits_as_unsigned(): UnsignedLong {
     return _bits_as_unsigned()
-}
-
-func get_largest(): Long {
-    return 9223372036854775807
-}
-
-func get_smallest(): Long {
-    var almost: Long = -9223372036854775807
-    return almost - 1
 }
 
 func _bits_as_double(): Double
@@ -263,4 +249,44 @@ func _bit_at(index: Integer): Boolean {
     var moved = _shifted_right(index)
     var lowest = moved._bits_and(1)
     return lowest == 1
+}
+
+func _as_byte(): Byte {
+    return _value()
+}
+
+func _as_tiny(): Tiny {
+    return _value()
+}
+
+func _as_short(): Short {
+    return _value()
+}
+
+func _as_unsigned_short(): UnsignedShort {
+    return _value()
+}
+
+func _as_integer(): Integer {
+    return _value()
+}
+
+func _as_unsigned_integer(): UnsignedInteger {
+    return _value()
+}
+
+func _as_long(): Long {
+    return _value()
+}
+
+func _as_unsigned_long(): UnsignedLong {
+    return _value()
+}
+
+func _as_float(): Float {
+    return _value()
+}
+
+func _as_double(): Double {
+    return _value()
 }

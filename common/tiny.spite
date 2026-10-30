@@ -2,52 +2,26 @@
 
 var _buffer = Buffer(1)
 
+func Tiny(from: String): Tiny? {
+    var value: Long? = from
+    fallback value and value >= Tiny.Smallest() and value <= Tiny.Largest()
+    return value
+}
+
+func Largest(): Tiny {
+    return 127
+}
+
+func Smallest(): Tiny {
+    return -128
+}
+
 func _value(): Tiny {
     return _buffer._read_tiny_at(0)
 }
 
 func to_buffer(): Buffer {
     return _buffer._copy_first_bytes(1)
-}
-
-func to_byte(): Byte {
-    return _value()
-}
-
-func to_tiny(): Tiny {
-    return _value()
-}
-
-func to_short(): Short {
-    return _value()
-}
-
-func to_unsigned_short(): UnsignedShort {
-    return _value()
-}
-
-func to_integer(): Integer {
-    return _value()
-}
-
-func to_unsigned_integer(): UnsignedInteger {
-    return _value()
-}
-
-func to_long(): Long {
-    return _value()
-}
-
-func to_unsigned_long(): UnsignedLong {
-    return _value()
-}
-
-func to_float(): Float {
-    return _value()
-}
-
-func to_double(): Double {
-    return _value()
 }
 
 func absolute(): Tiny {
@@ -135,14 +109,6 @@ func _bits_as_unsigned(): Byte
 
 func bits_as_unsigned(): Byte {
     return _bits_as_unsigned()
-}
-
-func get_largest(): Tiny {
-    return 127
-}
-
-func get_smallest(): Tiny {
-    return -128
 }
 
 func sum(other: Tiny): Tiny {
@@ -256,4 +222,44 @@ func _bit_at(index: Integer): Boolean {
     var moved = _shifted_right(index)
     var lowest = moved._bits_and(1)
     return lowest == 1
+}
+
+func _as_byte(): Byte {
+    return _value()
+}
+
+func _as_tiny(): Tiny {
+    return _value()
+}
+
+func _as_short(): Short {
+    return _value()
+}
+
+func _as_unsigned_short(): UnsignedShort {
+    return _value()
+}
+
+func _as_integer(): Integer {
+    return _value()
+}
+
+func _as_unsigned_integer(): UnsignedInteger {
+    return _value()
+}
+
+func _as_long(): Long {
+    return _value()
+}
+
+func _as_unsigned_long(): UnsignedLong {
+    return _value()
+}
+
+func _as_float(): Float {
+    return _value()
+}
+
+func _as_double(): Double {
+    return _value()
 }

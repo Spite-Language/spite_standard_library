@@ -18,6 +18,10 @@ func Duration(amount: Long, unit: Unit) {
     _nanoseconds = amount % per_second * nanoseconds_per_unit
 }
 
+func Duration(from: String): Duration? {
+    return from._as_duration()
+}
+
 func total(unit: Unit): Long {
     var per_second = _units_per_second(unit)
     var seconds_per_unit = _seconds_per_unit(unit)
@@ -86,7 +90,7 @@ func to_string(): String {
     var hours = size.part('hours')
     var minutes = size.part('minutes')
     var seconds = size.part('seconds')
-    var nanoseconds = size._nanoseconds.to_integer()
+    var nanoseconds: Integer = size._nanoseconds
     var fraction = nanoseconds._written_as_fraction()
     var written = "{sign}PT"
     if hours != 0 {
@@ -109,7 +113,7 @@ func _written_as_offset(): String {
         size = -this
     }
     var seconds_long = size.total('seconds')
-    var seconds = seconds_long.to_integer()
+    var seconds: Integer = seconds_long
     var hours = seconds / 3600
     var minutes = seconds / 60 % 60
     var remaining = seconds % 60

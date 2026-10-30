@@ -102,8 +102,8 @@ func hmac(key: Buffer, message: Buffer): Buffer {
         var key_byte = _byte_at(block, index)
         var inner_byte = key_byte.bits_exclusive_or(54)
         var outer_byte = key_byte.bits_exclusive_or(92)
-        var inner_value = inner_byte.to_byte()
-        var outer_value = outer_byte.to_byte()
+        var inner_value: Byte = inner_byte
+        var outer_value: Byte = outer_byte
         inner_input.append(inner_value)
         outer_input.append(outer_value)
         index = index + 1

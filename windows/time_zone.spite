@@ -73,7 +73,7 @@ func _opened_calendar(): Long {
     while index < length {
         var code = _identifier.byte_at(index)
         fallback code <= 127
-        var unit = code.to_unsigned_short()
+        var unit: UnsignedShort = code
         characters.append_unsigned_short_little_endian(unit)
         index = index + 1
     }

@@ -167,7 +167,7 @@ func _read_request(client: Tcp.Connection): Http.Request? {
     fallback headers_read
     var declared = request.header("content-length")
     if declared {
-        var length = declared.to_integer()
+        var length: Integer? = declared
         fallback length
         fallback length >= 0 and length <= largest_body
         var body = client._read_exactly(length)

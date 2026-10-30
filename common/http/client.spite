@@ -98,7 +98,7 @@ func _read_response(connection: Tcp.Connection, request: Http.Request, first_lin
     fallback line_length >= 12
     var status_text = first_line.slice(9, 12)
     crash status_text
-    var status = status_text.to_integer()
+    var status: Integer? = status_text
     fallback status
     var response = Http.Response()
     response.status = status
@@ -121,7 +121,7 @@ func _read_response(connection: Tcp.Connection, request: Http.Request, first_lin
         fallback chunked
         response._body = chunked
     } else if declared {
-        var length = declared.to_integer()
+        var length: Integer? = declared
         fallback length
         fallback length >= 0 and length <= largest_body
         var body = connection._read_exactly(length)

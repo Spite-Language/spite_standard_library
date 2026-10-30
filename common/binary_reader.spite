@@ -42,20 +42,17 @@ func _read(): $value_type {
         }
         return flag == 1
     } else if $value_type == Byte {
-        var stored = _read_byte()
-        return stored.to_byte()
+        return _read_byte()
     } else if $value_type == Tiny {
         var stored = _read_byte()
         if stored > 127 {
             stored = stored - 256
         }
-        return stored.to_tiny()
+        return stored
     } else if $value_type == Short {
-        var stored = _read_short()
-        return stored.to_short()
+        return _read_short()
     } else if $value_type == UnsignedShort {
-        var stored = _read_unsigned_short()
-        return stored.to_unsigned_short()
+        return _read_unsigned_short()
     } else if $value_type == Integer {
         return _read_integer()
     } else if $value_type == UnsignedInteger {
@@ -245,7 +242,7 @@ func _read_count(): Integer {
             _fail()
         }
     }
-    return result.to_integer()
+    return result
 }
 
 func _read_text(): String {

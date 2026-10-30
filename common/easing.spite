@@ -46,18 +46,18 @@ func in_out_cubic(amount: Float): Float {
 }
 
 func in_sine(amount: Float): Float {
-    var angle = amount * Float.pi * 0.5
+    var angle = amount * Float.Pi() * 0.5
     var cosine = angle.cosine()
     return 1.0 - cosine
 }
 
 func out_sine(amount: Float): Float {
-    var angle = amount * Float.pi * 0.5
+    var angle = amount * Float.Pi() * 0.5
     return angle.sine()
 }
 
 func in_out_sine(amount: Float): Float {
-    var angle = amount * Float.pi
+    var angle = amount * Float.Pi()
     var cosine = angle.cosine()
     return (1.0 - cosine) * 0.5
 }
@@ -98,7 +98,8 @@ func out_elastic(amount: Float): Float {
     var two: Float = 2.0
     var exponent = -10.0 * amount
     var decay = two.power(exponent)
-    var angle = (amount * 10.0 - 0.75) * (2.0 * Float.pi) / 3.0
+    var float_pi = Float.Pi()
+    var angle = (amount * 10.0 - 0.75) * (2.0 * float_pi) / 3.0
     var wave = angle.sine()
     return decay * wave + 1.0
 }

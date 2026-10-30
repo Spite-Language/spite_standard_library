@@ -629,7 +629,7 @@ func _write_bits(value: Integer, bits: Integer) {
     _bit_count = _bit_count + bits
     while _bit_count >= 8 {
         var low_bits = _bit_buffer.bits_and(255)
-        var low = low_bits.to_byte()
+        var low: Byte = low_bits
         _output.append(low)
         _bit_buffer = _bit_buffer.shifted_right(8)
         _bit_count = _bit_count - 8
@@ -652,7 +652,7 @@ func _write_code(code: Integer, bits: Integer) {
 func _flush() {
     while _bit_count > 0 {
         var low_bits = _bit_buffer.bits_and(255)
-        var low = low_bits.to_byte()
+        var low: Byte = low_bits
         _output.append(low)
         _bit_buffer = _bit_buffer.shifted_right(8)
         _bit_count = _bit_count - 8
@@ -692,7 +692,7 @@ func _read_bits(bits: Integer): Integer {
     var one: Long = 1
     var mask = one.shifted_left(bits) - 1
     var masked = _bit_buffer.bits_and(mask)
-    var value = masked.to_integer()
+    var value: Integer = masked
     _bit_buffer = _bit_buffer.shifted_right(bits)
     _bit_count = _bit_count - bits
     return value
@@ -701,7 +701,7 @@ func _read_bits(bits: Integer): Integer {
 func _decode_symbol(table: Buffer, mask: Long): Integer {
     _refill()
     var wide_index = _bit_buffer.bits_and(mask)
-    var index = wide_index.to_integer()
+    var index: Integer = wide_index
     var entry = _get(table, index)
     var bits = entry.bits_and(15)
     if bits == 0 {
@@ -769,7 +769,7 @@ func _decode_symbols() {
         symbol = _decode_symbol(_literal_table, _literal_mask)
         fallback not _failed
         if symbol < 256 {
-            var literal = symbol.to_byte()
+            var literal: Byte = symbol
             _result.append(literal)
         } else if symbol > 256 {
             _copy_match(symbol)
@@ -801,7 +801,7 @@ func _copy_match(symbol: Integer) {
     var copied = 0
     while copied < match_length {
         var value = _byte_of(_result, from + copied)
-        var held = value.to_byte()
+        var held: Byte = value
         _result.append(held)
         copied = copied + 1
     }

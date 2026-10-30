@@ -2,52 +2,26 @@
 
 var _buffer = Buffer(4)
 
+func Integer(from: String): Integer? {
+    var value: Long? = from
+    fallback value and value >= Integer.Smallest() and value <= Integer.Largest()
+    return value
+}
+
+func Largest(): Integer {
+    return 2147483647
+}
+
+func Smallest(): Integer {
+    return -2147483648
+}
+
 func _value(): Integer {
     return _buffer._read_integer_at(0)
 }
 
 func to_buffer(): Buffer {
     return _buffer._copy_first_bytes(4)
-}
-
-func to_byte(): Byte {
-    return _value()
-}
-
-func to_tiny(): Tiny {
-    return _value()
-}
-
-func to_short(): Short {
-    return _value()
-}
-
-func to_unsigned_short(): UnsignedShort {
-    return _value()
-}
-
-func to_integer(): Integer {
-    return _value()
-}
-
-func to_unsigned_integer(): UnsignedInteger {
-    return _value()
-}
-
-func to_long(): Long {
-    return _value()
-}
-
-func to_unsigned_long(): UnsignedLong {
-    return _value()
-}
-
-func to_float(): Float {
-    return _value()
-}
-
-func to_double(): Double {
-    return _value()
 }
 
 func absolute(): Integer {
@@ -135,14 +109,6 @@ func _bits_as_unsigned(): UnsignedInteger
 
 func bits_as_unsigned(): UnsignedInteger {
     return _bits_as_unsigned()
-}
-
-func get_largest(): Integer {
-    return 2147483647
-}
-
-func get_smallest(): Integer {
-    return -2147483648
 }
 
 func sum(other: Integer): Integer {
@@ -283,4 +249,44 @@ func _bit_at(index: Integer): Boolean {
     var moved = _shifted_right(index)
     var lowest = moved._bits_and(1)
     return lowest == 1
+}
+
+func _as_byte(): Byte {
+    return _value()
+}
+
+func _as_tiny(): Tiny {
+    return _value()
+}
+
+func _as_short(): Short {
+    return _value()
+}
+
+func _as_unsigned_short(): UnsignedShort {
+    return _value()
+}
+
+func _as_integer(): Integer {
+    return _value()
+}
+
+func _as_unsigned_integer(): UnsignedInteger {
+    return _value()
+}
+
+func _as_long(): Long {
+    return _value()
+}
+
+func _as_unsigned_long(): UnsignedLong {
+    return _value()
+}
+
+func _as_float(): Float {
+    return _value()
+}
+
+func _as_double(): Double {
+    return _value()
 }

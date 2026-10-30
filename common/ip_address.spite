@@ -1,6 +1,20 @@
 var _parts = [0, 0, 0, 0]
+
 var _scope = 0
 var _name = ""
+
+func IpAddress(from: String): IpAddress? {
+    var address = IpAddress()
+    if address._read_text(from) {
+        return address
+    }
+    fallback address._names_a_host(from)
+    var addresses = from.resolve_ip_addresses()
+    fallback not addresses.is_empty()
+    var first = addresses[0]
+    first._name = from
+    return first
+}
 
 func is_ipv4(): Boolean {
     return _parts.count() == 4
@@ -336,9 +350,9 @@ func _system_address(port: Integer, as_ipv6: Boolean): Buffer {
         index = index + 1
     }
     var family = _system_family(as_ipv6)
-    var narrow_family = family.to_unsigned_short()
+    var narrow_family: UnsignedShort = family
     address.write_unsigned_short_little_endian_at(0, narrow_family)
-    var narrow_port = port.to_unsigned_short()
+    var narrow_port: UnsignedShort? = port
     address.write_unsigned_short_big_endian_at(2, narrow_port)
     if not as_ipv6 {
         index = 0
@@ -366,7 +380,7 @@ func _system_address(port: Integer, as_ipv6: Boolean): Buffer {
     while index < 8 {
         var group = _parts[index]
         crash group
-        var narrow_group = group.to_unsigned_short()
+        var narrow_group: UnsignedShort = group
         address.write_unsigned_short_big_endian_at(8 + index * 2, narrow_group)
         index = index + 1
     }
@@ -377,14 +391,14 @@ func _system_address(port: Integer, as_ipv6: Boolean): Buffer {
 func _read_system_address(address: Buffer): Boolean {
     var read_family = address.read_unsigned_short_little_endian_at(0)
     crash read_family
-    var family = read_family.to_integer()
+    var family: Integer? = read_family
     if family == _ipv4_family() {
         var bytes = List<Integer>()
         var index = 0
         while index < 4 {
             var byte = address[4 + index]
             crash byte
-            var value = byte.to_integer()
+            var value: Integer = byte
             bytes.append(value)
             index = index + 1
         }
@@ -398,7 +412,7 @@ func _read_system_address(address: Buffer): Boolean {
     while index < 8 {
         var group = address.read_unsigned_short_big_endian_at(8 + index * 2)
         crash group
-        var value = group.to_integer()
+        var value: Integer = group
         groups.append(value)
         index = index + 1
     }
@@ -413,5 +427,5 @@ func _read_system_address(address: Buffer): Boolean {
 func _system_port(address: Buffer): Integer {
     var port = address.read_unsigned_short_big_endian_at(2)
     crash port
-    return port.to_integer()
+    return port
 }

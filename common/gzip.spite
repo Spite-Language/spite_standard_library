@@ -112,7 +112,7 @@ func _crc32(bytes: Buffer, from: Integer, total: Integer): UnsignedInteger {
         var byte_value: UnsignedInteger = _byte_at(bytes, index)
         var mixed = crc.bits_exclusive_or(byte_value)
         var slot_value = mixed.bits_and(255)
-        var slot = slot_value.to_integer()
+        var slot: Integer = slot_value
         var looked = table.read_unsigned_integer_little_endian_at(slot * 4)
         crash looked
         var shifted = crc.shifted_right(8)

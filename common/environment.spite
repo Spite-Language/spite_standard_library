@@ -59,7 +59,7 @@ func integer_setting(name: String, declared: Integer): Integer {
     if not text {
         return declared
     }
-    var number = text.to_integer()
+    var number: Integer? = text
     if not number {
         _stop_on_malformed(name, text, "a whole number", "4")
     }

@@ -27,7 +27,7 @@ func TimeZone(identifier: String, offset: Duration) {
     var seconds = offset.total('seconds')
     crash seconds > -86400 and seconds < 86400
     _identifier = identifier
-    _first_offset = seconds.to_integer()
+    _first_offset = seconds
 }
 
 func get_identifier(): String {
@@ -97,7 +97,7 @@ func _yearly_offset_seconds_at(unix_seconds: Long): Integer {
     }
     var first_day = Date(1970, 1, 1)
     var days_long = (local_seconds - second_of_day) / 86400
-    var days = days_long.to_integer()
+    var days: Integer = days_long
     var date = first_day + Period(days, 'days')
     var year = date.year
     var start_local = _change_local_seconds_in(year, _start_letter, _start_number, _start_week, _start_weekday, _start_time)
@@ -125,7 +125,7 @@ func _change_day_since_1970(year: Integer, letter: Integer, number: Integer, wee
         var first = Date(year, number, 1)
         var first_since_1970 = first.days_since_1970
         var first_weekday_long = (first_since_1970 % 7 + 11) % 7
-        var first_weekday = first_weekday_long.to_integer()
+        var first_weekday: Integer = first_weekday_long
         var day = 1 + (weekday - first_weekday + 7) % 7 + (week - 1) * 7
         var days_in_month = first.days_in_month
         while day > days_in_month {
@@ -154,7 +154,8 @@ func _read_tzif(data: Buffer): Boolean {
     if version != 0 {
         var first_block = _tzif_block_bytes(data, 0, 4)
         fallback first_block <= 100000000
-        header = first_block.to_integer() + 44
+        var first_block_integer: Integer = first_block
+        header = first_block_integer + 44
         time_bytes = 8
         fallback _is_tzif_header_at(data, header)
     }
@@ -165,10 +166,12 @@ func _read_tzif(data: Buffer): Boolean {
     var block_end_long = block + header_long + 44
     var length: Long = data.count()
     fallback type_count != 0 and block_end_long <= length
-    var block_end = block_end_long.to_integer()
+    var block_end: Integer = block_end_long
     var times = header + 44
-    var indices = time_count.to_integer() * time_bytes + times
-    var types = time_count.to_integer() + indices
+    var time_count_integer: Integer = time_count
+    var indices = time_count_integer * time_bytes + times
+    var time_count_integer: Integer = time_count
+    var types = time_count_integer + indices
     var first_offset = _tzif_offset_of_type(data, types)
     fallback first_offset
     _first_offset = first_offset
@@ -222,13 +225,13 @@ func _tzif_block_bytes(data: Buffer, header: Integer, time_bytes: Integer): Long
 func _tzif_offset_of_type(data: Buffer, type_start: Integer): Integer? {
     var offset = _tzif_signed_at(data, type_start, 4)
     fallback offset > -100000 and offset < 100000
-    return offset.to_integer()
+    return offset
 }
 
 func _tzif_byte_at(data: Buffer, position: Integer): Integer {
     var held = data[position]
     crash held
-    return held.to_integer()
+    return held
 }
 
 func _tzif_unsigned_at(data: Buffer, position: Integer, bytes: Integer): Long {

@@ -248,11 +248,11 @@ func _cost(field: String, prefix: String): Integer? {
     var field_length = field.length()
     var digits = field.slice(2, field_length)
     crash digits
-    var parsed = digits.to_long()
+    var parsed: Long? = digits
     fallback parsed
     fallback parsed >= 0 and parsed <= 2147483647
     var plain: Long = parsed
-    return plain.to_integer()
+    return plain
 }
 
 func _unpadded(text: String): Buffer? {
@@ -491,7 +491,7 @@ func _fill_segment(
             var upper = high.shifted_right(32)
             var wide_lanes: UnsignedLong = lanes
             var picked = upper % wide_lanes
-            reference_lane = picked.to_integer()
+            reference_lane = picked
         }
         var same_lane = reference_lane == lane
         var area = _reference_area(pass, slice, index, same_lane, lane_length, segment_length)
@@ -502,14 +502,14 @@ func _fill_segment(
         var wide_area: UnsignedLong = area
         var scaled = wide_area * squared
         scaled = scaled.shifted_right(32)
-        var scaled_count = scaled.to_integer()
+        var scaled_count: Integer = scaled
         var relative = area - 1 - scaled_count
         var start: Long = 0
         if pass > 0 and slice < 3 {
             start = (slice + 1) * segment_length
         }
         var reference_column_long = (start + relative) % lane_length
-        var reference_column = reference_column_long.to_integer()
+        var reference_column: Integer = reference_column_long
         var reference = reference_lane * lane_length + reference_column
         _compress(memory, previous * 1024, reference * 1024, current * 1024, pass > 0, mixed_at)
         index = index + 1

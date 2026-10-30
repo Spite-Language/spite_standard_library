@@ -1,4 +1,5 @@
 var _hour = 0
+
 var _minute = 0
 var _second = 0
 var _nanosecond = 0
@@ -12,6 +13,10 @@ func Time(hour: Integer, minute: Integer, second: Integer, nanosecond: Integer) 
     _minute = minute
     _second = second
     _nanosecond = nanosecond
+}
+
+func Time(from: String): Time? {
+    return from._as_time()
 }
 
 func get_hour(): Integer {

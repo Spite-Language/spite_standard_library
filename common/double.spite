@@ -2,6 +2,49 @@
 
 var _buffer = Buffer(8)
 
+func Double(from: String): Double? {
+    var text = from.trim()
+    var valid = text._is_decimal()
+    fallback valid
+    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
+    var end: Long = 0
+    return library.strtod_as_double(text, end)
+}
+
+func Pi(): Double {
+    return 3.141592653589793
+}
+
+func Tau(): Double {
+    return 6.283185307179586
+}
+
+func EulerNumber(): Double {
+    return 2.718281828459045
+}
+
+func Infinity(): Double {
+    var one: Double = 1.0
+    var zero: Double = 0.0
+    return one / zero
+}
+
+func NotANumber(): Double {
+    var zero: Double = 0.0
+    return zero / zero
+}
+
+func Largest(): Double {
+    var pattern: Long = 9218868437227405311
+    return pattern.bits_as_double()
+}
+
+func Smallest(): Double {
+    var largest = Double.Largest()
+    var zero: Double = 0.0
+    return zero - largest
+}
+
 func _value(): Double {
     return _buffer._read_double_at(0)
 }
@@ -52,42 +95,6 @@ func square_root(): Double {
 
 func to_buffer(): Buffer {
     return _buffer._copy_first_bytes(8)
-}
-
-func to_tiny(): Tiny {
-    return _value()
-}
-
-func to_short(): Short {
-    return _value()
-}
-
-func to_integer(): Integer {
-    return _value()
-}
-
-func to_long(): Long {
-    return _value()
-}
-
-func to_byte(): Byte {
-    return _value()
-}
-
-func to_unsigned_short(): UnsignedShort {
-    return _value()
-}
-
-func to_unsigned_integer(): UnsignedInteger {
-    return _value()
-}
-
-func to_float(): Float {
-    return _value()
-}
-
-func to_double(): Double {
-    return _value()
 }
 
 func absolute(): Double {
@@ -490,7 +497,6 @@ func _scientific_text(digits: String, exponent: Long): String {
     return "{mantissa}e{sign}{padding}{magnitude}"
 }
 
-
 func sine(): Double {
     return _sine()
 }
@@ -601,36 +607,42 @@ func negate(): Double {
     return value * minus_one
 }
 
-func get_pi(): Double {
-    return 3.141592653589793
+func _as_tiny(): Tiny {
+    return _value()
 }
 
-func get_tau(): Double {
-    return 6.283185307179586
+func _as_short(): Short {
+    return _value()
 }
 
-func get_euler_number(): Double {
-    return 2.718281828459045
+func _as_integer(): Integer {
+    return _value()
 }
 
-func get_infinity(): Double {
-    var one: Double = 1.0
-    var zero: Double = 0.0
-    return one / zero
+func _as_long(): Long {
+    return _value()
 }
 
-func get_not_a_number(): Double {
-    var zero: Double = 0.0
-    return zero / zero
+func _as_byte(): Byte {
+    return _value()
 }
 
-func get_largest(): Double {
-    var pattern: Long = 9218868437227405311
-    return pattern.bits_as_double()
+func _as_unsigned_short(): UnsignedShort {
+    return _value()
 }
 
-func get_smallest(): Double {
-    var largest = get_largest()
-    var zero: Double = 0.0
-    return zero - largest
+func _as_unsigned_integer(): UnsignedInteger {
+    return _value()
+}
+
+func _as_float(): Float {
+    return _value()
+}
+
+func _as_double(): Double {
+    return _value()
+}
+
+func _as_unsigned_long(): UnsignedLong {
+    return _value()
 }

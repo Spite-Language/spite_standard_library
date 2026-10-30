@@ -211,7 +211,7 @@ func _write_string(text: String): Boolean {
 func _byte_of(room: Buffer, at: Integer): Integer {
     var held = room[at]
     crash held
-    return held.to_integer()
+    return held
 }
 
 func _send_control(opcode: Integer, payload: Buffer) {
@@ -238,10 +238,10 @@ func _send_frame(opcode: Integer, payload: Buffer): Boolean {
     frame.append(opening)
     frame.append(length_mark)
     if extended == 2 {
-        var short_length = count.to_unsigned_short()
+        var short_length: UnsignedShort = count
         frame.append_unsigned_short_big_endian(short_length)
     } else if extended == 8 {
-        var long_length = count.to_long()
+        var long_length: Long = count
         frame.append_long_big_endian(long_length)
     }
     if _masking {

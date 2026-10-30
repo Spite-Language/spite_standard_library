@@ -20,6 +20,10 @@ func Date(year: Integer, month: Integer, day: Integer) {
     _day = day
 }
 
+func Date(from: String): Date? {
+    return from._as_date()
+}
+
 func get_year(): Integer {
     return _year
 }
@@ -51,14 +55,13 @@ func get_day_of_year(): Integer {
     var first = Date(_year, 1, 1)
     var first_day = first.days_since_1970
     var this_day = get_days_since_1970()
-    var difference = this_day - first_day + 1
-    return difference.to_integer()
+    return this_day - first_day + 1
 }
 
 func get_weekday(): Weekday {
     var days = get_days_since_1970()
     var remainder = days % 7
-    var shifted = remainder.to_integer()
+    var shifted: Integer = remainder
     var index = (shifted + 10) % 7
     switch index {
         1: return 'tuesday'
@@ -101,9 +104,9 @@ func sum(period: Period): Date {
         month_index = month_index + 12
     }
     var moved_year_long = (months - month_index) / 12
-    var moved_year = moved_year_long.to_integer()
+    var moved_year: Integer = moved_year_long
     var moved_month_long = month_index + 1
-    var moved_month = moved_month_long.to_integer()
+    var moved_month: Integer = moved_month_long
     var day = _day
     var last_day = _days_in(moved_year, moved_month)
     if day > last_day {
@@ -124,7 +127,7 @@ func period_until(other: Date): Period {
     var days: Long = other._day - _day
     if months > 0 and days < 0 {
         months = months - 1
-        var whole_months_count = months.to_integer()
+        var whole_months_count: Integer = months
         var whole_months = Period(whole_months_count, 'months')
         var moved = this + whole_months
         days = moved.days_until(other)
@@ -134,10 +137,10 @@ func period_until(other: Date): Period {
         days = days - other_days_in_month
     }
     var years_long = months / 12
-    var years_count = years_long.to_integer()
+    var years_count: Integer = years_long
     var months_long = months % 12
-    var months_count = months_long.to_integer()
-    var days_count = days.to_integer()
+    var months_count: Integer = months_long
+    var days_count: Integer = days
     var whole_years = Period(years_count, 'years')
     var left_over_months = Period(months_count, 'months')
     var whole_days = Period(days_count, 'days')
@@ -200,9 +203,9 @@ func _from_days(days_since_1970: Long): Date {
         month = shifted_month - 9
         year = year + 1
     }
-    var year_count = year.to_integer()
-    var month_count = month.to_integer()
-    var day_count = day.to_integer()
+    var year_count: Integer = year
+    var month_count: Integer = month
+    var day_count: Integer = day
     return Date(year_count, month_count, day_count)
 }
 

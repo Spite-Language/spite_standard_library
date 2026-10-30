@@ -1,9 +1,14 @@
 var _date = Date(1970, 1, 1)
+
 var _time = Time(0, 0, 0, 0)
 
 func DateTime(date: Date, time: Time) {
     _date = date
     _time = time
+}
+
+func DateTime(from: String): DateTime? {
+    return from._as_date_time()
 }
 
 func get_date(): Date {

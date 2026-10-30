@@ -60,7 +60,7 @@ func _whole_part(number_text: String): String {
     var written = number_text
     var has_exponent = written.contains("e") or written.contains("E")
     if has_exponent {
-        var decimal = written.to_double()
+        var decimal: Double? = written
         crash decimal
         written = decimal.to_string()
     }

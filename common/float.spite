@@ -2,6 +2,49 @@
 
 var _buffer = Buffer(4)
 
+func Float(from: String): Float? {
+    var text = from.trim()
+    var valid = text._is_decimal()
+    fallback valid
+    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
+    var end: Long = 0
+    return library.strtof_as_float(text, end)
+}
+
+func Pi(): Float {
+    return 3.1415927
+}
+
+func Tau(): Float {
+    return 6.2831855
+}
+
+func EulerNumber(): Float {
+    return 2.7182817
+}
+
+func Infinity(): Float {
+    var one: Float = 1.0
+    var zero: Float = 0.0
+    return one / zero
+}
+
+func NotANumber(): Float {
+    var pattern: UnsignedInteger = 2143289344
+    return pattern.bits_as_float()
+}
+
+func Largest(): Float {
+    var pattern: UnsignedInteger = 2139095039
+    return pattern.bits_as_float()
+}
+
+func Smallest(): Float {
+    var largest = Float.Largest()
+    var zero: Float = 0.0
+    return zero - largest
+}
+
 func _value(): Float {
     return _buffer._read_float_at(0)
 }
@@ -52,22 +95,6 @@ func square_root(): Float {
 
 func to_buffer(): Buffer {
     return _buffer._copy_first_bytes(4)
-}
-
-func to_integer(): Integer {
-    return _value()
-}
-
-func to_long(): Long {
-    return _value()
-}
-
-func to_float(): Float {
-    return _value()
-}
-
-func to_double(): Double {
-    return _value()
 }
 
 func absolute(): Float {
@@ -147,7 +174,6 @@ func to_string(): String {
 func to_debug(): String {
     return to_string()
 }
-
 
 func sine(): Float {
     return _sine()
@@ -260,7 +286,7 @@ func negate(): Float {
 }
 
 func to_half_precision(): UnsignedShort {
-    var pattern: Long = bits().to_long()
+    var pattern: Long = bits()
     var sign: Long = pattern / 2147483648
     var exponent: Long = (pattern / 8388608) % 256
     var mantissa: Long = pattern % 8388608
@@ -308,36 +334,42 @@ func _rounded_to_even(numerator: Long, divisor: Long): Long {
     return quotient
 }
 
-func get_pi(): Float {
-    return 3.1415927
+func _as_integer(): Integer {
+    return _value()
 }
 
-func get_tau(): Float {
-    return 6.2831855
+func _as_long(): Long {
+    return _value()
 }
 
-func get_euler_number(): Float {
-    return 2.7182817
+func _as_float(): Float {
+    return _value()
 }
 
-func get_infinity(): Float {
-    var one: Float = 1.0
-    var zero: Float = 0.0
-    return one / zero
+func _as_double(): Double {
+    return _value()
 }
 
-func get_not_a_number(): Float {
-    var pattern: UnsignedInteger = 2143289344
-    return pattern.bits_as_float()
+func _as_byte(): Byte {
+    return _value()
 }
 
-func get_largest(): Float {
-    var pattern: UnsignedInteger = 2139095039
-    return pattern.bits_as_float()
+func _as_tiny(): Tiny {
+    return _value()
 }
 
-func get_smallest(): Float {
-    var largest = get_largest()
-    var zero: Float = 0.0
-    return zero - largest
+func _as_short(): Short {
+    return _value()
+}
+
+func _as_unsigned_short(): UnsignedShort {
+    return _value()
+}
+
+func _as_unsigned_integer(): UnsignedInteger {
+    return _value()
+}
+
+func _as_unsigned_long(): UnsignedLong {
+    return _value()
 }

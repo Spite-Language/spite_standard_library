@@ -10,42 +10,6 @@ func to_buffer(): Buffer {
     return _buffer._copy_first_bytes(1)
 }
 
-func to_boolean(): Boolean {
-    return _value() != 0
-}
-
-func to_byte(): Byte {
-    return _value()
-}
-
-func to_tiny(): Tiny {
-    return _value()
-}
-
-func to_short(): Short {
-    return _value()
-}
-
-func to_unsigned_short(): UnsignedShort {
-    return _value()
-}
-
-func to_integer(): Integer {
-    return _value()
-}
-
-func to_unsigned_integer(): UnsignedInteger {
-    return _value()
-}
-
-func to_long(): Long {
-    return _value()
-}
-
-func to_unsigned_long(): UnsignedLong {
-    return _value()
-}
-
 func to_string(): String {
     if _value() != 0 {
         return "true"

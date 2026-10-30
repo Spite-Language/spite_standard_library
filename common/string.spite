@@ -325,65 +325,19 @@ func _characters(): List<String> {
 }
 
 
-func to_long(): Long? {
-    var text = trim()
-    var size = text._length
-    var index = 0
-    var negative = false
-    if size > 0 and (text.byte_at(0) == 45 or text.byte_at(0) == 43) {
-        negative = text.byte_at(0) == 45
-        index = 1
-    }
-    var digits_start = index
-    var value: Long = 0
-    while index < size and text.byte_at(index) >= 48 and text.byte_at(index) <= 57 {
-        var digit: Long = text.byte_at(index) - 48
-        fallback value >= (Long.smallest + digit) / 10
-        value = value * 10 - digit
-        index = index + 1
-    }
-    fallback index > digits_start and index == size
-    if negative {
-        return value
-    }
-    fallback value != Long.smallest
-    return 0 - value
-}
-
-func to_double(): Double? {
-    var text = trim()
-    var valid = text._is_decimal()
-    fallback valid
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    var end: Long = 0
-    return library.strtod_as_double(text, end)
-}
-
-func to_color(): Color? {
-    var reader = Color(0.0, 0.0, 0.0, 1.0)
-    var channels = reader._channels_of(this)
-    fallback channels
-    crash channels.count() == 4
-    var read_red = channels[0]
-    var read_green = channels[1]
-    var read_blue = channels[2]
-    var read_alpha = channels[3]
-    return Color(read_red, read_green, read_blue, read_alpha)
-}
-
-func to_date(): Date? {
+func _as_date(): Date? {
     return _date_between(0, _length)
 }
 
-func to_time(): Time? {
+func _as_time(): Time? {
     return _time_between(0, _length)
 }
 
-func to_date_time(): DateTime? {
+func _as_date_time(): DateTime? {
     return _date_time_between(0, _length)
 }
 
-func to_instant(): Instant? {
+func _as_instant(): Instant? {
     var offset_start = _date_end_at(0) + 1
     while offset_start < _length and not _is_offset_start_at(offset_start) {
         offset_start = offset_start + 1
@@ -425,7 +379,7 @@ func to_instant(): Instant? {
     return instant
 }
 
-func to_duration(): Duration? {
+func _as_duration(): Duration? {
     var index = 0
     var negative = false
     if _length > 0 and _is_sign_at(0) {
@@ -445,7 +399,7 @@ func to_duration(): Duration? {
         fallback digit_count >= 1 and digit_count <= 15
         var number_text = slice(index, number_end)
         crash number_text
-        var number = number_text.to_long()
+        var number: Long? = number_text
         fallback number
         var unit_at = number_end
         var fraction = 0
@@ -483,7 +437,7 @@ func to_duration(): Duration? {
     return duration
 }
 
-func to_period(): Period? {
+func _as_period(): Period? {
     var index = 0
     var negative = false
     if _length > 0 and _is_sign_at(0) {
@@ -508,7 +462,7 @@ func to_period(): Period? {
         fallback digit_count >= 1 and digit_count <= 10
         var number_text = slice(index, number_end)
         crash number_text
-        var number = number_text.to_long()
+        var number: Long? = number_text
         fallback number and number <= 2147483647
         var signed = number
         if component_negative {
@@ -516,10 +470,10 @@ func to_period(): Period? {
         }
         var unit = _code_at(number_end)
         if unit == 89 and order < 1 {
-            years = signed.to_integer()
+            years = signed
             order = 1
         } else if unit == 77 and order < 2 {
-            months = signed.to_integer()
+            months = signed
             order = 2
         } else if unit == 87 and order < 3 {
             days = signed * 7
@@ -533,7 +487,7 @@ func to_period(): Period? {
         index = number_end + 1
     }
     fallback days <= 2147483647 and days >= -2147483647
-    var days_count = days.to_integer()
+    var days_count: Integer = days
     var whole_years = Period(years, 'years')
     var whole_months = Period(months, 'months')
     var whole_days = Period(days_count, 'days')
@@ -694,28 +648,6 @@ func _annotation_agrees(is_first: Boolean, instant: Instant, offset_seconds: Int
     return zone_seconds == offset_seconds
 }
 
-func to_ip_address(): IpAddress? {
-    var address = IpAddress()
-    if address._read_text(this) {
-        return address
-    }
-    fallback address._names_a_host(this)
-    var addresses = resolve_ip_addresses()
-    fallback not addresses.is_empty()
-    var first = addresses[0]
-    first._name = this
-    return first
-}
-
-func to_float(): Float? {
-    var text = trim()
-    var valid = text._is_decimal()
-    fallback valid
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    var end: Long = 0
-    return library.strtof_as_float(text, end)
-}
-
 func _is_decimal(): Boolean {
     var index = 0
     if _length > 0 and _is_sign_at(0) {
@@ -753,61 +685,6 @@ func _digits_end(start: Integer): Integer {
         index = index + 1
     }
     return index
-}
-
-func to_integer(): Integer? {
-    var value = to_long()
-    fallback value and value >= Integer.smallest and value <= Integer.largest
-    return value
-}
-
-func to_tiny(): Tiny? {
-    var value = to_long()
-    fallback value and value >= Tiny.smallest and value <= Tiny.largest
-    return value
-}
-
-func to_short(): Short? {
-    var value = to_long()
-    fallback value and value >= Short.smallest and value <= Short.largest
-    return value
-}
-
-func to_byte(): Byte? {
-    var value = to_long()
-    fallback value and value >= 0 and value <= Byte.largest
-    return value
-}
-
-func to_unsigned_short(): UnsignedShort? {
-    var value = to_long()
-    fallback value and value >= 0 and value <= UnsignedShort.largest
-    return value
-}
-
-func to_unsigned_integer(): UnsignedInteger? {
-    var value = to_long()
-    fallback value and value >= 0 and value <= UnsignedInteger.largest
-    return value
-}
-
-func to_unsigned_long(): UnsignedLong? {
-    var text = trim()
-    var size = text._length
-    var index = 0
-    if size > 0 and text.byte_at(0) == 43 {
-        index = 1
-    }
-    var digits_start = index
-    var value: UnsignedLong = 0
-    while index < size and text.byte_at(index) >= 48 and text.byte_at(index) <= 57 {
-        var digit: UnsignedLong = text.byte_at(index) - 48
-        fallback value <= (UnsignedLong.largest - digit) / 10
-        value = value * 10 + digit
-        index = index + 1
-    }
-    fallback index > digits_start and index == size
-    return value
 }
 
 func to_string(): String {

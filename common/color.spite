@@ -1,4 +1,5 @@
 var red: Float = 0.0
+
 var green: Float = 0.0
 var blue: Float = 0.0
 var alpha: Float = 1.0
@@ -8,6 +9,18 @@ func Color(new_red: Float, new_green: Float, new_blue: Float, new_alpha: Float) 
     green = new_green
     blue = new_blue
     alpha = new_alpha
+}
+
+func Color(from: String): Color? {
+    var reader = Color(0.0, 0.0, 0.0, 1.0)
+    var channels = reader._channels_of(from)
+    fallback channels
+    crash channels.count() == 4
+    var read_red = channels[0]
+    var read_green = channels[1]
+    var read_blue = channels[2]
+    var read_alpha = channels[3]
+    return Color(read_red, read_green, read_blue, read_alpha)
 }
 
 func equals(other: Color): Boolean {
@@ -123,8 +136,7 @@ func _byte_of(channel: Float): Integer {
     crash channel == channel
     var held = channel.clamp(0.0, 1.0)
     var scaled = held * 255.0
-    var rounded = scaled.round()
-    return rounded.to_integer()
+    return scaled.round()
 }
 
 func _byte_hex(channel: Float): String {
@@ -324,8 +336,7 @@ func _without_unit(part: String): String {
 }
 
 func _number_of(part: String): Float? {
-    var body = _without_unit(part)
-    return body.to_float()
+    return _without_unit(part)
 }
 
 func _fraction(part: String, whole: Float): Float? {

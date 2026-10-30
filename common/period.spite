@@ -21,6 +21,10 @@ func Period(amount: Integer, unit: Unit) {
     }
 }
 
+func Period(from: String): Period? {
+    return from._as_period()
+}
+
 func get_years(): Integer {
     return _years
 }

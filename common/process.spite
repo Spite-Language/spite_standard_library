@@ -19,7 +19,7 @@ func run(): Integer? {
     var chunk = Buffer(4096)
     var got = _read_into(chunk, 4096, handle)
     while got > 0 {
-        var got_count = got.to_integer()
+        var got_count: Integer = got
         chunk.take_written(got_count)
         output_bytes.append_buffer(chunk, 0, got_count)
         got = _read_into(chunk, 4096, handle)

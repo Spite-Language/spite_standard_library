@@ -1,8 +1,13 @@
 var _zones = TimeZones()
+
 var _since_1970 = Duration(0, 'seconds')
 
 func Instant(since_1970: Duration) {
     _since_1970 = since_1970
+}
+
+func Instant(from: String): Instant? {
+    return from._as_instant()
 }
 
 func get_since_1970(): Duration {
@@ -45,10 +50,10 @@ func to_date_time_in(zone: TimeZone): DateTime {
     }
     var first_day = Date(1970, 1, 1)
     var days_long = (seconds - second_of_day) / 86400
-    var days = days_long.to_integer()
+    var days: Integer = days_long
     var date = first_day + Period(days, 'days')
-    var second_of_day_count = second_of_day.to_integer()
-    var nanosecond = nanosecond_long.to_integer()
+    var second_of_day_count: Integer = second_of_day
+    var nanosecond: Integer = nanosecond_long
     var time = Time(second_of_day_count / 3600, second_of_day_count / 60 % 60, second_of_day_count % 60, nanosecond)
     return DateTime(date, time)
 }

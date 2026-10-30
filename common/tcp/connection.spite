@@ -183,7 +183,7 @@ func _text_of(room: Buffer, count: Integer): String {
     while index < count {
         var read = room[index]
         crash read
-        var code = read.to_integer()
+        var code: Integer = read
         text.append_code(code)
         index = index + 1
     }
