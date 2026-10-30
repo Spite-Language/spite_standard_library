@@ -942,16 +942,24 @@ func _plural_word(word: String): String {
 }
 
 func _plural_special(word: String): String {
-    switch word {
-        "oxen": return word
-        "mice": return word
-        "lice": return word
-        "ox": return "oxen"
-        "mouse": return "mice"
-        "louse": return "lice"
-        "axis": return "axes"
-        "testis": return "testes"
-        _: return ""
+    if word == "oxen" {
+        return word
+    } else if word == "mice" {
+        return word
+    } else if word == "lice" {
+        return word
+    } else if word == "ox" {
+        return "oxen"
+    } else if word == "mouse" {
+        return "mice"
+    } else if word == "louse" {
+        return "lice"
+    } else if word == "axis" {
+        return "axes"
+    } else if word == "testis" {
+        return "testes"
+    } else {
+        return ""
     }
 }
 
@@ -1051,13 +1059,18 @@ func _singular_word(word: String): String {
 }
 
 func _singular_special(word: String): String {
-    switch word {
-        "oxen": return "ox"
-        "axis": return "axis"
-        "axes": return "axis"
-        "mice": return "mouse"
-        "lice": return "louse"
-        _: return ""
+    if word == "oxen" {
+        return "ox"
+    } else if word == "axis" {
+        return "axis"
+    } else if word == "axes" {
+        return "axis"
+    } else if word == "mice" {
+        return "mouse"
+    } else if word == "lice" {
+        return "louse"
+    } else {
+        return ""
     }
 }
 

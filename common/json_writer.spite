@@ -140,13 +140,18 @@ func quoted(text: String): String {
 }
 
 func escape_of(code: Integer): String {
-    switch code {
-        34: return "\\\""
-        92: return "\\\\"
-        10: return "\\n"
-        13: return "\\r"
-        9: return "\\t"
-        _: return control_escape_of(code)
+    if code == 34 {
+        return "\\\""
+    } else if code == 92 {
+        return "\\\\"
+    } else if code == 10 {
+        return "\\n"
+    } else if code == 13 {
+        return "\\r"
+    } else if code == 9 {
+        return "\\t"
+    } else {
+        return control_escape_of(code)
     }
 }
 

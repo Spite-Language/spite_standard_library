@@ -63,14 +63,20 @@ func get_weekday(): Weekday {
     var remainder = days % 7
     var shifted: Integer = remainder
     var index = (shifted + 10) % 7
-    switch index {
-        1: return 'tuesday'
-        2: return 'wednesday'
-        3: return 'thursday'
-        4: return 'friday'
-        5: return 'saturday'
-        6: return 'sunday'
-        _: return 'monday'
+    if index == 1 {
+        return 'tuesday'
+    } else if index == 2 {
+        return 'wednesday'
+    } else if index == 3 {
+        return 'thursday'
+    } else if index == 4 {
+        return 'friday'
+    } else if index == 5 {
+        return 'saturday'
+    } else if index == 6 {
+        return 'sunday'
+    } else {
+        return 'monday'
     }
 }
 

@@ -346,13 +346,18 @@ func _read_escape(): String {
         crash sliced
         return sliced
     }
-    switch code {
-        110: return "\n"
-        116: return "\t"
-        114: return "\r"
-        98: return _text_of(8)
-        102: return _text_of(12)
-        _: return _unicode_escape_of(code)
+    if code == 110 {
+        return "\n"
+    } else if code == 116 {
+        return "\t"
+    } else if code == 114 {
+        return "\r"
+    } else if code == 98 {
+        return _text_of(8)
+    } else if code == 102 {
+        return _text_of(12)
+    } else {
+        return _unicode_escape_of(code)
     }
 }
 

@@ -34,7 +34,9 @@ func part(unit: Unit): Long {
         'hours': return _seconds / 3600
         'minutes': return _seconds / 60 % 60
         'seconds': return _seconds % 60
-        _: return _nanoseconds / _nanoseconds_per_unit(unit)
+        'nanoseconds': return _nanoseconds / _nanoseconds_per_unit(unit)
+        'microseconds': return _nanoseconds / _nanoseconds_per_unit(unit)
+        'milliseconds': return _nanoseconds / _nanoseconds_per_unit(unit)
     }
 }
 
@@ -147,7 +149,9 @@ func _units_per_second(unit: Unit): Long {
         'nanoseconds': return 1000000000
         'microseconds': return 1000000
         'milliseconds': return 1000
-        _: return 1
+        'seconds': return 1
+        'minutes': return 1
+        'hours': return 1
     }
 }
 
@@ -156,7 +160,9 @@ func _nanoseconds_per_unit(unit: Unit): Long {
         'nanoseconds': return 1
         'microseconds': return 1000
         'milliseconds': return 1000000
-        _: return 1000000000
+        'seconds': return 1000000000
+        'minutes': return 1000000000
+        'hours': return 1000000000
     }
 }
 
