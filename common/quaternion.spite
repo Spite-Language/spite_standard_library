@@ -1,4 +1,4 @@
-generic $number_type: Number
+generic $number_type: Part
 
 enum RotationOrder {
     'xyz'
@@ -7,6 +7,20 @@ enum RotationOrder {
     'yzx'
     'zxy'
     'zyx'
+}
+
+type Part {
+    sum(Part): Part
+    subtract(Part): Part
+    multiply(Part): Part
+    divide(Part): Part
+    equals(Part): Boolean
+    less_than(Part): Boolean
+    greater_than(Part): Boolean
+    square_root(): Part
+    sine(): Part
+    cosine(): Part
+    arc_cosine(): Part
 }
 
 var x: $number_type = 0.0

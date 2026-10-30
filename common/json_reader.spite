@@ -26,7 +26,7 @@ func _parse(): $value_type {
         return _read_text()
     } else if $value_type == Boolean {
         return _read_boolean()
-    } else if $value_type == Number {
+    } else if $value_type.is_number {
         return _parse_number()
     } else if $value_type == Enum {
         return _read_enum()

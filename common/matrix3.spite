@@ -1,4 +1,12 @@
-generic $number_type: Number
+generic $number_type: Element
+
+type Element {
+    sum(Element): Element
+    subtract(Element): Element
+    multiply(Element): Element
+    divide(Element): Element
+    equals(Element): Boolean
+}
 
 var column_0_row_0: $number_type = 1.0
 var column_0_row_1: $number_type = 0.0

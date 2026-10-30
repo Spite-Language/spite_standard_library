@@ -31,7 +31,7 @@ func _written(shown: $value_type): String {
         return quoted(shown)
     } else if $value_type == Float or $value_type == Double {
         return written_decimal(shown)
-    } else if $value_type == Number {
+    } else if $value_type.is_number {
         return shown.to_string()
     } else if $value_type == Enum {
         var name = shown.to_string()

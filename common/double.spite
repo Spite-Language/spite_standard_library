@@ -130,6 +130,12 @@ func divide(other: Double): Double {
     return left / right
 }
 
+func remainder(other: Double): Double {
+    var left = _value()
+    var right = other._value()
+    return left % right
+}
+
 func minimum(other: Double): Double {
     var left = _value()
     var right = other._value()

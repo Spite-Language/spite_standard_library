@@ -130,6 +130,12 @@ func divide(other: Float): Float {
     return left / right
 }
 
+func remainder(other: Float): Float {
+    var left = _value()
+    var right = other._value()
+    return left % right
+}
+
 func minimum(other: Float): Float {
     var left = _value()
     var right = other._value()
@@ -323,12 +329,12 @@ func _half_subnormal(exponent: Long, mantissa: Long): Long {
 
 func _rounded_to_even(numerator: Long, divisor: Long): Long {
     var quotient: Long = numerator / divisor
-    var remainder: Long = numerator % divisor
+    var rest: Long = numerator % divisor
     var halfway: Long = divisor / 2
-    if remainder > halfway {
+    if rest > halfway {
         return quotient + 1
     }
-    if remainder == halfway and quotient % 2 == 1 {
+    if rest == halfway and quotient % 2 == 1 {
         return quotient + 1
     }
     return quotient
