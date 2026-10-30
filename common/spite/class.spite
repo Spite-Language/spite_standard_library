@@ -11,6 +11,9 @@ var _is_fixed_size = false
 var _element_type: Spite.Class? = null
 var _attributes = Dictionary<String, Spite.AttributeDeclaration>()
 var _functions = Dictionary<String, Spite.Function>()
+var _enums = Dictionary<String, Spite.Enum>()
+var _unions = Dictionary<String, Spite.Union>()
+var _types = Dictionary<String, Spite.Type>()
 var _has_no_stand_in = false
 var _source_folder = ""
 var _source_files = List<File>()
@@ -38,6 +41,18 @@ func get_attributes(): Dictionary<String, Spite.AttributeDeclaration> {
 
 func get_functions(): Dictionary<String, Spite.Function> {
     return _functions
+}
+
+func get_enums(): Dictionary<String, Spite.Enum> {
+    return _enums
+}
+
+func get_unions(): Dictionary<String, Spite.Union> {
+    return _unions
+}
+
+func get_types(): Dictionary<String, Spite.Type> {
+    return _types
 }
 
 func get_is_singleton(): Boolean {

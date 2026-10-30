@@ -1,0 +1,33 @@
+var _name = ""
+var _name_with_namespaces = ""
+var _owner: Spite.Class? = null
+
+func Type(starting_name: String) {
+    _name = starting_name
+    _name_with_namespaces = starting_name
+}
+
+func get_name(): String {
+    return _name
+}
+
+func get_name_with_namespaces(): String {
+    return _name_with_namespaces
+}
+
+func get_owner(): Spite.Class {
+    crash _owner
+    return _owner
+}
+
+func equals(other: Type): Boolean {
+    return _name_with_namespaces == other._name_with_namespaces
+}
+
+func to_string(): String {
+    return _name
+}
+
+func to_debug(): String {
+    return _name
+}
