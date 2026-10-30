@@ -5,19 +5,19 @@ union Entry {
 
 var path = ""
 
-func Directory(starting_path: String) {
-    path = starting_path
+func Directory(starting_path: Path) {
+    path = starting_path.written
 }
 
-func move_to(new_path: String): Boolean {
+func move_to(new_path: Path): Boolean {
     var file_there = File(new_path)
     var folder_there = Directory(new_path)
     var file_exists = file_there.exists()
     var folder_exists = folder_there.exists()
     fallback not file_exists and not folder_exists
-    var renamed = _rename_to(new_path)
+    var renamed = _rename_to(new_path.written)
     if renamed {
-        path = new_path
+        path = new_path.written
     }
     return renamed
 }

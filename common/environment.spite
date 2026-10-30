@@ -13,7 +13,7 @@ func Environment() {
 func _read_settings() {
 }
 
-func load_from_file(path: String): Boolean {
+func load_from_file(path: Path): Boolean {
     var file = File(path)
     var text = file.read_as_string()
     fallback text
@@ -25,7 +25,8 @@ func load_from_file(path: String): Boolean {
         index = index + 1
     }
     _read_settings()
-    _report_unknown(path)
+    var written = path.written
+    _report_unknown(written)
     return true
 }
 

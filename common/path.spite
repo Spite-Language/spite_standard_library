@@ -1,0 +1,100 @@
+var _text = "."
+var _written = "."
+
+func Path(from: String): Path {
+    var made = Path()
+    made._text = made._normalised(from)
+    made._written = from
+    return made
+}
+
+func get_name(): String {
+    var parts = _text.split("/")
+    var last = parts.last()
+    crash last
+    return last
+}
+
+func get_extension(): String {
+    var name = get_name()
+    var pieces = name.split(".")
+    fallback pieces.count() > 1 and not name.starts_with(".")
+    var extension = pieces.last()
+    crash extension
+    return extension
+}
+
+func get_parent(): Path {
+    var parts = _text.split("/")
+    var parent = Path()
+    fallback parts.count() > 1
+    crash parts.remove_last()
+    var kept = parts.join("/")
+    if kept.is_empty() {
+        parent._text = "/"
+        return parent
+    }
+    parent._text = kept
+    return parent
+}
+
+func get_written(): String {
+    return _written
+}
+
+func get_is_rooted(): Boolean {
+    var has_a_drive = _text.length() >= 2 and _text.byte_at(1) == 58
+    return _text.starts_with("/") or has_a_drive
+}
+
+func joined(other: Path): Path {
+    if other.is_rooted {
+        return other
+    }
+    return "{_text}/{other._text}"
+}
+
+func equals(other: Path): Boolean {
+    return _text == other._text
+}
+
+func to_string(): String {
+    return _text
+}
+
+func _normalised(written: String): String {
+    var forward = written.replace("\\", "/")
+    var is_rooted = forward.starts_with("/")
+    var parts = forward.split("/")
+    var kept = List<String>()
+    var index = 0
+    while index < parts.count() {
+        var part = parts[index]
+        _keep(kept, part, is_rooted)
+        index = index + 1
+    }
+    var joined_parts = kept.join("/")
+    if is_rooted {
+        return "/{joined_parts}"
+    }
+    if kept.is_empty() {
+        return "."
+    }
+    return joined_parts
+}
+
+func _keep(kept: List<String>, part: String, is_rooted: Boolean) {
+    fallback not part.is_empty() and part != "."
+    if part != ".." {
+        kept.append(part)
+        return
+    }
+    var last = kept.last()
+    if last and last != ".." {
+        crash kept.remove_last()
+        return
+    }
+    if not is_rooted {
+        kept.append(part)
+    }
+}

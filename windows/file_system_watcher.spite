@@ -6,11 +6,13 @@ var buffers = List<Buffer>()
 var roots = List<String>()
 var file_names = List<String>()
 
-func watch_folder(path: String): Boolean {
-    return _open_watch(path, path, "")
+func watch_folder(path: Path): Boolean {
+    var written = path.written
+    return _open_watch(written, written, "")
 }
 
-func watch_file(path: String): Boolean {
+func watch_file(file_path: Path): Boolean {
+    var path = file_path.written
     var cut = path.length()
     var found = false
     while cut > 0 and not found {

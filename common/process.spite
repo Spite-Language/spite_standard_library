@@ -1,6 +1,6 @@
 var command = ""
 var arguments = List<String>()
-var working_directory = ""
+var working_directory: Path? = null
 var environment_variables = Dictionary<String, String>()
 var with_errors = false
 var _output: Buffer? = null
@@ -60,8 +60,8 @@ func _command_line(): String {
 
 func _settings_prefix(): String {
     var prefix = ""
-    if not working_directory.is_empty() {
-        var changed = _change_directory(working_directory)
+    if working_directory {
+        var changed = _change_directory(working_directory.written)
         prefix = "{changed} && "
     }
     var names = environment_variables.keys()
