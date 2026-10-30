@@ -1,7 +1,14 @@
 var _name = ""
-var _declaration: Spite.FunctionDeclaration? = null
-var _owner: Anything? = null
+var _arguments = List<Spite.Argument>()
+var _returns: Spite.Class? = null
+var _is_resumable = false
+var _has_facts = false
+var _has_reach = false
+var _returned_literal: String? = null
 var _called: Spite.Function<Nothing>? = null
+var _called_on: Spite.Function<Anything, Dictionary<String, Anything>, Nothing>? = null
+var _reads = List<Spite.AttributeDeclaration>()
+var _writes = List<Spite.AttributeDeclaration>()
 
 func Function(starting_name: String) {
     _name = starting_name
@@ -11,38 +18,32 @@ func get_name(): String {
     return _name
 }
 
-func get_declaration(): Spite.FunctionDeclaration {
-    crash _declaration
-    return _declaration
-}
-
-func get_owner(): Anything {
-    crash _owner
-    return _owner
-}
-
 func get_arguments(): List<Spite.Argument> {
-    return declaration.arguments
+    return _arguments
 }
 
 func get_returns(): Spite.Class? {
-    return declaration.returns
+    return _returns
 }
 
 func get_is_resumable(): Boolean {
-    return declaration.is_resumable
+    crash _has_facts
+    return _is_resumable
 }
 
 func get_returned_literal(): String {
-    return declaration.returned_literal
+    crash _returned_literal
+    return _returned_literal
 }
 
 func get_reads(): List<Spite.AttributeDeclaration> {
-    return declaration.reads
+    crash _has_reach
+    return _reads
 }
 
 func get_writes(): List<Spite.AttributeDeclaration> {
-    return declaration.writes
+    crash _has_reach
+    return _writes
 }
 
 func call_function() {
@@ -51,12 +52,39 @@ func call_function() {
     called()
 }
 
+func _call_on(instance: Anything, arguments: Dictionary<String, Anything>) {
+    crash _called_on
+    var called = _called_on
+    called(instance, arguments)
+}
+
 func argument_count(): Integer {
-    return declaration.argument_count()
+    return _arguments.count()
 }
 
 func name_fits(pattern: String): Boolean {
-    return declaration.name_fits(pattern)
+    var opening = pattern.index_of("<")
+    var closing = pattern.index_of(">")
+    if opening and closing {
+        return _fits_around(pattern, opening, closing)
+    }
+    return _name == pattern
+}
+
+func _fits_around(pattern: String, opening: Integer, closing: Integer): Boolean {
+    if closing < opening {
+        return _name == pattern
+    }
+    var pattern_length = pattern.length()
+    var prefix = pattern.slice(0, opening)
+    crash prefix
+    var suffix = pattern.slice(closing + 1, pattern_length)
+    crash suffix
+    var prefix_length = prefix.length()
+    var suffix_length = suffix.length()
+    var name_length = _name.length()
+    var long_enough = name_length > prefix_length + suffix_length
+    return long_enough and _name.starts_with(prefix) and _name.ends_with(suffix)
 }
 
 func to_string(): String {

@@ -10,7 +10,7 @@ var _is_stateful = false
 var _is_fixed_size = false
 var _element_type: Spite.Class? = null
 var _attributes = Dictionary<String, Spite.AttributeDeclaration>()
-var _functions = Dictionary<String, Spite.FunctionDeclaration>()
+var _functions = Dictionary<String, Spite.Function>()
 var _enums = Dictionary<String, Spite.Enum>()
 var _unions = Dictionary<String, Spite.Union>()
 var _types = Dictionary<String, Spite.Type>()
@@ -39,7 +39,7 @@ func get_attributes(): Dictionary<String, Spite.AttributeDeclaration> {
     return _attributes
 }
 
-func get_functions(): Dictionary<String, Spite.FunctionDeclaration> {
+func get_functions(): Dictionary<String, Spite.Function> {
     return _functions
 }
 

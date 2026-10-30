@@ -54,7 +54,7 @@ func _is_test(name: String): Boolean {
     return name == "test" or name.starts_with("test_")
 }
 
-func _run_function(tested: Spite.Class, declaration: Spite.FunctionDeclaration) {
+func _run_function(tested: Spite.Class, declaration: Spite.Function) {
     var named = "{tested.name_with_namespaces}.{declaration.name}"
     if not _chosen {
         _run_apart(named)

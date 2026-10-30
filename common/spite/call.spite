@@ -1,8 +1,8 @@
-var _declaration = Spite.FunctionDeclaration("", "", 0)
+var _declaration = Spite.Function("")
 var _instance: Anything? = null
 var _arguments = Dictionary<String, Anything>()
 
-func Call(starting_declaration: Spite.FunctionDeclaration, starting_instance: Anything) {
+func Call(starting_declaration: Spite.Function, starting_instance: Anything) {
     _declaration = starting_declaration
     _instance = starting_instance
 }
