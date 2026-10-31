@@ -1,13 +1,15 @@
 singleton
 
 var _program = Program()
-var _given: List<String> = _program.arguments()
+var _given: List<String> = _program._arguments()
 var _loaded = Dictionary<String, String>()
 var _read_names = List<String>()
+var _defers_the_undeclared = false
 
 func Environment() {
-    _given = _program.arguments()
+    _given = _program._arguments()
     _read_settings()
+    _refuse_the_undeclared()
 }
 
 func _read_settings() {
@@ -30,6 +32,65 @@ func load_from_file(path: Path): Boolean {
     return true
 }
 
+func _name_of(argument: String): String {
+    fallback argument.starts_with("--")
+    var length = argument.length()
+    var written = argument.slice(2, length)
+    crash written
+    var equals = written.index_of("=")
+    if equals {
+        var named = written.slice(0, equals)
+        crash named
+        written = named
+    }
+    return written.replace("-", "_")
+}
+
+# ../../spite_spec/specs/programs.md#program-settings-environment
+func _refuse_the_undeclared() {
+    var index = 0
+    while index < _given.count() {
+        var argument = _given[index]
+        _refuse_if_undeclared(argument)
+        index = index + 1
+    }
+}
+
+func _refuse_if_undeclared(argument: String) {
+    var console = Console()
+    if not argument.starts_with("--") {
+        var first = "error: '{argument}' is given by position: every value on the command line is a named setting"
+        console.error("{first}, like --name={argument}, declared in environment.spite as 'var name = \"\"'")
+        _program.exit(1)
+    }
+    fallback not _defers_the_undeclared
+    var name = _name_of(argument)
+    fallback not _read_names.contains(name)
+    if name.is_empty() {
+        console.error("error: '{argument}' is not a separator: every value on the command line is a named setting, given as --name=value")
+        _program.exit(1)
+    }
+    var flag = name.replace("_", "-")
+    var first = "error: '--{flag}' names no setting of Environment"
+    console.error("{first}: declare it in environment.spite, like 'var {name} = \"\"', and the program reads it as Environment().{name}")
+    _program.exit(1)
+}
+
+# ../../spite_spec/specs/compiler.md#flags-and-settings
+func _given_flags(): List<String> {
+    _defers_the_undeclared = true
+    var flags = List<String>()
+    var index = 0
+    while index < _given.count() {
+        var argument = _given[index]
+        if argument.starts_with("--") {
+            flags.append(argument)
+        }
+        index = index + 1
+    }
+    return flags
+}
+
 func boolean_setting(name: String, declared: Boolean): Boolean {
     _note_read(name)
     var flag = _flag_of(name)
@@ -43,7 +104,7 @@ func boolean_setting(name: String, declared: Boolean): Boolean {
         return declared
     }
     if text != "true" and text != "false" {
-        _stop_on_malformed(name, text, "'true' or 'false'", "true")
+        _stop_on_malformed(name, text, "a Boolean, 'true' or 'false'", "true")
     }
     return text == "true"
 }
@@ -54,7 +115,7 @@ func integer_setting(name: String, declared: Integer): Integer {
     var written = _written(flag)
     var is_bare = _is_bare(written, flag)
     if is_bare {
-        _stop_on_malformed(name, "--{flag}", "a whole number", "4")
+        _stop_on_malformed(name, "--{flag}", "an Integer, a whole number", "4")
     }
     var text = _setting(name, flag, written)
     if not text {
@@ -62,7 +123,7 @@ func integer_setting(name: String, declared: Integer): Integer {
     }
     var number: Integer? = text
     if not number {
-        _stop_on_malformed(name, text, "a whole number", "4")
+        _stop_on_malformed(name, text, "an Integer, a whole number", "4")
     }
     crash number
     return number
@@ -74,13 +135,28 @@ func text_setting(name: String, declared: String): String {
     var written = _written(flag)
     var is_bare = _is_bare(written, flag)
     if is_bare {
-        _stop_on_malformed(name, "--{flag}", "a text after '='", "value")
+        _stop_on_malformed(name, "--{flag}", "a String, a text after '='", "value")
     }
     var text = _setting(name, flag, written)
     if not text {
         return declared
     }
     return text
+}
+
+func enum_setting(name: String, declared: String, names: String): String {
+    var text = text_setting(name, declared)
+    var listed = names.split(", ")
+    if listed.contains(text) {
+        return text
+    }
+    var flag = name.replace("_", "-")
+    var variable = name.upper_case()
+    var first = "error: the setting Environment.{name} was given '{text}', which is not one of its values: {names}"
+    var console = Console()
+    console.error("{first}: write --{flag}={declared} on the command line, or {variable}={declared} in the environment or a .env file")
+    _program.exit(1)
+    return declared
 }
 
 func _load_line(line: String) {
