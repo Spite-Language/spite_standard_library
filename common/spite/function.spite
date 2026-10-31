@@ -46,6 +46,10 @@ func get_writes(): List<Spite.AttributeDeclaration> {
     return declaration.writes
 }
 
+func get_source_file(): File {
+    return declaration.source_file
+}
+
 func call_function() {
     crash _called
     var called = _called

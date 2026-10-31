@@ -11,6 +11,7 @@ var _called_on: Spite.Function<Anything, Dictionary<String, Anything>, Nothing>?
 var _reads = List<Spite.AttributeDeclaration>()
 var _writes = List<Spite.AttributeDeclaration>()
 var _signature = ""
+var _source_file: File? = null
 
 func FunctionDeclaration(starting_name: String, starting_hole: String, starting_index: Integer) {
     _name = starting_name
@@ -56,6 +57,11 @@ func get_reads(): List<Spite.AttributeDeclaration> {
 func get_writes(): List<Spite.AttributeDeclaration> {
     crash _has_reach
     return _writes
+}
+
+func get_source_file(): File {
+    crash _source_file
+    return _source_file
 }
 
 func _call_on(instance: Anything, arguments: Dictionary<String, Anything>) {

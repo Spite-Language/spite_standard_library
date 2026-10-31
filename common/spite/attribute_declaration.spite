@@ -1,6 +1,7 @@
 var _name = ""
 var _class: Spite.Class? = null
 var _index = 0
+var _source_file: File? = null
 
 func AttributeDeclaration(starting_name: String, starting_index: Integer) {
     _name = starting_name
@@ -17,6 +18,11 @@ func get_class(): Spite.Class? {
 
 func get_index(): Integer {
     return _index
+}
+
+func get_source_file(): File {
+    crash _source_file
+    return _source_file
 }
 
 func get_is_singleton(): Boolean {
