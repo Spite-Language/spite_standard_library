@@ -19,12 +19,12 @@ func Smallest(): Byte {
 }
 
 # ../docs/memory.md#the-numbers
-func _set_this(value: Long) {
+func set_this(value: Long) {
     crash value >= _smallest_value and value <= _largest_value
     _buffer._write_byte_at(0, value)
 }
 
-func _value(): Byte {
+func get_this(): Byte {
     return _buffer._read_byte_at(0)
 }
 
@@ -33,7 +33,7 @@ func to_buffer(): Buffer {
 }
 
 func absolute(): Byte {
-    return _value()
+    return get_this()
 }
 
 func _bits_and(other: Byte): Byte
@@ -98,7 +98,7 @@ func wrapping_multiply(other: Byte): Byte {
 }
 
 func clamp(lowest: Byte, highest: Byte): Byte {
-    var value = _value()
+    var value = get_this()
     if value < lowest {
         value = lowest
     }
@@ -115,38 +115,38 @@ func bits_as_signed(): Tiny {
 }
 
 func sum(other: Byte): Byte {
-    var left = _value()
-    var right = other._value()
+    var left = get_this()
+    var right = other.get_this()
     return left + right
 }
 
 func subtract(other: Byte): Byte {
-    var left = _value()
-    var right = other._value()
+    var left = get_this()
+    var right = other.get_this()
     return left - right
 }
 
 func multiply(other: Byte): Byte {
-    var left = _value()
-    var right = other._value()
+    var left = get_this()
+    var right = other.get_this()
     return left * right
 }
 
 func divide(other: Byte): Byte {
-    var left = _value()
-    var right = other._value()
+    var left = get_this()
+    var right = other.get_this()
     return left / right
 }
 
 func remainder(other: Byte): Byte {
-    var left = _value()
-    var right = other._value()
+    var left = get_this()
+    var right = other.get_this()
     return left % right
 }
 
 func minimum(other: Byte): Byte {
-    var left = _value()
-    var right = other._value()
+    var left = get_this()
+    var right = other.get_this()
     if left < right {
         return left
     }
@@ -154,8 +154,8 @@ func minimum(other: Byte): Byte {
 }
 
 func maximum(other: Byte): Byte {
-    var left = _value()
-    var right = other._value()
+    var left = get_this()
+    var right = other.get_this()
     if left > right {
         return left
     }
@@ -163,25 +163,25 @@ func maximum(other: Byte): Byte {
 }
 
 func equals(other: Byte): Boolean {
-    var left = _value()
-    var right = other._value()
+    var left = get_this()
+    var right = other.get_this()
     return left == right
 }
 
 func less_than(other: Byte): Boolean {
-    var left = _value()
-    var right = other._value()
+    var left = get_this()
+    var right = other.get_this()
     return left < right
 }
 
 func greater_than(other: Byte): Boolean {
-    var left = _value()
-    var right = other._value()
+    var left = get_this()
+    var right = other.get_this()
     return left > right
 }
 
 func to_string(): String {
-    var value: Long = _value()
+    var value: Long = get_this()
     var made = String()
     made._append_whole(value)
     return made
@@ -228,41 +228,41 @@ func _bit_at(index: Integer): Boolean {
 }
 
 func _as_byte(): Byte {
-    return _value()
+    return get_this()
 }
 
 func _as_tiny(): Tiny {
-    return _value()
+    return get_this()
 }
 
 func _as_short(): Short {
-    return _value()
+    return get_this()
 }
 
 func _as_unsigned_short(): UnsignedShort {
-    return _value()
+    return get_this()
 }
 
 func _as_integer(): Integer {
-    return _value()
+    return get_this()
 }
 
 func _as_unsigned_integer(): UnsignedInteger {
-    return _value()
+    return get_this()
 }
 
 func _as_long(): Long {
-    return _value()
+    return get_this()
 }
 
 func _as_unsigned_long(): UnsignedLong {
-    return _value()
+    return get_this()
 }
 
 func _as_float(): Float {
-    return _value()
+    return get_this()
 }
 
 func _as_double(): Double {
-    return _value()
+    return get_this()
 }

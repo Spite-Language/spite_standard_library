@@ -63,13 +63,13 @@ A number is a room too, of the width the number takes, and it reads its value fr
 ```spite
 var _buffer = Buffer(4)
 
-func _value(): Integer {
+func get_this(): Integer {
     return _buffer._read_integer_at(0)
 }
 
 func less_than(other: Integer): Boolean {
-    var left = _value()
-    var right = other._value()
+    var left = get_this()
+    var right = other.get_this()
     return left < right
 }
 ```

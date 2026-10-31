@@ -23,12 +23,12 @@ func Smallest(): UnsignedShort {
 }
 
 # ../docs/memory.md#the-numbers
-func _set_this(value: Long) {
+func set_this(value: Long) {
     crash value >= _smallest_value and value <= _largest_value
     _buffer._write_unsigned_short_at(0, value)
 }
 
-func _value(): UnsignedShort {
+func get_this(): UnsignedShort {
     return _buffer._read_unsigned_short_at(0)
 }
 
@@ -37,7 +37,7 @@ func to_buffer(): Buffer {
 }
 
 func half_precision_to_float(): Float {
-    var bits: Long = _value()
+    var bits: Long = get_this()
     var sign: Long = bits / 32768
     var exponent: Long = (bits / 1024) % 32
     var mantissa: Long = bits % 1024
@@ -69,7 +69,7 @@ func _half_special(mantissa: Long): Float {
 }
 
 func absolute(): UnsignedShort {
-    return _value()
+    return get_this()
 }
 
 func _bits_and(other: UnsignedShort): UnsignedShort
@@ -134,7 +134,7 @@ func wrapping_multiply(other: UnsignedShort): UnsignedShort {
 }
 
 func clamp(lowest: UnsignedShort, highest: UnsignedShort): UnsignedShort {
-    var value = _value()
+    var value = get_this()
     if value < lowest {
         value = lowest
     }
@@ -151,38 +151,38 @@ func bits_as_signed(): Short {
 }
 
 func sum(other: UnsignedShort): UnsignedShort {
-    var left = _value()
-    var right = other._value()
+    var left = get_this()
+    var right = other.get_this()
     return left + right
 }
 
 func subtract(other: UnsignedShort): UnsignedShort {
-    var left = _value()
-    var right = other._value()
+    var left = get_this()
+    var right = other.get_this()
     return left - right
 }
 
 func multiply(other: UnsignedShort): UnsignedShort {
-    var left = _value()
-    var right = other._value()
+    var left = get_this()
+    var right = other.get_this()
     return left * right
 }
 
 func divide(other: UnsignedShort): UnsignedShort {
-    var left = _value()
-    var right = other._value()
+    var left = get_this()
+    var right = other.get_this()
     return left / right
 }
 
 func remainder(other: UnsignedShort): UnsignedShort {
-    var left = _value()
-    var right = other._value()
+    var left = get_this()
+    var right = other.get_this()
     return left % right
 }
 
 func minimum(other: UnsignedShort): UnsignedShort {
-    var left = _value()
-    var right = other._value()
+    var left = get_this()
+    var right = other.get_this()
     if left < right {
         return left
     }
@@ -190,8 +190,8 @@ func minimum(other: UnsignedShort): UnsignedShort {
 }
 
 func maximum(other: UnsignedShort): UnsignedShort {
-    var left = _value()
-    var right = other._value()
+    var left = get_this()
+    var right = other.get_this()
     if left > right {
         return left
     }
@@ -199,25 +199,25 @@ func maximum(other: UnsignedShort): UnsignedShort {
 }
 
 func equals(other: UnsignedShort): Boolean {
-    var left = _value()
-    var right = other._value()
+    var left = get_this()
+    var right = other.get_this()
     return left == right
 }
 
 func less_than(other: UnsignedShort): Boolean {
-    var left = _value()
-    var right = other._value()
+    var left = get_this()
+    var right = other.get_this()
     return left < right
 }
 
 func greater_than(other: UnsignedShort): Boolean {
-    var left = _value()
-    var right = other._value()
+    var left = get_this()
+    var right = other.get_this()
     return left > right
 }
 
 func to_string(): String {
-    var value: Long = _value()
+    var value: Long = get_this()
     var made = String()
     made._append_whole(value)
     return made
@@ -264,41 +264,41 @@ func _bit_at(index: Integer): Boolean {
 }
 
 func _as_byte(): Byte {
-    return _value()
+    return get_this()
 }
 
 func _as_tiny(): Tiny {
-    return _value()
+    return get_this()
 }
 
 func _as_short(): Short {
-    return _value()
+    return get_this()
 }
 
 func _as_unsigned_short(): UnsignedShort {
-    return _value()
+    return get_this()
 }
 
 func _as_integer(): Integer {
-    return _value()
+    return get_this()
 }
 
 func _as_unsigned_integer(): UnsignedInteger {
-    return _value()
+    return get_this()
 }
 
 func _as_long(): Long {
-    return _value()
+    return get_this()
 }
 
 func _as_unsigned_long(): UnsignedLong {
-    return _value()
+    return get_this()
 }
 
 func _as_float(): Float {
-    return _value()
+    return get_this()
 }
 
 func _as_double(): Double {
-    return _value()
+    return get_this()
 }

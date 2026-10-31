@@ -52,12 +52,12 @@ func Smallest(): Double {
 }
 
 # ../docs/memory.md#the-numbers
-func _set_this(value: Double) {
+func set_this(value: Double) {
     crash value >= _smallest_value and value <= _largest_value
     _buffer._write_double_at(0, value)
 }
 
-func _value(): Double {
+func get_this(): Double {
     return _buffer._read_double_at(0)
 }
 
@@ -110,7 +110,7 @@ func to_buffer(): Buffer {
 }
 
 func absolute(): Double {
-    var value = _value()
+    var value = get_this()
     if value <= 0.0 {
         var zero: Double = 0.0
         return zero - value
@@ -119,38 +119,38 @@ func absolute(): Double {
 }
 
 func sum(other: Double): Double {
-    var left = _value()
-    var right = other._value()
+    var left = get_this()
+    var right = other.get_this()
     return left + right
 }
 
 func subtract(other: Double): Double {
-    var left = _value()
-    var right = other._value()
+    var left = get_this()
+    var right = other.get_this()
     return left - right
 }
 
 func multiply(other: Double): Double {
-    var left = _value()
-    var right = other._value()
+    var left = get_this()
+    var right = other.get_this()
     return left * right
 }
 
 func divide(other: Double): Double {
-    var left = _value()
-    var right = other._value()
+    var left = get_this()
+    var right = other.get_this()
     return left / right
 }
 
 func remainder(other: Double): Double {
-    var left = _value()
-    var right = other._value()
+    var left = get_this()
+    var right = other.get_this()
     return left % right
 }
 
 func minimum(other: Double): Double {
-    var left = _value()
-    var right = other._value()
+    var left = get_this()
+    var right = other.get_this()
     if right < left or right != right {
         return right
     }
@@ -158,8 +158,8 @@ func minimum(other: Double): Double {
 }
 
 func maximum(other: Double): Double {
-    var left = _value()
-    var right = other._value()
+    var left = get_this()
+    var right = other.get_this()
     if right > left or right != right {
         return right
     }
@@ -167,25 +167,25 @@ func maximum(other: Double): Double {
 }
 
 func equals(other: Double): Boolean {
-    var left = _value()
-    var right = other._value()
+    var left = get_this()
+    var right = other.get_this()
     return left == right
 }
 
 func less_than(other: Double): Boolean {
-    var left = _value()
-    var right = other._value()
+    var left = get_this()
+    var right = other.get_this()
     return left < right
 }
 
 func greater_than(other: Double): Boolean {
-    var left = _value()
-    var right = other._value()
+    var left = get_this()
+    var right = other.get_this()
     return left > right
 }
 
 func to_string(): String {
-    var value = _value()
+    var value = get_this()
     return _shortest_text(value, 9007199254740992, _lowest_subnormal_exponent, 17)
 }
 
@@ -580,9 +580,9 @@ func round(): Double {
 }
 
 func clamp(low: Double, high: Double): Double {
-    var value = _value()
-    var lowest = low._value()
-    var highest = high._value()
+    var value = get_this()
+    var lowest = low.get_this()
+    var highest = high.get_this()
     if value != value {
         return value
     }
@@ -603,64 +603,64 @@ func clamp(low: Double, high: Double): Double {
 }
 
 func is_not_a_number(): Boolean {
-    var value = _value()
+    var value = get_this()
     return value != value
 }
 
 func is_finite(): Boolean {
-    var value = _value()
+    var value = get_this()
     var difference = value - value
     return difference == 0.0
 }
 
 func is_infinite(): Boolean {
-    var value = _value()
+    var value = get_this()
     var difference = value - value
     return difference != 0.0 and value == value
 }
 
 func negate(): Double {
-    var value = _value()
+    var value = get_this()
     var minus_one: Double = -1.0
     return value * minus_one
 }
 
 func _as_tiny(): Tiny {
-    return _value()
+    return get_this()
 }
 
 func _as_short(): Short {
-    return _value()
+    return get_this()
 }
 
 func _as_integer(): Integer {
-    return _value()
+    return get_this()
 }
 
 func _as_long(): Long {
-    return _value()
+    return get_this()
 }
 
 func _as_byte(): Byte {
-    return _value()
+    return get_this()
 }
 
 func _as_unsigned_short(): UnsignedShort {
-    return _value()
+    return get_this()
 }
 
 func _as_unsigned_integer(): UnsignedInteger {
-    return _value()
+    return get_this()
 }
 
 func _as_float(): Float {
-    return _value()
+    return get_this()
 }
 
 func _as_double(): Double {
-    return _value()
+    return get_this()
 }
 
 func _as_unsigned_long(): UnsignedLong {
-    return _value()
+    return get_this()
 }

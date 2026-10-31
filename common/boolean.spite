@@ -5,12 +5,12 @@ var _smallest_value: Long = 0
 var _largest_value: Long = 1
 
 # ../docs/memory.md#the-numbers
-func _set_this(value: Long) {
+func set_this(value: Long) {
     crash value >= _smallest_value and value <= _largest_value
     _buffer._write_byte_at(0, value)
 }
 
-func _value(): Byte {
+func get_this(): Byte {
     return _buffer._read_byte_at(0)
 }
 
@@ -19,7 +19,7 @@ func to_buffer(): Buffer {
 }
 
 func to_string(): String {
-    if _value() != 0 {
+    if get_this() != 0 {
         return "true"
     }
     return "false"
@@ -30,7 +30,7 @@ func to_debug(): String {
 }
 
 func equals(other: Boolean): Boolean {
-    var left = _value()
-    var right = other._value()
+    var left = get_this()
+    var right = other.get_this()
     return left == right
 }
