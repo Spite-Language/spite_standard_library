@@ -10,6 +10,7 @@ var _returned_literal: String? = null
 var _called_on: Spite.Function<Anything, Dictionary<String, Anything>, Nothing>? = null
 var _reads = List<Spite.AttributeDeclaration>()
 var _writes = List<Spite.AttributeDeclaration>()
+var _signature = ""
 
 func FunctionDeclaration(starting_name: String, starting_hole: String, starting_index: Integer) {
     _name = starting_name

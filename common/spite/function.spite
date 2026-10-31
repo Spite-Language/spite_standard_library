@@ -2,6 +2,7 @@ var _name = ""
 var _declaration: Spite.FunctionDeclaration? = null
 var _owner: Anything? = null
 var _called: Spite.Function<Nothing>? = null
+var _value: Spite.Function<Nothing>? = null
 
 func Function(starting_name: String) {
     _name = starting_name
