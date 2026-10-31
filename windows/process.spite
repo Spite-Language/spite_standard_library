@@ -1,4 +1,21 @@
 var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
+var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+var _pipe_size = 1048576
+var _chunk_size = 65536
+var _pause_milliseconds = 10
+var _startup_size = 104
+var _information_size = 24
+var _security_size = 24
+var _limit_size = 144
+var _kills_on_close = 8192
+var _extended_limits = 9
+var _starts_suspended = 4
+var _uses_standard_handles = 256
+var _inherits_handle = 1
+var _same_access = 2
+var _standard_input = -10
+var _standard_error = -12
+var _finished_waiting = 0
 
 func run_attached(): Integer? {
     var command_text = _command_line()
@@ -18,20 +35,249 @@ func _system_error(): Integer {
     return error
 }
 
-func _open_process(line: String): Long {
-    var wide_line = line._to_wide()
-    var mode = "r"
-    var wide_mode = mode._to_wide()
-    return library._wpopen_as_long(wide_line, wide_mode)
+func _run_child(line: String): Integer? {
+    var output_ends = _pipe_ends()
+    fallback output_ends
+    var output_reading = _first_handle(output_ends)
+    var output_writing = _second_handle(output_ends)
+    var errors_reading: Long = 0
+    var errors_writing: Long = 0
+    if keeps_errors_apart {
+        var errors_ends = _pipe_ends()
+        if not errors_ends {
+            kernel.CloseHandle(output_reading)
+            kernel.CloseHandle(output_writing)
+            return null
+        }
+        errors_reading = _first_handle(errors_ends)
+        errors_writing = _second_handle(errors_ends)
+    } else {
+        errors_writing = _inherited_standard_handle(_standard_error)
+    }
+    var input_reading = _inherited_standard_handle(_standard_input)
+    var startup = _zeroed(_startup_size)
+    startup.write_integer_little_endian_at(0, _startup_size)
+    startup.write_integer_little_endian_at(60, _uses_standard_handles)
+    startup.write_long_little_endian_at(80, input_reading)
+    startup.write_long_little_endian_at(88, output_writing)
+    startup.write_long_little_endian_at(96, errors_writing)
+    var information = _zeroed(_information_size)
+    var creation = 0
+    if time_limit {
+        creation = _starts_suspended
+    }
+    var shell_line = "cmd.exe /c {line}"
+    var wide_line = shell_line._to_wide()
+    var no_value: Long = 0
+    var made = kernel.CreateProcessW(
+        no_value,
+        wide_line,
+        no_value,
+        no_value,
+        1,
+        creation,
+        no_value,
+        no_value,
+        startup,
+        information,
+    )
+    _close_if_open(output_writing)
+    _close_if_open(errors_writing)
+    _close_if_open(input_reading)
+    if made == 0 {
+        kernel.CloseHandle(output_reading)
+        _close_if_open(errors_reading)
+        return null
+    }
+    var child = _first_handle(information)
+    var first_thread = _second_handle(information)
+    var job = _job_for(child, first_thread)
+    kernel.CloseHandle(first_thread)
+    if time_limit and job == 0 {
+        kernel.TerminateProcess(child, 1)
+        kernel.WaitForSingleObject(child, -1)
+        kernel.CloseHandle(child)
+        kernel.CloseHandle(output_reading)
+        _close_if_open(errors_reading)
+        return null
+    }
+    var code = _read_until_finished(child, job, output_reading, errors_reading)
+    kernel.CloseHandle(child)
+    kernel.CloseHandle(output_reading)
+    _close_if_open(errors_reading)
+    _close_if_open(job)
+    return code
 }
 
-func _read_into(room: Buffer, bytes: Long, handle: Long): Long {
-    var one: Long = 1
-    return library.fread_as_long(room, one, bytes, handle)
+func _read_until_finished(
+    child: Long,
+    job: Long,
+    output_reading: Long,
+    errors_reading: Long,
+): Integer? {
+    var output_bytes = Buffer(0)
+    var errors_bytes = Buffer(0)
+    var started = kernel.GetTickCount64_as_long()
+    var output_open = true
+    var errors_open = errors_reading != 0
+    var finished = false
+    while not finished {
+        var read_any = false
+        if output_open {
+            var output_got = _read_what_waits(output_reading, output_bytes)
+            output_open = output_got >= 0
+            read_any = output_got > 0
+        }
+        if errors_open {
+            var errors_got = _read_what_waits(errors_reading, errors_bytes)
+            errors_open = errors_got >= 0
+            read_any = read_any or errors_got > 0
+        }
+        var waited = kernel.WaitForSingleObject(child, 0)
+        var child_ended = waited == _finished_waiting
+        finished = child_ended and not output_open and not errors_open
+        if not finished and not read_any {
+            if _is_past_the_limit(started) {
+                kernel.TerminateJobObject(job, 1)
+                kernel.WaitForSingleObject(child, -1)
+                _keep_what_was_read(output_bytes, errors_bytes, errors_reading)
+                _was_stopped = true
+                return null
+            }
+            if child_ended {
+                kernel.Sleep(_pause_milliseconds)
+            } else {
+                kernel.WaitForSingleObject(child, _pause_milliseconds)
+            }
+        }
+    }
+    _keep_what_was_read(output_bytes, errors_bytes, errors_reading)
+    var answer = _zeroed(4)
+    var asked = kernel.GetExitCodeProcess(child, answer)
+    crash asked != 0
+    var code = answer.read_integer_little_endian_at(0)
+    crash code
+    return code
 }
 
-func _close_process(handle: Long): Integer {
-    return library._pclose(handle)
+func _keep_what_was_read(
+    output_bytes: Buffer,
+    errors_bytes: Buffer,
+    errors_reading: Long,
+) {
+    _output = output_bytes
+    if errors_reading != 0 {
+        _errors = errors_bytes
+    }
+}
+
+func _is_past_the_limit(started: Long): Boolean {
+    fallback time_limit
+    var now = kernel.GetTickCount64_as_long()
+    var limit = time_limit.total('milliseconds')
+    return now - started >= limit
+}
+
+func _read_what_waits(handle: Long, into: Buffer): Integer {
+    var waiting = _zeroed(4)
+    var no_value: Long = 0
+    var peeked = kernel.PeekNamedPipe(handle, no_value, 0, no_value, waiting, no_value)
+    if peeked == 0 {
+        return -1
+    }
+    var waiting_count = waiting.read_integer_little_endian_at(0)
+    crash waiting_count
+    fallback waiting_count != 0
+    var wanted = waiting_count
+    if wanted > _chunk_size {
+        wanted = _chunk_size
+    }
+    var chunk = Buffer(wanted)
+    var got = _zeroed(4)
+    var read = kernel.ReadFile(handle, chunk, wanted, got, no_value)
+    if read == 0 {
+        return -1
+    }
+    var got_count = got.read_integer_little_endian_at(0)
+    crash got_count
+    chunk.take_written(got_count)
+    into.append_buffer(chunk, 0, got_count)
+    return got_count
+}
+
+func _job_for(child: Long, first_thread: Long): Long {
+    if not time_limit {
+        kernel.ResumeThread(first_thread)
+        return 0
+    }
+    var no_value: Long = 0
+    var job = kernel.CreateJobObjectA_as_long(no_value, no_value)
+    fallback job != 0
+    var limits = _zeroed(_limit_size)
+    limits.write_integer_little_endian_at(16, _kills_on_close)
+    kernel.SetInformationJobObject(job, _extended_limits, limits, _limit_size)
+    var assigned = kernel.AssignProcessToJobObject(job, child)
+    if assigned == 0 {
+        kernel.CloseHandle(job)
+        return 0
+    }
+    kernel.ResumeThread(first_thread)
+    return job
+}
+
+func _pipe_ends(): Buffer? {
+    var security = _zeroed(_security_size)
+    security.write_integer_little_endian_at(0, _security_size)
+    security.write_integer_little_endian_at(16, 1)
+    var reading = _zeroed(8)
+    var writing = _zeroed(8)
+    var made = kernel.CreatePipe(reading, writing, security, _pipe_size)
+    fallback made != 0
+    var reading_handle = _first_handle(reading)
+    var writing_handle = _first_handle(writing)
+    kernel.SetHandleInformation(reading_handle, _inherits_handle, 0)
+    var ends = _zeroed(16)
+    ends.write_long_little_endian_at(0, reading_handle)
+    ends.write_long_little_endian_at(8, writing_handle)
+    return ends
+}
+
+func _first_handle(room: Buffer): Long {
+    var handle = room.read_long_little_endian_at(0)
+    crash handle
+    return handle
+}
+
+func _second_handle(room: Buffer): Long {
+    var handle = room.read_long_little_endian_at(8)
+    crash handle
+    return handle
+}
+
+func _inherited_standard_handle(which: Integer): Long {
+    var handle = kernel.GetStdHandle_as_long(which)
+    fallback handle != 0 and handle != -1
+    var this_process: Long = -1
+    var copied = _zeroed(8)
+    var duplicated = kernel.DuplicateHandle(this_process, handle, this_process, copied, 0, 1, _same_access)
+    fallback duplicated != 0
+    return _first_handle(copied)
+}
+
+func _close_if_open(handle: Long) {
+    if handle != 0 {
+        kernel.CloseHandle(handle)
+    }
+}
+
+func _zeroed(size: Integer): Buffer {
+    var room = Buffer(size)
+    var index = 0
+    while index < size {
+        room.append(0)
+        index = index + 1
+    }
+    return room
 }
 
 func _shell_line(line: String): String {

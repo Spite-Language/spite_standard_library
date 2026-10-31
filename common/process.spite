@@ -3,7 +3,11 @@ var arguments = List<String>()
 var working_directory: Path? = null
 var environment_variables = Dictionary<String, String>()
 var with_errors = false
+var keeps_errors_apart = false
+var time_limit: Duration? = null
 var _output: Buffer? = null
+var _errors: Buffer? = null
+var _was_stopped = false
 
 func Process(starting_command: String, starting_arguments: List<String>) {
     command = starting_command
@@ -12,20 +16,10 @@ func Process(starting_command: String, starting_arguments: List<String>) {
 
 func run(): Integer? {
     _output = null
+    _errors = null
+    _was_stopped = false
     var command_text = _command_line()
-    var handle = _open_process(command_text)
-    fallback handle != 0
-    var output_bytes = Buffer(0)
-    var chunk = Buffer(4096)
-    var got = _read_into(chunk, 4096, handle)
-    while got > 0 {
-        var got_count: Integer = got
-        chunk.take_written(got_count)
-        output_bytes.append_buffer(chunk, 0, got_count)
-        got = _read_into(chunk, 4096, handle)
-    }
-    _output = output_bytes
-    return _close_process(handle)
+    return _run_child(command_text)
 }
 
 func read_output_as_string(): String? {
@@ -35,6 +29,19 @@ func read_output_as_string(): String? {
 
 func read_output_as_buffer(): Buffer? {
     return _output
+}
+
+func read_errors_as_string(): String? {
+    fallback _errors
+    return _errors.read_as_string()
+}
+
+func read_errors_as_buffer(): Buffer? {
+    return _errors
+}
+
+func get_was_stopped(): Boolean {
+    return _was_stopped
 }
 
 func _command_line(): String {
