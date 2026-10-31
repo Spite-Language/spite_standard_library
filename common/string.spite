@@ -94,31 +94,29 @@ func append_code(code: Integer) {
 
 func _append_text(other: String) {
     var count = other._length
-    var wanted = _length + count
-    _buffer._reserve(wanted)
-    _buffer._copy_bytes(_length, other._buffer, 0, count)
+    var kept = _length
+    var wanted = kept + count
     _buffer.item_count = wanted
+    var index = 0
+    while index < count {
+        var copied = other._buffer._read_byte_at(index)
+        _buffer._write_byte_at(kept + index, copied)
+        index = index + 1
+    }
     _length = wanted
 }
 
 func _append_bytes(source: Buffer, start: Integer, count: Integer) {
-    var wanted = _length + count
-    _buffer._reserve(wanted)
-    _buffer._copy_bytes(_length, source, start, count)
+    var kept = _length
+    var wanted = kept + count
     _buffer.item_count = wanted
+    var index = 0
+    while index < count {
+        var copied = source._read_byte_at(start + index)
+        _buffer._write_byte_at(kept + index, copied)
+        index = index + 1
+    }
     _length = wanted
-}
-
-func _make_room(added: Integer) {
-    var wanted = _length + added
-    _buffer._reserve(wanted)
-}
-
-func _make_room_for(added: Long) {
-    var wanted: Long = _length
-    wanted = wanted + added
-    var room: Integer = wanted
-    _buffer._reserve(room)
 }
 
 func _append_whole(value: Long) {
@@ -133,7 +131,7 @@ func _append_whole(value: Long) {
         digits = digits + 1
     }
     var wanted = start + digits
-    _buffer._reserve(wanted)
+    _buffer.item_count = wanted
     if value < 0 {
         _buffer._write_byte_at(start, 45)
     }
@@ -150,7 +148,6 @@ func _append_whole(value: Long) {
         left = left / 10
         more = left != 0
     }
-    _buffer.item_count = wanted
     _length = wanted
 }
 
@@ -162,7 +159,7 @@ func _append_unsigned_whole(value: UnsignedLong) {
         left = left / 10
     }
     var wanted = _length + digits
-    _buffer._reserve(wanted)
+    _buffer.item_count = wanted
     var position = wanted - 1
     left = value
     var more = true
@@ -173,7 +170,6 @@ func _append_unsigned_whole(value: UnsignedLong) {
         left = left / 10
         more = left != 0
     }
-    _buffer.item_count = wanted
     _length = wanted
 }
 
@@ -210,8 +206,6 @@ func slice(start: Integer, end: Integer): String? {
 
 func sum(other: String): String {
     var summed = String()
-    var total = _length + other._length
-    summed._make_room(total)
     summed._append_text(this)
     summed._append_text(other)
     return summed

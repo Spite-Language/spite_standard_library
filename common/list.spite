@@ -6,8 +6,6 @@ var _buffer = Buffer(0)
 var _length = 0
 var _capacity = 0
 
-func _item_size(): Integer
-
 func _read_value(index: Integer): $element_type
 
 func _write_value(index: Integer, value: $element_type)
@@ -32,7 +30,6 @@ func is_empty(): Boolean {
 }
 
 func append(value: $element_type) {
-    _make_room()
     _write_value(_length, value)
     _length = _length + 1
 }
@@ -43,7 +40,6 @@ func prepend(value: $element_type) {
 
 func insert(index: Integer, value: $element_type) {
     var at = index.clamp(0, _length)
-    _make_room()
     if at == _length {
         _write_value(_length, value)
         _length = _length + 1
@@ -340,24 +336,6 @@ func sort_by(measure: Spite.Function<$element_type, Integer>): List<$element_typ
         index = index + 1
     }
     return sorted
-}
-
-func _make_room() {
-    _reserve(_length + 1)
-}
-
-func _reserve(wanted: Integer) {
-    fallback wanted > _capacity
-    var grown = _capacity * 2
-    if grown < wanted {
-        grown = wanted
-    }
-    if grown < 4 {
-        grown = 4
-    }
-    var size = _item_size()
-    _buffer._reserve(grown * size)
-    _capacity = grown
 }
 
 func _move_values_up(from: Integer, wanted: Integer) {

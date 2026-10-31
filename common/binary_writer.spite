@@ -162,8 +162,6 @@ func _write_text(text: String) {
     var length = text.length()
     _write_count(length)
     var target = _target()
-    var used = target.count()
-    target._reserve(used + length)
     var index = 0
     while index < length {
         var code = text.byte_at(index)

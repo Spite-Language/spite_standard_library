@@ -14,8 +14,8 @@ value itself. A value is read from the room, and written to it, and the read and
 ## The buffer
 
 The `Buffer` is the class that names memory. Its methods with no body are the ones the compiler writes,
-because reading memory is not something Spite can say: `_resize_room(size)`, and a read and a write for
-each whole number, in the order of the machine:
+because reading memory is not something Spite can say: a read and a write for each whole number, in the
+order of the machine:
 
 ```spite
 func _read_byte_at(at: Integer): Byte
@@ -34,6 +34,26 @@ place, and a program reads a buffer through its public methods.
 The public way to read a byte of a buffer is its index, `buffer[0]`, which is the buffer's own `get_at`:
 it answers the byte, and `null` outside the bytes the buffer holds. The write is `set_at`, and it stops
 outside them. `Buffer(size)` is room for `size` bytes; appending past it doubles the room.
+
+## The room
+
+How much room a buffer keeps, and when it grows, is the compiler's, never the library's (D1735): no function
+here makes room. The library says what the bytes are, and the compiler makes the room before it:
+
+- `Buffer(size)` sets `_capacity` to `size`, and setting it gives the buffer that much room;
+- an append raises `item_count` first and writes the bytes below it, and raising the count grows the room;
+- a `List` writes its new item at `_length`, and that write grows the list's room by one item.
+
+```spite
+func append(value: Byte) {
+    var at = item_count
+    item_count = at + 1
+    _write_byte_at(at, value)
+}
+```
+
+A `String` appends the same way, through its buffer's count. The growth, at least doubling, is the compiler's
+([optimizations](https://github.com/Spite-Language/spite_compiler/blob/master/OPTIMIZATIONS.md#a-buffer-grows-where-its-count-does)).
 
 ## The byte order
 
