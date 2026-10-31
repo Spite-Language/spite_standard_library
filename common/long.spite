@@ -1,6 +1,8 @@
 # ../docs/memory.md#the-numbers
 
 var _buffer = Buffer(8)
+var _smallest_value_but_one: Long = -9223372036854775807
+var _largest_value: Long = 9223372036854775807
 
 func Long(from: String): Long? {
     var text = from.trim()
@@ -35,6 +37,12 @@ func Largest(): Long {
 func Smallest(): Long {
     var almost: Long = -9223372036854775807
     return almost - 1
+}
+
+# ../docs/memory.md#the-numbers
+func _set_this(value: Long) {
+    crash value >= _smallest_value_but_one - 1 and value <= _largest_value
+    _buffer._write_long_at(0, value)
 }
 
 func _value(): Long {

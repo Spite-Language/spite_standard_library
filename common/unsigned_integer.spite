@@ -1,6 +1,8 @@
 # ../docs/memory.md#the-numbers
 
 var _buffer = Buffer(4)
+var _smallest_value: Long = 0
+var _largest_value: Long = 4294967295
 
 func UnsignedInteger(from: String): UnsignedInteger? {
     var value: Long? = from
@@ -14,6 +16,12 @@ func Largest(): UnsignedInteger {
 
 func Smallest(): UnsignedInteger {
     return 0
+}
+
+# ../docs/memory.md#the-numbers
+func _set_this(value: Long) {
+    crash value >= _smallest_value and value <= _largest_value
+    _buffer._write_unsigned_integer_at(0, value)
 }
 
 func _value(): UnsignedInteger {

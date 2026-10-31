@@ -1,6 +1,8 @@
 # ../docs/memory.md#the-numbers
 
 var _buffer = Buffer(1)
+var _smallest_value: Long = -128
+var _largest_value: Long = 127
 
 func Tiny(from: String): Tiny? {
     var value: Long? = from
@@ -14,6 +16,12 @@ func Largest(): Tiny {
 
 func Smallest(): Tiny {
     return -128
+}
+
+# ../docs/memory.md#the-numbers
+func _set_this(value: Long) {
+    crash value >= _smallest_value and value <= _largest_value
+    _buffer._write_tiny_at(0, value)
 }
 
 func _value(): Tiny {

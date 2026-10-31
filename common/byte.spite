@@ -1,6 +1,8 @@
 # ../docs/memory.md#the-numbers
 
 var _buffer = Buffer(1)
+var _smallest_value: Long = 0
+var _largest_value: Long = 255
 
 func Byte(from: String): Byte? {
     var value: Long? = from
@@ -14,6 +16,12 @@ func Largest(): Byte {
 
 func Smallest(): Byte {
     return 0
+}
+
+# ../docs/memory.md#the-numbers
+func _set_this(value: Long) {
+    crash value >= _smallest_value and value <= _largest_value
+    _buffer._write_byte_at(0, value)
 }
 
 func _value(): Byte {

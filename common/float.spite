@@ -9,6 +9,8 @@ var _largest_finite_half_exponent: Long = 142
 var _smallest_normal_half_exponent: Long = 113
 var _half_exponent_rebias: Long = 112
 var _subnormal_shift_origin: Long = 126
+var _smallest_value: Double = -340282346638528859811704183484516925440.0
+var _largest_value: Double = 340282346638528859811704183484516925440.0
 
 func Float(from: String): Float? {
     var text = from.trim()
@@ -51,6 +53,12 @@ func Smallest(): Float {
     var largest = Float.Largest()
     var zero: Float = 0.0
     return zero - largest
+}
+
+# ../docs/memory.md#the-numbers
+func _set_this(value: Double) {
+    crash value >= _smallest_value and value <= _largest_value
+    _buffer._write_float_at(0, value)
 }
 
 func _value(): Float {

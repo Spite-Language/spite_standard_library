@@ -5,6 +5,8 @@ var _smallest_half_subnormal_bits: UnsignedInteger = 864026624
 var _half_exponent_rebias: Long = 112
 var _float_infinity_bits: UnsignedInteger = 2139095040
 var _float_not_a_number_bits: UnsignedInteger = 2143289344
+var _smallest_value: Long = 0
+var _largest_value: Long = 65535
 
 func UnsignedShort(from: String): UnsignedShort? {
     var value: Long? = from
@@ -18,6 +20,12 @@ func Largest(): UnsignedShort {
 
 func Smallest(): UnsignedShort {
     return 0
+}
+
+# ../docs/memory.md#the-numbers
+func _set_this(value: Long) {
+    crash value >= _smallest_value and value <= _largest_value
+    _buffer._write_unsigned_short_at(0, value)
 }
 
 func _value(): UnsignedShort {
