@@ -92,19 +92,6 @@ func append_code(code: Integer) {
     _length = _length + 1
 }
 
-func _is_held_once(): Boolean
-
-func _ready_to_grow(): String {
-    if _is_held_once() {
-        return this
-    }
-    var grown = String()
-    var room = _length * 2
-    grown._buffer._reserve(room)
-    grown._append_text(this)
-    return grown
-}
-
 func _append_text(other: String) {
     var count = other._length
     var wanted = _length + count
