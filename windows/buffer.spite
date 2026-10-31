@@ -1,3 +1,5 @@
+var _utf8_code_page = 65001
+
 func _read_wide_string_at(at: Integer, characters: Integer): String? {
     if characters == 0 {
         return ""
@@ -8,10 +10,10 @@ func _read_wide_string_at(at: Integer, characters: Integer): String? {
     var only_valid = 128
     var no_room: Long = 0
     var no_value: Long = 0
-    var size = kernel.WideCharToMultiByte(65001, only_valid, wide, characters, no_room, 0, no_value, no_value)
+    var size = kernel.WideCharToMultiByte(_utf8_code_page, only_valid, wide, characters, no_room, 0, no_value, no_value)
     fallback size > 0
     var text = Buffer(size)
-    var written = kernel.WideCharToMultiByte(65001, only_valid, wide, characters, text, size, no_value, no_value)
+    var written = kernel.WideCharToMultiByte(_utf8_code_page, only_valid, wide, characters, text, size, no_value, no_value)
     fallback written == size
     text.take_written(written)
     return text.read_string_at(0, written)

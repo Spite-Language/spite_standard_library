@@ -12,6 +12,37 @@ var _message_opcode = 0
 var _parts = Buffer(0)
 var _random = SecureRandom()
 var _base64 = Base64()
+var _largest_short_payload = 125
+var _two_byte_length_mark = 126
+var _eight_byte_length_mark = 127
+var _largest_two_byte_length = 65535
+var _payload_length_mask = 127
+var _reserved_bits_mask = 112
+var _low_byte_mask = 255
+var _going_away_code = 1001
+var _protocol_error_code = 1002
+var _unsupported_data_code = 1003
+var _no_status_code = 1005
+var _abnormal_closure_code = 1006
+var _invalid_payload_code = 1007
+var _message_too_big_code = 1009
+var _bad_gateway_code = 1014
+var _first_registered_code = 3000
+var _last_private_code = 4999
+var _switching_protocols_status = 101
+var _bad_request_status = 400
+var _upgrade_required_status = 426
+var _most_header_lines = 200
+var _sha1_initial_a: UnsignedInteger = 1732584193
+var _sha1_initial_b: UnsignedInteger = 4023233417
+var _sha1_initial_c: UnsignedInteger = 2562383102
+var _sha1_initial_d: UnsignedInteger = 271733878
+var _sha1_initial_e: UnsignedInteger = 3285377520
+var _sha1_schedule_bytes = 320
+var _sha1_first_quarter_constant: UnsignedInteger = 1518500249
+var _sha1_second_quarter_constant: UnsignedInteger = 1859775393
+var _sha1_third_quarter_constant: UnsignedInteger = 2400959708
+var _sha1_fourth_quarter_constant: UnsignedInteger = 3395469782
 
 func Connection(connection: Tcp.Connection, masking: Boolean) {
     _connection = connection
@@ -45,7 +76,7 @@ func send_buffer(bytes: Buffer): Boolean {
 
 func send_ping(bytes: Buffer): Boolean {
     var counted = bytes.count()
-    crash counted <= 125
+    crash counted <= _largest_short_payload
     return _send_frame(9, bytes)
 }
 
@@ -73,7 +104,7 @@ func close() {
 func drop() {
     fallback not _closed
     if not _close_sent {
-        _send_close(1001)
+        _send_close(_going_away_code)
     }
     _drain()
     _connection.close()
@@ -84,7 +115,7 @@ func _take_data(frame: Buffer): WebSocket.Message? {
     var continuing = _opcode == 0
     var started = _message_opcode != 0
     if continuing != started {
-        _fail(1002)
+        _fail(_protocol_error_code)
     }
     fallback not _closed
     if started {
@@ -104,7 +135,7 @@ func _take_data(frame: Buffer): WebSocket.Message? {
     }
     var text = whole.read_as_string()
     if not text {
-        _fail(1007)
+        _fail(_invalid_payload_code)
     }
     fallback text
     return WebSocket.Message(whole, true)
@@ -120,21 +151,21 @@ func _refusal(request: Http.Request): Integer {
     var connection = request.header("connection")
     var key = request.header("sec-websocket-key")
     if request.method != "GET" or request.version != "HTTP/1.1" or not upgrade or not connection or not key {
-        return 400
+        return _bad_request_status
     }
     var upgrade_lowered = upgrade.lower_case()
     var upgrading = _has_token(connection, "upgrade")
     if upgrade_lowered != "websocket" or not upgrading {
-        return 400
+        return _bad_request_status
     }
     if not version or version != "13" {
-        return 426
+        return _upgrade_required_status
     }
     var nonce = _base64.decode(key)
     if not nonce or nonce.count() != 16 {
-        return 400
+        return _bad_request_status
     }
-    return 101
+    return _switching_protocols_status
 }
 
 func _answer_fits(key: String, request: Http.Request): Boolean {
@@ -145,7 +176,7 @@ func _answer_fits(key: String, request: Http.Request): Boolean {
     var ended = false
     while not ended {
         var line = _connection.read_line()
-        fallback line and count < 200
+        fallback line and count < _most_header_lines
         if line.is_empty() {
             ended = true
         } else {
@@ -223,11 +254,11 @@ func _send_frame(opcode: Integer, payload: Buffer): Boolean {
     var count = payload.count()
     var length_mark = count
     var extended = 0
-    if count > 65535 {
-        length_mark = 127
+    if count > _largest_two_byte_length {
+        length_mark = _eight_byte_length_mark
         extended = 8
-    } else if count > 125 {
-        length_mark = 126
+    } else if count > _largest_short_payload {
+        length_mark = _two_byte_length_mark
         extended = 2
     }
     if _masking {
@@ -268,9 +299,9 @@ func _send_frame(opcode: Integer, payload: Buffer): Boolean {
 
 func _send_close(code: Integer) {
     var payload = Buffer(2)
-    if code != 1005 {
+    if code != _no_status_code {
         var high = code.shifted_right(8)
-        var low = code.bits_and(255)
+        var low = code.bits_and(_low_byte_mask)
         payload.append(high)
         payload.append(low)
     }
@@ -286,39 +317,39 @@ func _read_frame(already: Integer): Buffer? {
     _final = first.bits_and(128) != 0
     _opcode = first.bits_and(15)
     var masked = second.bits_and(128) != 0
-    var length: Long = second.bits_and(127)
-    var reserved_bits = first.bits_and(112) != 0
+    var length: Long = second.bits_and(_payload_length_mask)
+    var reserved_bits = first.bits_and(_reserved_bits_mask) != 0
     var known = _opcode <= 2 or _opcode >= 8 and _opcode <= 10
     var control = _opcode >= 8
-    var control_fits = not control or _final and length <= 125
+    var control_fits = not control or _final and length <= _largest_short_payload
     if reserved_bits or masked == _masking or not known or not control_fits {
-        _fail(1002)
+        _fail(_protocol_error_code)
     }
     fallback not _closed
-    if length == 126 {
+    if length == _two_byte_length_mark {
         var extended = _read_bytes(2)
         fallback extended
         length = _read_length(extended, 2)
-        if length < 126 {
-            _fail(1002)
+        if length < _two_byte_length_mark {
+            _fail(_protocol_error_code)
         }
-    } else if length == 127 {
+    } else if length == _eight_byte_length_mark {
         var extended = _read_bytes(8)
         fallback extended
         var top = _byte_of(extended, 0)
         if top >= 128 {
-            _fail(1002)
+            _fail(_protocol_error_code)
         }
         fallback not _closed
         length = _read_length(extended, 8)
         if length < 65536 {
-            _fail(1002)
+            _fail(_protocol_error_code)
         }
     }
     fallback not _closed
     var room: Long = largest_message - already
     if not control and length > room {
-        _fail(1009)
+        _fail(_message_too_big_code)
     }
     fallback not _closed
     var mask: Buffer? = null
@@ -377,26 +408,26 @@ func _answer_control(frame: Buffer) {
 
 func _answer_close(frame: Buffer) {
     var count = frame.count()
-    var code = 1005
+    var code = _no_status_code
     var reason = ""
     if count == 1 {
-        _fail(1002)
+        _fail(_protocol_error_code)
     }
     fallback not _closed
     if count >= 2 {
         var high = _byte_of(frame, 0)
         var low = _byte_of(frame, 1)
         code = high * 256 + low
-        var allowed = code >= 1000 and code <= 1003 or code >= 1007 and code <= 1014 or code >= 3000 and code <= 4999
+        var allowed = code >= 1000 and code <= _unsupported_data_code or code >= _invalid_payload_code and code <= _bad_gateway_code or code >= _first_registered_code and code <= _last_private_code
         if not allowed {
-            _fail(1002)
+            _fail(_protocol_error_code)
         }
         fallback not _closed
         var rest = frame.read_buffer_at(2, count - 2)
         crash rest
         var text = rest.read_as_string()
         if not text {
-            _fail(1007)
+            _fail(_invalid_payload_code)
         }
         fallback text
         reason = text
@@ -433,7 +464,7 @@ func _lost() {
     fallback not _closed
     _connection.close()
     _closed = true
-    _close_code = 1006
+    _close_code = _abnormal_closure_code
 }
 
 func _zeroed(size: Integer): Buffer {
@@ -467,17 +498,17 @@ func _sha1(source: Buffer): Buffer {
     bits = bits * 8
     block.write_long_big_endian_at(padded - 8, bits)
     var state = _zeroed(20)
-    var initial_a: UnsignedInteger = 1732584193
-    var initial_b: UnsignedInteger = 4023233417
-    var initial_c: UnsignedInteger = 2562383102
-    var initial_d: UnsignedInteger = 271733878
-    var initial_e: UnsignedInteger = 3285377520
+    var initial_a = _sha1_initial_a
+    var initial_b = _sha1_initial_b
+    var initial_c = _sha1_initial_c
+    var initial_d = _sha1_initial_d
+    var initial_e = _sha1_initial_e
     state.write_unsigned_integer_big_endian_at(0, initial_a)
     state.write_unsigned_integer_big_endian_at(4, initial_b)
     state.write_unsigned_integer_big_endian_at(8, initial_c)
     state.write_unsigned_integer_big_endian_at(12, initial_d)
     state.write_unsigned_integer_big_endian_at(16, initial_e)
-    var schedule = _zeroed(320)
+    var schedule = _zeroed(_sha1_schedule_bytes)
     var offset = 0
     while offset < padded {
         _sha1_compress(state, block, offset, schedule)
@@ -519,22 +550,22 @@ func _sha1_compress(state: Buffer, source: Buffer, source_at: Integer, schedule:
             var inverted = working_b.bits_inverted()
             var others = inverted.bits_and(working_d)
             mixed = chosen.bits_or(others)
-            constant = 1518500249
+            constant = _sha1_first_quarter_constant
         } else if round < 40 {
             mixed = working_b.bits_exclusive_or(working_c)
             mixed = mixed.bits_exclusive_or(working_d)
-            constant = 1859775393
+            constant = _sha1_second_quarter_constant
         } else if round < 60 {
             var both_bc = working_b.bits_and(working_c)
             var both_bd = working_b.bits_and(working_d)
             var both_cd = working_c.bits_and(working_d)
             mixed = both_bc.bits_or(both_bd)
             mixed = mixed.bits_or(both_cd)
-            constant = 2400959708
+            constant = _sha1_third_quarter_constant
         } else {
             mixed = working_b.bits_exclusive_or(working_c)
             mixed = mixed.bits_exclusive_or(working_d)
-            constant = 3395469782
+            constant = _sha1_fourth_quarter_constant
         }
         var scheduled = _word_in(schedule, round * 4)
         var rotated_a = _rotated_left(working_a, 5)

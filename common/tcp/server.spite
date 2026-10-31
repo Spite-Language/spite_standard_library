@@ -1,9 +1,10 @@
 var handle: Long = -1
 var closed = true
+var _loopback_first_part = 127
 
 func listen_locally(port: Integer): Boolean {
     var address = IpAddress()
-    address._parts = [127, 0, 0, 1]
+    address._parts = [_loopback_first_part, 0, 0, 1]
     return listen_at(address, port)
 }
 

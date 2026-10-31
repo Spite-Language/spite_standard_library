@@ -1,19 +1,27 @@
 singleton
 
+var _second_magic_byte: Byte = 139
+var _unknown_operating_system: Byte = 255
+var _reserved_flags_mask = 224
+var _low_short_mask: UnsignedInteger = 65535
+var _crc_polynomial: UnsignedInteger = 3988292384
+var _crc_all_ones: UnsignedInteger = 4294967295
+var _low_byte_mask: UnsignedInteger = 255
+
 func compress(bytes: Buffer): Buffer {
     var deflate = Deflate()
     var body = deflate.compress(bytes)
     var body_count = body.count()
     var output = Buffer(body_count + 18)
     output.append(31)
-    output.append(139)
+    output.append(_second_magic_byte)
     output.append(8)
     var index = 3
     while index < 9 {
         output.append(0)
         index = index + 1
     }
-    output.append(255)
+    output.append(_unknown_operating_system)
     output.append_buffer(body, 0, body_count)
     var total = bytes.count()
     var checksum = _crc32(bytes, 0, total)
@@ -30,8 +38,8 @@ func decompress(bytes: Buffer): Buffer? {
     var second = _byte_at(bytes, 1)
     var method = _byte_at(bytes, 2)
     var flags = _byte_at(bytes, 3)
-    fallback first == 31 and second == 139 and method == 8
-    fallback flags.bits_and(224) == 0
+    fallback first == 31 and second == _second_magic_byte and method == 8
+    fallback flags.bits_and(_reserved_flags_mask) == 0
     var position = 10
     if flags.bits_and(4) != 0 {
         fallback position + 2 <= total
@@ -48,7 +56,7 @@ func decompress(bytes: Buffer): Buffer? {
     if flags.bits_and(2) != 0 {
         fallback position + 2 <= total
         var header_crc = _crc32(bytes, 0, position)
-        var header_check = header_crc.bits_and(65535)
+        var header_check = header_crc.bits_and(_low_short_mask)
         var stored_value = bytes.read_unsigned_short_little_endian_at(position)
         fallback stored_value
         var stored: UnsignedInteger = stored_value
@@ -90,7 +98,7 @@ func _skip_text(bytes: Buffer, from: Integer, total: Integer): Integer {
 
 func _crc32(bytes: Buffer, from: Integer, total: Integer): UnsignedInteger {
     var table = Buffer(1024)
-    var polynomial: UnsignedInteger = 3988292384
+    var polynomial = _crc_polynomial
     var entry = 0
     while entry < 256 {
         var value: UnsignedInteger = entry
@@ -106,12 +114,12 @@ func _crc32(bytes: Buffer, from: Integer, total: Integer): UnsignedInteger {
         table.append_unsigned_integer_little_endian(value)
         entry = entry + 1
     }
-    var crc: UnsignedInteger = 4294967295
+    var crc = _crc_all_ones
     var index = from
     while index < total {
         var byte_value: UnsignedInteger = _byte_at(bytes, index)
         var mixed = crc.bits_exclusive_or(byte_value)
-        var slot_value = mixed.bits_and(255)
+        var slot_value = mixed.bits_and(_low_byte_mask)
         var slot: Integer = slot_value
         var looked = table.read_unsigned_integer_little_endian_at(slot * 4)
         crash looked
@@ -119,5 +127,5 @@ func _crc32(bytes: Buffer, from: Integer, total: Integer): UnsignedInteger {
         crc = shifted.bits_exclusive_or(looked)
         index = index + 1
     }
-    return crc.bits_exclusive_or(4294967295)
+    return crc.bits_exclusive_or(_crc_all_ones)
 }

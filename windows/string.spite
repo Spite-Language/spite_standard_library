@@ -1,9 +1,12 @@
+var _winsock_version_2_2 = 514
+var _utf8_code_page = 65001
+
 func resolve_ip_addresses(): List<IpAddress> {
     var sockets = DynamicLibrary("ws2_32.dll", 'identity', "")
     var memory_library = DynamicLibrary("ucrtbase.dll", 'identity', "")
     var addresses = List<IpAddress>()
     var information = Buffer(512)
-    sockets.WSAStartup(514, information)
+    sockets.WSAStartup(_winsock_version_2_2, information)
     var hints = Buffer(48)
     var index = 0
     while index < 48 {
@@ -64,9 +67,9 @@ func _to_wide(): Buffer {
     var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
     var byte_count = length()
     var no_room: Long = 0
-    var characters = kernel.MultiByteToWideChar(65001, 0, this, byte_count, no_room, 0)
+    var characters = kernel.MultiByteToWideChar(_utf8_code_page, 0, this, byte_count, no_room, 0)
     var room = Buffer(characters * 2 + 2)
-    var written = kernel.MultiByteToWideChar(65001, 0, this, byte_count, room, characters)
+    var written = kernel.MultiByteToWideChar(_utf8_code_page, 0, this, byte_count, room, characters)
     crash written == characters
     room.take_written(written * 2)
     room.append(0)

@@ -1,4 +1,6 @@
 var _http = Http.Server()
+var _switching_protocols_status = 101
+var _upgrade_required_status = 426
 
 func Server(http: Http.Server) {
     _http = http
@@ -15,10 +17,10 @@ func accept(request: Http.Request): WebSocket.Connection? {
     crash asks_to_upgrade(request)
     var connection = WebSocket.Connection(request._connection, false)
     var status = connection._refusal(request)
-    if status != 101 {
+    if status != _switching_protocols_status {
         var refused = Http.Response()
         refused.status = status
-        if status == 426 {
+        if status == _upgrade_required_status {
             refused.set_header("sec-websocket-version", "13")
         }
         refused.set_header("connection", "close")

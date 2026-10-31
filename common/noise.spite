@@ -1,4 +1,9 @@
 var seed: UnsignedInteger = 0
+var _low_24_bits_mask: UnsignedInteger = 16777215
+var _x_hash_prime: UnsignedInteger = 374761393
+var _y_hash_prime: UnsignedInteger = 668265263
+var _z_hash_prime: UnsignedInteger = 2147483647
+var _mix_hash_prime: UnsignedInteger = 1274126177
 
 func Noise(starting_seed: UnsignedInteger) {
     seed = starting_seed
@@ -154,7 +159,7 @@ func _gradient_dot_3d(
 
 func _lattice_value(cell_x: Integer, cell_y: Integer, cell_z: Integer): Float {
     var hashed = _hash(cell_x, cell_y, cell_z)
-    var kept = hashed.bits_and(16777215)
+    var kept = hashed.bits_and(_low_24_bits_mask)
     var share: Float = kept
     return share / 16777215.0 * 2.0 - 1.0
 }
@@ -163,13 +168,13 @@ func _hash(cell_x: Integer, cell_y: Integer, cell_z: Integer): UnsignedInteger {
     var first = cell_x.bits_as_unsigned()
     var second = cell_y.bits_as_unsigned()
     var third = cell_z.bits_as_unsigned()
-    var first_part = first.wrapping_multiply(374761393)
-    var second_part = second.wrapping_multiply(668265263)
-    var third_part = third.wrapping_multiply(2147483647)
+    var first_part = first.wrapping_multiply(_x_hash_prime)
+    var second_part = second.wrapping_multiply(_y_hash_prime)
+    var third_part = third.wrapping_multiply(_z_hash_prime)
     var mixed = seed.wrapping_sum(first_part).wrapping_sum(second_part).wrapping_sum(third_part)
     var high_bits = mixed.shifted_right(13)
     mixed = mixed.bits_exclusive_or(high_bits)
-    mixed = mixed.wrapping_multiply(1274126177)
+    mixed = mixed.wrapping_multiply(_mix_hash_prime)
     var top_bits = mixed.shifted_right(16)
     return mixed.bits_exclusive_or(top_bits)
 }

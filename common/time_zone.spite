@@ -22,10 +22,18 @@ var _end_number = 0
 var _end_week = 0
 var _end_weekday = 0
 var _end_time = 7200
+var _seconds_per_day: Long = 86400
+var _seconds_per_hour = 3600
+var _unix_epoch_year = 1970
+var _tzif_magic_i_code = 105
+var _tzif_magic_f_code = 102
+var _default_change_time = 7200
+var _largest_posix_day_number = 365
+var _lowercase_z_code = 122
 
 func TimeZone(identifier: String, offset: Duration) {
     var seconds = offset.total('seconds')
-    crash seconds > -86400 and seconds < 86400
+    crash seconds > -_seconds_per_day and seconds < _seconds_per_day
     _identifier = identifier
     _first_offset = seconds
 }
@@ -91,12 +99,12 @@ func _yearly_offset_seconds_at(unix_seconds: Long): Integer {
     var standard_offset: Long = _standard_offset
     var daylight_offset: Long = _daylight_offset
     var local_seconds = unix_seconds + standard_offset
-    var second_of_day = local_seconds % 86400
+    var second_of_day = local_seconds % _seconds_per_day
     if second_of_day < 0 {
-        second_of_day = second_of_day + 86400
+        second_of_day = second_of_day + _seconds_per_day
     }
-    var first_day = Date(1970, 1, 1)
-    var days_long = (local_seconds - second_of_day) / 86400
+    var first_day = Date(_unix_epoch_year, 1, 1)
+    var days_long = (local_seconds - second_of_day) / _seconds_per_day
     var days: Integer = days_long
     var date = first_day + Period(days, 'days')
     var year = date.year
@@ -117,7 +125,7 @@ func _yearly_offset_seconds_at(unix_seconds: Long): Integer {
 func _change_local_seconds_in(year: Integer, letter: Integer, number: Integer, week: Integer, weekday: Integer, time_seconds: Integer): Long {
     var day = _change_day_since_1970(year, letter, number, week, weekday)
     var time: Long = time_seconds
-    return day * 86400 + time
+    return day * _seconds_per_day + time
 }
 
 func _change_day_since_1970(year: Integer, letter: Integer, number: Integer, week: Integer, weekday: Integer): Long {
@@ -206,7 +214,7 @@ func _read_tzif(data: Buffer): Boolean {
 
 func _is_tzif_header_at(data: Buffer, position: Integer): Boolean {
     fallback position >= 0 and position + 44 <= data.count()
-    return _tzif_byte_at(data, position) == 84 and _tzif_byte_at(data, position + 1) == 90 and _tzif_byte_at(data, position + 2) == 105 and _tzif_byte_at(data, position + 3) == 102
+    return _tzif_byte_at(data, position) == 84 and _tzif_byte_at(data, position + 1) == 90 and _tzif_byte_at(data, position + 2) == _tzif_magic_i_code and _tzif_byte_at(data, position + 3) == _tzif_magic_f_code
 }
 
 func _tzif_block_bytes(data: Buffer, header: Integer, time_bytes: Integer): Long {
@@ -272,7 +280,7 @@ func _read_posix_rule(rule: String): Boolean {
     }
     var daylight_name_end = _posix_name_end(head, standard_offset_end)
     fallback daylight_name_end
-    var daylight_offset = _standard_offset + 3600
+    var daylight_offset = _standard_offset + _seconds_per_hour
     if daylight_name_end < head.length() {
         var daylight_offset_end = _posix_offset_end(head, daylight_name_end)
         var read_offset = _posix_offset_between(head, daylight_name_end, daylight_offset_end)
@@ -341,7 +349,7 @@ func _posix_offset_between(text: String, start: Integer, end: Integer): Integer?
     var pieces = written.split(":")
     fallback pieces.count() <= 3
     var seconds = 0
-    var scale = 3600
+    var scale = _seconds_per_hour
     var index = 0
     while index < pieces.count() {
         var piece = pieces[index]
@@ -359,7 +367,7 @@ func _read_posix_change(text: String, is_start: Boolean): Boolean {
     fallback pieces.count() <= 2
     var day = pieces[0]
     crash day
-    var time_seconds = 7200
+    var time_seconds = _default_change_time
     if pieces.count() == 2 {
         var time = pieces[1]
         var time_end = _posix_offset_end(time, 0)
@@ -399,8 +407,8 @@ func _read_posix_change(text: String, is_start: Boolean): Boolean {
     } else {
         var day_number = _posix_number(number_text)
         fallback day_number
-        fallback letter != 74 or day_number >= 1 and day_number <= 365
-        fallback day_number <= 365
+        fallback letter != 74 or day_number >= 1 and day_number <= _largest_posix_day_number
+        fallback day_number <= _largest_posix_day_number
         number = day_number
     }
     crash number
@@ -439,5 +447,5 @@ func _is_posix_digit(code: Integer): Boolean {
 }
 
 func _is_posix_letter(code: Integer): Boolean {
-    return code >= 65 and code <= 90 or code >= 97 and code <= 122
+    return code >= 65 and code <= 90 or code >= 97 and code <= _lowercase_z_code
 }

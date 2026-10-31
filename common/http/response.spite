@@ -1,6 +1,23 @@
 var status = 200
 var headers = Dictionary<String, String>()
 var _body = Buffer(0)
+var _ok_status = 200
+var _created_status = 201
+var _no_content_status = 204
+var _moved_permanently_status = 301
+var _found_status = 302
+var _not_modified_status = 304
+var _bad_request_status = 400
+var _unauthorized_status = 401
+var _forbidden_status = 403
+var _not_found_status = 404
+var _method_not_allowed_status = 405
+var _conflict_status = 409
+var _content_too_large_status = 413
+var _upgrade_required_status = 426
+var _too_many_requests_status = 429
+var _internal_server_error_status = 500
+var _service_unavailable_status = 503
 
 func header(name: String): String? {
     var lowered = name.lower_case()
@@ -29,39 +46,39 @@ func write_body_buffer(buffer: Buffer) {
 }
 
 func reason(): String {
-    if status == 200 {
+    if status == _ok_status {
         return "OK"
-    } else if status == 201 {
+    } else if status == _created_status {
         return "Created"
-    } else if status == 204 {
+    } else if status == _no_content_status {
         return "No Content"
-    } else if status == 301 {
+    } else if status == _moved_permanently_status {
         return "Moved Permanently"
-    } else if status == 302 {
+    } else if status == _found_status {
         return "Found"
-    } else if status == 304 {
+    } else if status == _not_modified_status {
         return "Not Modified"
-    } else if status == 400 {
+    } else if status == _bad_request_status {
         return "Bad Request"
-    } else if status == 401 {
+    } else if status == _unauthorized_status {
         return "Unauthorized"
-    } else if status == 403 {
+    } else if status == _forbidden_status {
         return "Forbidden"
-    } else if status == 404 {
+    } else if status == _not_found_status {
         return "Not Found"
-    } else if status == 405 {
+    } else if status == _method_not_allowed_status {
         return "Method Not Allowed"
-    } else if status == 409 {
+    } else if status == _conflict_status {
         return "Conflict"
-    } else if status == 413 {
+    } else if status == _content_too_large_status {
         return "Content Too Large"
-    } else if status == 426 {
+    } else if status == _upgrade_required_status {
         return "Upgrade Required"
-    } else if status == 429 {
+    } else if status == _too_many_requests_status {
         return "Too Many Requests"
-    } else if status == 500 {
+    } else if status == _internal_server_error_status {
         return "Internal Server Error"
-    } else if status == 503 {
+    } else if status == _service_unavailable_status {
         return "Service Unavailable"
     } else {
         return "Status {status}"

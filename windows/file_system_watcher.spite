@@ -5,6 +5,8 @@ var overlaps = List<Buffer>()
 var buffers = List<Buffer>()
 var roots = List<String>()
 var file_names = List<String>()
+var _backup_semantics_and_overlapped_flags = 1107296256
+var _io_incomplete_error = 996
 
 func watch_folder(path: Path): Boolean {
     var written = path.written
@@ -52,7 +54,7 @@ func _zeroed(size: Integer): Buffer {
 func _open_watch(folder: String, root: String, file_name: String): Boolean {
     var no_value: Long = 0
     var wide_folder = folder._to_wide()
-    var handle = kernel.CreateFileW_as_long(wide_folder, 1, 7, no_value, 3, 1107296256, no_value)
+    var handle = kernel.CreateFileW_as_long(wide_folder, 1, 7, no_value, 3, _backup_semantics_and_overlapped_flags, no_value)
     fallback handle != -1
     var overlap = _zeroed(32)
     var event = kernel.CreateEventW_as_long(no_value, 1, 0, no_value)
@@ -114,7 +116,7 @@ func _collect_from(watching: Integer, transferred: Buffer) {
     var result = kernel.GetOverlappedResult(handle, overlap, transferred, 0)
     if result == 0 {
         var failure = kernel.GetLastError()
-        if failure != 996 {
+        if failure != _io_incomplete_error {
             _note(root)
             _close_watch(watching)
         }

@@ -2,6 +2,18 @@
 
 var item_count = 0
 var _capacity = 0
+var _highest_continuation_byte = 191
+var _lowest_two_byte_lead = 194
+var _highest_two_byte_lead = 223
+var _lowest_three_byte_lead = 224
+var _highest_three_byte_lead = 239
+var _lowest_four_byte_lead = 240
+var _highest_four_byte_lead = 244
+var _surrogate_range_lead = 237
+var _lowest_second_after_lowest_three_byte_lead = 160
+var _lowest_second_after_lowest_four_byte_lead = 144
+var _highest_second_before_surrogates = 159
+var _highest_second_below_largest_code_point = 143
 
 func Buffer(size: Integer) {
     crash size >= 0
@@ -485,7 +497,7 @@ func _utf8_length_before(index: Integer, limit: Integer): Integer {
     var place = 2
     while place < length {
         var following: Integer = _read_byte_at(index + place)
-        fallback following >= 128 and following <= 191
+        fallback following >= 128 and following <= _highest_continuation_byte
         place = place + 1
     }
     return length
@@ -495,34 +507,34 @@ func _utf8_length_of(lead: Integer): Integer {
     if lead < 128 {
         return 1
     }
-    if lead >= 194 and lead <= 223 {
+    if lead >= _lowest_two_byte_lead and lead <= _highest_two_byte_lead {
         return 2
     }
-    if lead >= 224 and lead <= 239 {
+    if lead >= _lowest_three_byte_lead and lead <= _highest_three_byte_lead {
         return 3
     }
-    if lead >= 240 and lead <= 244 {
+    if lead >= _lowest_four_byte_lead and lead <= _highest_four_byte_lead {
         return 4
     }
     return 0
 }
 
 func _utf8_lowest_second(lead: Integer): Integer {
-    if lead == 224 {
-        return 160
+    if lead == _lowest_three_byte_lead {
+        return _lowest_second_after_lowest_three_byte_lead
     }
-    if lead == 240 {
-        return 144
+    if lead == _lowest_four_byte_lead {
+        return _lowest_second_after_lowest_four_byte_lead
     }
     return 128
 }
 
 func _utf8_highest_second(lead: Integer): Integer {
-    if lead == 237 {
-        return 159
+    if lead == _surrogate_range_lead {
+        return _highest_second_before_surrogates
     }
-    if lead == 244 {
-        return 143
+    if lead == _highest_four_byte_lead {
+        return _highest_second_below_largest_code_point
     }
-    return 191
+    return _highest_continuation_byte
 }

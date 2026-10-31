@@ -1,6 +1,10 @@
 # ../docs/memory.md#the-numbers
 
 var _buffer = Buffer(2)
+var _smallest_half_subnormal_bits: UnsignedInteger = 864026624
+var _half_exponent_rebias: Long = 112
+var _float_infinity_bits: UnsignedInteger = 2139095040
+var _float_not_a_number_bits: UnsignedInteger = 2143289344
 
 func UnsignedShort(from: String): UnsignedShort? {
     var value: Long? = from
@@ -33,11 +37,11 @@ func half_precision_to_float(): Float {
     if exponent == 31 {
         result = _half_special(mantissa)
     } else if exponent == 0 {
-        var scale: UnsignedInteger = 864026624
+        var scale = _smallest_half_subnormal_bits
         var mantissa_float: Float = mantissa
         result = mantissa_float * scale.bits_as_float()
     } else {
-        var wide: Long = (exponent + 112) * 8388608 + mantissa * 8192
+        var wide: Long = (exponent + _half_exponent_rebias) * 8388608 + mantissa * 8192
         var wide_unsigned_integer: UnsignedInteger = wide
         result = wide_unsigned_integer.bits_as_float()
     }
@@ -48,8 +52,8 @@ func half_precision_to_float(): Float {
 }
 
 func _half_special(mantissa: Long): Float {
-    var infinity: UnsignedInteger = 2139095040
-    var not_a_number: UnsignedInteger = 2143289344
+    var infinity = _float_infinity_bits
+    var not_a_number = _float_not_a_number_bits
     if mantissa == 0 {
         return infinity.bits_as_float()
     }

@@ -1,12 +1,17 @@
 singleton
 
+var _deflate_method_byte: Byte = 120
+var _default_compression_flags: Byte = 156
+var _adler_chunk_bytes = 5552
+var _adler_modulus: UnsignedInteger = 65521
+
 func compress(bytes: Buffer): Buffer {
     var deflate = Deflate()
     var body = deflate.compress(bytes)
     var body_count = body.count()
     var output = Buffer(body_count + 6)
-    output.append(120)
-    output.append(156)
+    output.append(_deflate_method_byte)
+    output.append(_default_compression_flags)
     output.append_buffer(body, 0, body_count)
     var checksum = _adler32(bytes)
     output.append_unsigned_integer_big_endian(checksum)
@@ -46,7 +51,7 @@ func _adler32(bytes: Buffer): UnsignedInteger {
     var total = bytes.count()
     var index = 0
     while index < total {
-        var chunk_limit = index + 5552
+        var chunk_limit = index + _adler_chunk_bytes
         var chunk_end = chunk_limit.minimum(total)
         while index < chunk_end {
             var value: UnsignedInteger = _byte_at(bytes, index)
@@ -54,8 +59,8 @@ func _adler32(bytes: Buffer): UnsignedInteger {
             high = high + low
             index = index + 1
         }
-        low = low % 65521
-        high = high % 65521
+        low = low % _adler_modulus
+        high = high % _adler_modulus
     }
     var shifted = high.shifted_left(16)
     return shifted.bits_or(low)

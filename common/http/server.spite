@@ -6,6 +6,10 @@ var _waiting = List<Tcp.Connection>()
 var _waiting_since = List<Duration>()
 var _longest_patience = Duration(1, 'seconds')
 var _clock = Clock()
+var _no_content_status = 204
+var _not_modified_status = 304
+var _bad_request_status = 400
+var _most_header_lines = 200
 
 func listen_locally(port: Integer): Boolean {
     return _listener.listen_locally(port)
@@ -40,7 +44,7 @@ func respond(request: Http.Request, response: Http.Response): Boolean {
     var client = request._connection
     var waiting_count = _waiting.count()
     var keep = _keeps_alive(request) and waiting_count < largest_waiting and not _listener.closed
-    var with_body = request.method != "HEAD" and response.status != 204 and response.status != 304
+    var with_body = request.method != "HEAD" and response.status != _no_content_status and response.status != _not_modified_status
     var announce = keep and request.version == "HTTP/1.0"
     var written = _write_response(client, response, with_body, announce or not keep)
     if keep and not client.closed {
@@ -182,7 +186,7 @@ func _read_request(client: Tcp.Connection): Http.Request? {
 
 func _read_headers(client: Tcp.Connection, headers: Dictionary<String, String>): Boolean {
     var count = 0
-    while count < 200 {
+    while count < _most_header_lines {
         var line = client.read_line()
         fallback line
         if line.is_empty() {
@@ -205,7 +209,7 @@ func _read_headers(client: Tcp.Connection, headers: Dictionary<String, String>):
 
 func _refuse(client: Tcp.Connection) {
     var refused = Http.Response()
-    refused.status = 400
+    refused.status = _bad_request_status
     fallback _write_response(client, refused, true, true)
 }
 

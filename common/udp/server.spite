@@ -1,10 +1,11 @@
 var handle: Long = -1
 var _as_ipv6 = false
 var _port = 0
+var _loopback_first_part = 127
 
 func open_locally(port: Integer): Boolean {
     var address = IpAddress()
-    address._parts = [127, 0, 0, 1]
+    address._parts = [_loopback_first_part, 0, 0, 1]
     return open_at(address, port)
 }
 

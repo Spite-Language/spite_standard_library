@@ -1,5 +1,6 @@
 var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
 var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+var _hundred_nanoseconds_from_1601_to_1970: Long = 116444736000000000
 
 func exists(): Boolean {
     var wide_path = path._to_wide()
@@ -83,6 +84,6 @@ func _modified_nanoseconds_since_1970(): Long? {
     fallback found != 0
     var written = data.read_long_little_endian_at(20)
     fallback written
-    var since_1970 = written - 116444736000000000
+    var since_1970 = written - _hundred_nanoseconds_from_1601_to_1970
     return since_1970 * 100
 }

@@ -1,6 +1,7 @@
 var _date = Date(1970, 1, 1)
 
 var _time = Time(0, 0, 0, 0)
+var _seconds_per_day: Long = 86400
 
 func DateTime(date: Date, time: Time) {
     _date = date
@@ -41,9 +42,9 @@ func greater_than(other: DateTime): Boolean {
 
 func to_instant_in(zone: TimeZone, ambiguity: TimeZone.Ambiguity): Instant {
     var second_of_day: Long = _time.second_of_day
-    var wall = _date.days_since_1970 * 86400 + second_of_day
-    var offset_before = zone._offset_seconds_at_unix(wall - 86400)
-    var offset_after = zone._offset_seconds_at_unix(wall + 86400)
+    var wall = _date.days_since_1970 * _seconds_per_day + second_of_day
+    var offset_before = zone._offset_seconds_at_unix(wall - _seconds_per_day)
+    var offset_after = zone._offset_seconds_at_unix(wall + _seconds_per_day)
     var offset_before_long: Long = offset_before
     var offset_after_long: Long = offset_after
     var before = wall - offset_before_long

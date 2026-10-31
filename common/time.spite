@@ -3,12 +3,14 @@ var _hour = 0
 var _minute = 0
 var _second = 0
 var _nanosecond = 0
+var _largest_nanosecond = 999999999
+var _seconds_per_hour = 3600
 
 func Time(hour: Integer, minute: Integer, second: Integer, nanosecond: Integer) {
     crash hour >= 0 and hour <= 23
     crash minute >= 0 and minute <= 59
     crash second >= 0 and second <= 59
-    crash nanosecond >= 0 and nanosecond <= 999999999
+    crash nanosecond >= 0 and nanosecond <= _largest_nanosecond
     _hour = hour
     _minute = minute
     _second = second
@@ -36,7 +38,7 @@ func get_nanosecond(): Integer {
 }
 
 func get_second_of_day(): Integer {
-    return _hour * 3600 + _minute * 60 + _second
+    return _hour * _seconds_per_hour + _minute * 60 + _second
 }
 
 func equals(other: Time): Boolean {

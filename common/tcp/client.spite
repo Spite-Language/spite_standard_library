@@ -1,4 +1,5 @@
 var _connection = Tcp.Connection()
+var _loopback_first_part = 127
 
 func connect(address: IpAddress, port: Integer): Boolean {
     _connection.close()
@@ -10,7 +11,7 @@ func connect(address: IpAddress, port: Integer): Boolean {
 
 func connect_locally(port: Integer): Boolean {
     var address = IpAddress()
-    address._parts = [127, 0, 0, 1]
+    address._parts = [_loopback_first_part, 0, 0, 1]
     return connect(address, port)
 }
 

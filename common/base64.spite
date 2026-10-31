@@ -2,6 +2,8 @@ singleton
 
 var _alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 var _url_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+var _low_byte_mask = 255
+var _lowercase_z_code = 122
 
 func encode(bytes: Buffer): String {
     return _encoded(bytes, _alphabet, true)
@@ -112,7 +114,7 @@ func _decoded(text: String, url: Boolean): Buffer? {
 
 func _append_byte(bytes: Buffer, group: Integer, shift: Integer) {
     var moved = group.shifted_right(shift)
-    var low_bits = moved.bits_and(255)
+    var low_bits = moved.bits_and(_low_byte_mask)
     var value: Byte = low_bits
     bytes.append(value)
 }
@@ -121,7 +123,7 @@ func _digit_value(code: Integer, url: Boolean): Integer {
     if code >= 65 and code <= 90 {
         return code - 65
     }
-    if code >= 97 and code <= 122 {
+    if code >= 97 and code <= _lowercase_z_code {
         return code - 71
     }
     if code >= 48 and code <= 57 {

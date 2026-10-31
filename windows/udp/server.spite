@@ -1,8 +1,9 @@
 var _sockets = DynamicLibrary("ws2_32.dll", 'identity', "")
+var _winsock_version_2_2 = 514
 
 func _start_sockets() {
     var information = Buffer(512)
-    _sockets.WSAStartup(514, information)
+    _sockets.WSAStartup(_winsock_version_2_2, information)
 }
 
 func _open_handle(family: Integer, as_ipv6: Boolean): Long {

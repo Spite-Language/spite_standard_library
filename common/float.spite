@@ -1,6 +1,14 @@
 # ../docs/memory.md#the-numbers
 
 var _buffer = Buffer(4)
+var _lowest_subnormal_exponent: Long = -149
+var _half_infinity: Long = 31744
+var _half_not_a_number: Long = 32256
+var _special_exponent_field: Long = 255
+var _largest_finite_half_exponent: Long = 142
+var _smallest_normal_half_exponent: Long = 113
+var _half_exponent_rebias: Long = 112
+var _subnormal_shift_origin: Long = 126
 
 func Float(from: String): Float? {
     var text = from.trim()
@@ -174,7 +182,7 @@ func greater_than(other: Float): Boolean {
 
 func to_string(): String {
     var wide: Double = _value()
-    return wide._shortest_text(wide, 16777216, -149, 9)
+    return wide._shortest_text(wide, 16777216, _lowest_subnormal_exponent, 9)
 }
 
 func to_debug(): String {
@@ -296,14 +304,14 @@ func to_half_precision(): UnsignedShort {
     var sign: Long = pattern / 2147483648
     var exponent: Long = (pattern / 8388608) % 256
     var mantissa: Long = pattern % 8388608
-    var magnitude: Long = 31744
-    if exponent == 255 {
+    var magnitude = _half_infinity
+    if exponent == _special_exponent_field {
         magnitude = _half_special(mantissa)
-    } else if exponent > 142 {
-        magnitude = 31744
-    } else if exponent >= 113 {
+    } else if exponent > _largest_finite_half_exponent {
+        magnitude = _half_infinity
+    } else if exponent >= _smallest_normal_half_exponent {
         var half_mantissa = _rounded_to_even(mantissa, 8192)
-        magnitude = (exponent - 112) * 1024 + half_mantissa
+        magnitude = (exponent - _half_exponent_rebias) * 1024 + half_mantissa
     } else if exponent == 0 {
         magnitude = 0
     } else {
@@ -314,13 +322,13 @@ func to_half_precision(): UnsignedShort {
 
 func _half_special(mantissa: Long): Long {
     if mantissa != 0 {
-        return 32256
+        return _half_not_a_number
     }
-    return 31744
+    return _half_infinity
 }
 
 func _half_subnormal(exponent: Long, mantissa: Long): Long {
-    var shift = 126 - exponent
+    var shift = _subnormal_shift_origin - exponent
     fallback shift <= 25
     var one: Long = 1
     var divisor = one.shifted_left(shift)

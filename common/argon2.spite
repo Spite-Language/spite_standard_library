@@ -176,6 +176,15 @@ var _blake_order: List<Integer> = [
 ]
 
 
+var _largest_lanes = 255
+var _largest_parsed_cost: Long = 2147483647
+var _largest_hashing_memory_cost = 2000000
+var _work_area_bytes = 5120
+var _mixed_block_offset = 3072
+var _low_32_bits_mask: UnsignedLong = 4294967295
+var _blake_fanout_and_depth: Long = 16842752
+var _fifteenth_word_offset = 112
+
 func hash(password: String): String? {
     var salt = random.random_buffer(16)
     fallback salt
@@ -209,7 +218,7 @@ func verify(password: String, encoded: String): Boolean? {
     var time_cost: Integer = found_time_cost
     var lanes: Integer = found_lanes
     fallback memory_cost > 0 and time_cost > 0 and lanes > 0
-    fallback memory_cost <= 1048576 and time_cost <= 1000 and lanes <= 255
+    fallback memory_cost <= 1048576 and time_cost <= 1000 and lanes <= _largest_lanes
     fallback memory_cost >= 8 * lanes
     var salt = _unpadded(salt_field)
     var expected = _unpadded(tag_field)
@@ -253,7 +262,7 @@ func _cost(field: String, prefix: String): Integer? {
     crash digits
     var parsed: Long? = digits
     fallback parsed
-    fallback parsed >= 0 and parsed <= 2147483647
+    fallback parsed >= 0 and parsed <= _largest_parsed_cost
     var plain: Long = parsed
     return plain
 }
@@ -302,7 +311,7 @@ func _derived(
     tag_length: Integer,
 ): Buffer {
     crash lanes >= 1 and time_cost >= 1 and tag_length >= 4
-    crash memory_cost >= 8 * lanes and memory_cost <= 2000000
+    crash memory_cost >= 8 * lanes and memory_cost <= _largest_hashing_memory_cost
     var parameters = Buffer(64)
     parameters.append_integer_little_endian(lanes)
     parameters.append_integer_little_endian(tag_length)
@@ -321,7 +330,7 @@ func _derived(
     var lane_length = segment_length * 4
     var block_count = lane_length * lanes
     var work_at = block_count * 1024
-    var memory = _zeroed(work_at + 5120)
+    var memory = _zeroed(work_at + _work_area_bytes)
     var lane = 0
     while lane < lanes {
         seed.write_integer_little_endian_at(68, lane)
@@ -453,7 +462,7 @@ func _fill_segment(
     var input_at = work_at
     var zero_at = work_at + 1024
     var address_at = work_at + 2048
-    var mixed_at = work_at + 3072
+    var mixed_at = work_at + _mixed_block_offset
     if independent {
         _clear(memory, zero_at)
         _clear(memory, input_at)
@@ -498,7 +507,7 @@ func _fill_segment(
         }
         var same_lane = reference_lane == lane
         var area = _reference_area(pass, slice, index, same_lane, lane_length, segment_length)
-        var mask: UnsignedLong = 4294967295
+        var mask = _low_32_bits_mask
         var low = high.bits_and(mask)
         var squared = low * low
         squared = squared.shifted_right(32)
@@ -649,7 +658,7 @@ func _mix(
 }
 
 func _multiplied_sum(left: UnsignedLong, right: UnsignedLong): UnsignedLong {
-    var mask: UnsignedLong = 4294967295
+    var mask = _low_32_bits_mask
     var low_left = left.bits_and(mask)
     var low_right = right.bits_and(mask)
     var product = low_left * low_right
@@ -714,7 +723,7 @@ func _blake2b(
     }
     var first = _long_at(state, 0)
     var parameter: Long = target_length
-    parameter = parameter.bits_or(16842752)
+    parameter = parameter.bits_or(_blake_fanout_and_depth)
     first = first.bits_exclusive_or(parameter)
     state.write_long_little_endian_at(0, first)
     var offset = 0
@@ -748,9 +757,9 @@ func _blake_compress(state: Buffer, block: Buffer, counter: Long, last: Boolean)
     twelfth = twelfth.bits_exclusive_or(counter)
     work.write_long_little_endian_at(96, twelfth)
     if last {
-        var fifteenth = _long_at(work, 112)
+        var fifteenth = _long_at(work, _fifteenth_word_offset)
         fifteenth = fifteenth.bits_inverted()
-        work.write_long_little_endian_at(112, fifteenth)
+        work.write_long_little_endian_at(_fifteenth_word_offset, fifteenth)
     }
     var round = 0
     while round < 12 {

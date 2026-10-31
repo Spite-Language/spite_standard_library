@@ -2,6 +2,13 @@ var _parts = [0, 0, 0, 0]
 
 var _scope = 0
 var _name = ""
+var _longest_host_name = 253
+var _lowercase_f_code = 102
+var _lowercase_z_code = 122
+var _mapped_ipv4_marker_group = 65535
+var _mapped_ipv4_marker_byte: Byte = 255
+var _low_byte_mask = 255
+var _largest_ipv4_part = 255
 
 func IpAddress(from: String): IpAddress? {
     var address = IpAddress()
@@ -67,7 +74,7 @@ func _host_text(): String {
 
 func _names_a_host(text: String): Boolean {
     var length = text.length()
-    fallback length != 0 and length <= 253
+    fallback length != 0 and length <= _longest_host_name
     var labels = text.split(".")
     var index = 0
     while index < labels.count() {
@@ -87,7 +94,7 @@ func _is_host_label(label: String): Boolean {
     var index = 0
     while index < length {
         var code = label.byte_at(index)
-        var letter = code >= 97 and code <= 122 or code >= 65 and code <= 90
+        var letter = code >= 97 and code <= _lowercase_z_code or code >= 65 and code <= 90
         var digit = code >= 48 and code <= 57
         fallback letter or digit or code == 45
         index = index + 1
@@ -161,7 +168,7 @@ func _unmap() {
     while mapped and index < 6 {
         var expected = 0
         if index == 5 {
-            expected = 65535
+            expected = _mapped_ipv4_marker_group
         }
         mapped = _parts[index] == expected
         index = index + 1
@@ -171,9 +178,9 @@ func _unmap() {
         var low = _parts[7]
         crash high and low
         var first = high.shifted_right(8)
-        var second = high.bits_and(255)
+        var second = high.bits_and(_low_byte_mask)
         var third = low.shifted_right(8)
-        var fourth = low.bits_and(255)
+        var fourth = low.bits_and(_low_byte_mask)
         _parts = [first, second, third, fourth]
     }
 }
@@ -189,7 +196,7 @@ func _ipv4_parts(text: String): List<Integer> {
         var piece_length = piece.length()
         var leading_zero = piece_length > 1 and piece.starts_with("0")
         var value = _decimal_value(piece, 3)
-        fallback not leading_zero and value >= 0 and value <= 255
+        fallback not leading_zero and value >= 0 and value <= _largest_ipv4_part
         parts.append(value)
         index = index + 1
     }
@@ -257,7 +264,7 @@ func _hex_value(text: String): Integer {
         var digit = -1
         if code >= 48 and code <= 57 {
             digit = code - 48
-        } else if code >= 97 and code <= 102 {
+        } else if code >= 97 and code <= _lowercase_f_code {
             digit = code - 87
         } else if code >= 65 and code <= 70 {
             digit = code - 55
@@ -365,8 +372,8 @@ func _system_address(port: Integer, as_ipv6: Boolean): Buffer {
         return address
     }
     if is_ipv4() {
-        address[18] = 255
-        address[19] = 255
+        address[18] = _mapped_ipv4_marker_byte
+        address[19] = _mapped_ipv4_marker_byte
         index = 0
         while index < 4 {
             var byte = _parts[index]

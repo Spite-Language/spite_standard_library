@@ -58,6 +58,22 @@ var uncountables = [
     "knowledge"
 ]
 
+var _two_byte_lead_start = 192
+var _three_byte_lead_start = 224
+var _four_byte_lead_start = 240
+var _seconds_per_day: Long = 86400
+var _seconds_per_hour = 3600
+var _largest_integer = 2147483647
+var _lowercase_e_code = 101
+var _lowercase_f_code = 102
+var _lowercase_i_code = 105
+var _lowercase_n_code = 110
+var _lowercase_o_code = 111
+var _lowercase_t_code = 116
+var _lowercase_u_code = 117
+var _lowercase_y_code = 121
+var _lowercase_z_code = 122
+
 func length(): Integer {
     return _length
 }
@@ -188,11 +204,11 @@ func _character_size(lead: Integer): Integer {
     if lead < 128 {
         return 1
     }
-    fallback lead >= 192
-    if lead < 224 {
+    fallback lead >= _two_byte_lead_start
+    if lead < _three_byte_lead_start {
         return 2
     }
-    if lead < 240 {
+    if lead < _four_byte_lead_start {
         return 3
     }
     return 4
@@ -354,12 +370,12 @@ func _as_instant(): Instant? {
     var time = local.time
     var second_of_day: Long = time.second_of_day
     var offset: Long = offset_seconds
-    var seconds = date.days_since_1970 * 86400 + second_of_day - offset
+    var seconds = date.days_since_1970 * _seconds_per_day + second_of_day - offset
     var whole = Duration(seconds, 'seconds')
     var part = Duration(time.nanosecond, 'nanoseconds')
     var since_1970 = whole + part
     var instant = Instant(since_1970)
-    var offset_is_unknown = _code_at(offset_start) == 90 or _code_at(offset_start) == 122
+    var offset_is_unknown = _code_at(offset_start) == 90 or _code_at(offset_start) == _lowercase_z_code
     var position = annotations_start
     var is_first = true
     while position < _length {
@@ -414,7 +430,7 @@ func _as_duration(): Duration? {
         }
         var unit = _code_at(unit_at)
         if unit == 72 and order < 1 and not has_fraction {
-            seconds = seconds + number * 3600
+            seconds = seconds + number * _seconds_per_hour
             order = 1
         } else if unit == 77 and order < 2 and not has_fraction {
             seconds = seconds + number * 60
@@ -463,7 +479,7 @@ func _as_period(): Period? {
         var number_text = slice(index, number_end)
         crash number_text
         var number: Long? = number_text
-        fallback number and number <= 2147483647
+        fallback number and number <= _largest_integer
         var signed = number
         if component_negative {
             signed = -number
@@ -486,7 +502,7 @@ func _as_period(): Period? {
         }
         index = number_end + 1
     }
-    fallback days <= 2147483647 and days >= -2147483647
+    fallback days <= _largest_integer and days >= -_largest_integer
     var days_count: Integer = days
     var whole_years = Period(years, 'years')
     var whole_months = Period(months, 'months')
@@ -591,7 +607,7 @@ func _date_time_between(start: Integer, end: Integer): DateTime? {
     fallback end > date_end
     var date = _date_between(start, date_end)
     var separator = _code_at(date_end)
-    fallback separator == 84 or separator == 116 or separator == 32
+    fallback separator == 84 or separator == _lowercase_t_code or separator == 32
     var time = _time_between(date_end + 1, end)
     fallback date and time
     return DateTime(date, time)
@@ -599,12 +615,12 @@ func _date_time_between(start: Integer, end: Integer): DateTime? {
 
 func _is_offset_start_at(index: Integer): Boolean {
     var code = _code_at(index)
-    return code == 90 or code == 122 or code == 43 or code == 45
+    return code == 90 or code == _lowercase_z_code or code == 43 or code == 45
 }
 
 func _offset_between(start: Integer, end: Integer): Integer? {
     var sign = _code_at(start)
-    if sign == 90 or sign == 122 {
+    if sign == 90 or sign == _lowercase_z_code {
         fallback end == start + 1
         return 0
     }
@@ -620,7 +636,7 @@ func _offset_between(start: Integer, end: Integer): Integer? {
         seconds = read_seconds
     }
     fallback hours <= 23 and minutes <= 59 and seconds <= 59
-    var offset = hours * 3600 + minutes * 60 + seconds
+    var offset = hours * _seconds_per_hour + minutes * 60 + seconds
     if sign == 45 {
         return -offset
     }
@@ -662,7 +678,7 @@ func _is_decimal(): Boolean {
         index = fraction_end
     }
     fallback digits != 0
-    if index < _length and (byte_at(index) == 101 or byte_at(index) == 69) {
+    if index < _length and (byte_at(index) == _lowercase_e_code or byte_at(index) == 69) {
         index = index + 1
         if index < _length and _is_sign_at(index) {
             index = index + 1
@@ -704,7 +720,7 @@ func to_debug(): String {
             quoted.append_code(code)
         } else if code == 10 {
             quoted.append_code(92)
-            quoted.append_code(110)
+            quoted.append_code(_lowercase_n_code)
         } else {
             quoted.append_code(code)
         }
@@ -771,7 +787,7 @@ func trim(): String {
 }
 
 func upper_case(): String {
-    return _shifted_case(97, 122, -32)
+    return _shifted_case(97, _lowercase_z_code, -32)
 }
 
 func lower_case(): String {
@@ -825,7 +841,7 @@ func _last_word_start(): Integer {
             return index + 1
         }
         var previous = byte_at(index - 1)
-        if code >= 65 and code <= 90 and previous >= 97 and previous <= 122 {
+        if code >= 65 and code <= 90 and previous >= 97 and previous <= _lowercase_z_code {
             return index
         }
         index = index - 1
@@ -916,7 +932,7 @@ func _code_before(word: String, suffix_length: Integer): Integer {
 }
 
 func _is_vowel_or_y(code: Integer): Boolean {
-    return code == 97 or code == 101 or code == 105 or code == 111 or code == 117 or code == 121
+    return code == 97 or code == _lowercase_e_code or code == _lowercase_i_code or code == _lowercase_o_code or code == _lowercase_u_code or code == _lowercase_y_code
 }
 
 func _plural_word(word: String): String {
@@ -996,7 +1012,7 @@ func _plural_consonant_y(word: String): String {
 func _plural_fe(word: String): String {
     fallback word.ends_with("fe") and not word.ends_with("hive")
     var before_fe = _code_before(word, 2)
-    if before_fe >= 0 and before_fe != 102 {
+    if before_fe >= 0 and before_fe != _lowercase_f_code {
         return _ending(word, 2, "ves")
     }
     return ""
@@ -1098,7 +1114,7 @@ func _singular_consonant_ies(word: String): String {
 func _singular_ves(word: String): String {
     fallback word.ends_with("ves") and not word.ends_with("lves") and not word.ends_with("rves") and not word.ends_with("tives") and not word.ends_with("hives")
     var before_ves = _code_before(word, 3)
-    if before_ves >= 0 and before_ves != 102 {
+    if before_ves >= 0 and before_ves != _lowercase_f_code {
         return _ending(word, 3, "fe")
     }
     return ""

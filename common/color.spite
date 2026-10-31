@@ -3,6 +3,8 @@ var red: Float = 0.0
 var green: Float = 0.0
 var blue: Float = 0.0
 var alpha: Float = 1.0
+var _opaque_alpha_byte = 255
+var _lowercase_f_code = 102
 
 func Color(new_red: Float, new_green: Float, new_blue: Float, new_alpha: Float) {
     red = new_red
@@ -71,7 +73,7 @@ func to_hexadecimal_string(): String {
     var blue_text = _byte_hex(blue)
     var text = "#{red_text}{green_text}{blue_text}"
     var alpha_byte = _byte_of(alpha)
-    if alpha_byte == 255 {
+    if alpha_byte == _opaque_alpha_byte {
         return text
     }
     var alpha_text = _byte_hex(alpha)
@@ -83,7 +85,7 @@ func to_rgb_string(): String {
     var green_byte = _byte_of(green)
     var blue_byte = _byte_of(blue)
     var alpha_byte = _byte_of(alpha)
-    if alpha_byte == 255 {
+    if alpha_byte == _opaque_alpha_byte {
         return "rgb({red_byte}, {green_byte}, {blue_byte})"
     }
     var alpha_rounded = _rounded(alpha, 1000.0)
@@ -110,7 +112,7 @@ func to_hsl_string(): String {
     var saturation_text = _rounded(saturation * 100.0, 10.0)
     var lightness_text = _rounded(lightness * 100.0, 10.0)
     var alpha_byte = _byte_of(alpha)
-    if alpha_byte == 255 {
+    if alpha_byte == _opaque_alpha_byte {
         return "hsl({hue_text}, {saturation_text}%, {lightness_text}%)"
     }
     var alpha_rounded = _rounded(alpha, 1000.0)
@@ -196,7 +198,7 @@ func _read_hex(text: String): List<Float>? {
         var short_red = _hex_value(digits, 0) * 17
         var short_green = _hex_value(digits, 1) * 17
         var short_blue = _hex_value(digits, 2) * 17
-        var short_alpha = 255
+        var short_alpha = _opaque_alpha_byte
         if count == 4 {
             short_alpha = _hex_value(digits, 3) * 17
         }
@@ -205,7 +207,7 @@ func _read_hex(text: String): List<Float>? {
     var long_red = _hex_pair(digits, 0)
     var long_green = _hex_pair(digits, 2)
     var long_blue = _hex_pair(digits, 4)
-    var long_alpha = 255
+    var long_alpha = _opaque_alpha_byte
     if count == 8 {
         long_alpha = _hex_pair(digits, 6)
     }
@@ -235,7 +237,7 @@ func _hex_value(digits: String, position: Integer): Integer {
     if code >= 48 and code <= 57 {
         return code - 48
     }
-    if code >= 97 and code <= 102 {
+    if code >= 97 and code <= _lowercase_f_code {
         return code - 87
     }
     return -1

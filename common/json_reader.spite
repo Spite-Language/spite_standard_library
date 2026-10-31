@@ -6,6 +6,18 @@ var _text = ""
 var position = 0
 var _expected = ""
 var _matched = false
+var _lowercase_e_code = 101
+var _lowercase_f_code = 102
+var _lowercase_n_code = 110
+var _lowercase_r_code = 114
+var _lowercase_t_code = 116
+var _lowercase_u_code = 117
+var _opening_brace_code = 123
+var _first_high_surrogate = 55296
+var _first_low_surrogate = 56320
+var _two_byte_lead_marker = 192
+var _three_byte_lead_marker = 224
+var _four_byte_lead_marker = 240
 
 func read(text: String): $value_type? {
     var parsed = _continue(text, 0, "")
@@ -285,7 +297,7 @@ func _skip_number() {
             _fail("a digit after '.'")
         }
     }
-    if _skip_character(101) or _skip_character(69) {
+    if _skip_character(_lowercase_e_code) or _skip_character(69) {
         if not _skip_character(43) {
             _skip_if(45)
         }
@@ -346,15 +358,15 @@ func _read_escape(): String {
         crash sliced
         return sliced
     }
-    if code == 110 {
+    if code == _lowercase_n_code {
         return "\n"
-    } else if code == 116 {
+    } else if code == _lowercase_t_code {
         return "\t"
-    } else if code == 114 {
+    } else if code == _lowercase_r_code {
         return "\r"
     } else if code == 98 {
         return _text_of(8)
-    } else if code == 102 {
+    } else if code == _lowercase_f_code {
         return _text_of(12)
     } else {
         return _unicode_escape_of(code)
@@ -362,14 +374,14 @@ func _read_escape(): String {
 }
 
 func _unicode_escape_of(code: Integer): String {
-    if code != 117 {
+    if code != _lowercase_u_code {
         _fail("an escape: one of \\\" \\\\ \\/ \\b \\f \\n \\r \\t \\u")
         return ""
     }
     var code_point = _read_hexadecimal()
-    if code_point >= 55296 and code_point < 56320 and _consume("\\u") {
+    if code_point >= _first_high_surrogate and code_point < _first_low_surrogate and _consume("\\u") {
         var low = _read_hexadecimal()
-        code_point = 65536 + (code_point - 55296) * 1024 + low - 56320
+        code_point = 65536 + (code_point - _first_high_surrogate) * 1024 + low - _first_low_surrogate
     }
     return _text_of(code_point)
 }
@@ -398,7 +410,7 @@ func _hexadecimal_digit(at: Integer): Integer {
     if code >= 48 and code <= 57 {
         return code - 48
     }
-    if code >= 97 and code <= 102 {
+    if code >= 97 and code <= _lowercase_f_code {
         return code - 87
     }
     if code >= 65 and code <= 70 {
@@ -413,13 +425,13 @@ func _text_of(code_point: Integer): String {
     var lead_marker = 0
     if code_point >= 65536 {
         shift = 18
-        lead_marker = 240
+        lead_marker = _four_byte_lead_marker
     } else if code_point >= 2048 {
         shift = 12
-        lead_marker = 224
+        lead_marker = _three_byte_lead_marker
     } else if code_point >= 128 {
         shift = 6
-        lead_marker = 192
+        lead_marker = _two_byte_lead_marker
     }
     var moved = code_point.shifted_right(shift)
     var lead = moved.bits_or(lead_marker)
@@ -468,7 +480,7 @@ func _skip_value() {
     var code = _text.byte_at(position)
     if code == 34 {
         _skip_text()
-    } else if code == 123 {
+    } else if code == _opening_brace_code {
         _skip_members()
     } else if code == 91 {
         _skip_elements()

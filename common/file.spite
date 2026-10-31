@@ -1,4 +1,5 @@
 var path = ""
+var _largest_buffer_length: Long = 2147483647
 
 func File(starting_path: Path) {
     path = starting_path.written
@@ -74,7 +75,7 @@ func read_as_buffer(): Buffer? {
     var sought = _seek(handle, 0, 2)
     var length = _tell(handle)
     var rewound = _seek(handle, 0, 0)
-    if sought != 0 or rewound != 0 or length < 0 or length > 2147483647 {
+    if sought != 0 or rewound != 0 or length < 0 or length > _largest_buffer_length {
         fallback _close_handle(handle) == 0
         return null
     }

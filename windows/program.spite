@@ -1,4 +1,5 @@
 var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+var _timer_all_access = 2031619
 
 func sleep(duration: Duration) {
     var milliseconds = duration.total('milliseconds')
@@ -9,7 +10,7 @@ func sleep(duration: Duration) {
     }
     var no_value: Long = 0
     var high_resolution = 2
-    var every_right = 2031619
+    var every_right = _timer_all_access
     var timer = kernel.CreateWaitableTimerExW_as_long(no_value, no_value, high_resolution, every_right)
     if timer == 0 {
         kernel.Sleep(milliseconds)

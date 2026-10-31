@@ -1,4 +1,6 @@
 var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+var _find_data_bytes = 592
+var _longest_path_characters = 260
 
 func exists(): Boolean {
     var wide_path = path._to_wide()
@@ -21,7 +23,7 @@ func _rename_to(new_path: String): Boolean {
 
 func _entry_names(want_folders: Boolean): List<String>? {
     var names = List<String>()
-    var found = Buffer(592)
+    var found = Buffer(_find_data_bytes)
     var pattern = "{path}/*"
     var wide_pattern = pattern._to_wide()
     var search = kernel.FindFirstFileW_as_long(wide_pattern, found)
@@ -29,11 +31,11 @@ func _entry_names(want_folders: Boolean): List<String>? {
     var readable = true
     var more = true
     while more and readable {
-        found.take_written(592)
+        found.take_written(_find_data_bytes)
         var attributes = found.read_integer_little_endian_at(0)
         crash attributes
         var is_folder = attributes.bits_and(16) != 0
-        var characters = found._wide_characters_before_zero(44, 260)
+        var characters = found._wide_characters_before_zero(44, _longest_path_characters)
         var name = found._read_wide_string_at(44, characters)
         if name {
             var listed = name != "." and name != ".."

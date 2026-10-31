@@ -11,6 +11,17 @@ enum Weekday {
 var _year = 1970
 var _month = 1
 var _day = 1
+var _days_in_leap_year = 366
+var _days_in_common_year = 365
+var _years_per_era = 400
+var _last_year_of_era: Long = 399
+var _days_in_march_to_july: Long = 153
+var _days_in_400_years: Long = 146097
+var _last_day_of_era: Long = 146096
+var _days_in_4_common_years: Long = 1460
+var _days_in_100_years: Long = 36524
+var _days_from_year_0_march_to_1970: Long = 719468
+var _largest_four_digit_year = 9999
 
 func Date(year: Integer, month: Integer, day: Integer) {
     crash month >= 1 and month <= 12
@@ -46,9 +57,9 @@ func get_days_in_month(): Integer {
 
 func get_days_in_year(): Integer {
     if _is_leap(_year) {
-        return 366
+        return _days_in_leap_year
     }
-    return 365
+    return _days_in_common_year
 }
 
 func get_day_of_year(): Integer {
@@ -89,14 +100,14 @@ func get_days_since_1970(): Long {
         year = year - 1
         shifted_month = month + 9
     }
-    var era = year / 400
+    var era = year / _years_per_era
     if year < 0 {
-        era = (year - 399) / 400
+        era = (year - _last_year_of_era) / _years_per_era
     }
-    var year_of_era = year - era * 400
-    var day_of_year = (153 * shifted_month + 2) / 5 + day - 1
-    var day_of_era = year_of_era * 365 + year_of_era / 4 - year_of_era / 100 + day_of_year
-    return era * 146097 + day_of_era - 719468
+    var year_of_era = year - era * _years_per_era
+    var day_of_year = (_days_in_march_to_july * shifted_month + 2) / 5 + day - 1
+    var day_of_era = year_of_era * _days_in_common_year + year_of_era / 4 - year_of_era / 100 + day_of_year
+    return era * _days_in_400_years + day_of_era - _days_from_year_0_march_to_1970
 }
 
 func sum(period: Period): Date {
@@ -179,7 +190,7 @@ func to_string(): String {
 }
 
 func _written_year(): String {
-    if _year >= 0 and _year <= 9999 {
+    if _year >= 0 and _year <= _largest_four_digit_year {
         return _year._written_with_digits(4)
     }
     var sign = "+"
@@ -193,18 +204,18 @@ func _written_year(): String {
 }
 
 func _from_days(days_since_1970: Long): Date {
-    var shifted = days_since_1970 + 719468
-    var era = shifted / 146097
+    var shifted = days_since_1970 + _days_from_year_0_march_to_1970
+    var era = shifted / _days_in_400_years
     if shifted < 0 {
-        era = (shifted - 146096) / 146097
+        era = (shifted - _last_day_of_era) / _days_in_400_years
     }
-    var day_of_era = shifted - era * 146097
-    var year_of_era = (day_of_era - day_of_era / 1460 + day_of_era / 36524 - day_of_era / 146096) / 365
-    var day_of_year = day_of_era - (year_of_era * 365 + year_of_era / 4 - year_of_era / 100)
-    var shifted_month = (day_of_year * 5 + 2) / 153
-    var day = day_of_year - (shifted_month * 153 + 2) / 5 + 1
+    var day_of_era = shifted - era * _days_in_400_years
+    var year_of_era = (day_of_era - day_of_era / _days_in_4_common_years + day_of_era / _days_in_100_years - day_of_era / _last_day_of_era) / _days_in_common_year
+    var day_of_year = day_of_era - (year_of_era * _days_in_common_year + year_of_era / 4 - year_of_era / 100)
+    var shifted_month = (day_of_year * 5 + 2) / _days_in_march_to_july
+    var day = day_of_year - (shifted_month * _days_in_march_to_july + 2) / 5 + 1
     var month = shifted_month + 3
-    var year = year_of_era + era * 400
+    var year = year_of_era + era * _years_per_era
     if shifted_month >= 10 {
         month = shifted_month - 9
         year = year + 1
@@ -216,7 +227,7 @@ func _from_days(days_since_1970: Long): Date {
 }
 
 func _is_leap(year: Integer): Boolean {
-    return year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)
+    return year % 4 == 0 and (year % 100 != 0 or year % _years_per_era == 0)
 }
 
 func _days_in(year: Integer, month: Integer): Integer {

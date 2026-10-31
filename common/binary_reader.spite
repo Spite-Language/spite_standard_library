@@ -6,6 +6,7 @@ var _at = 0
 var _failed = false
 var _walked = 0
 var _found = 0
+var _largest_tiny = 127
 
 func read(bytes: Buffer): $value_type? {
     var read_value = _read_from(bytes, 0)
@@ -45,7 +46,7 @@ func _read(): $value_type {
         return _read_byte()
     } else if $value_type == Tiny {
         var stored = _read_byte()
-        if stored > 127 {
+        if stored > _largest_tiny {
             stored = stored - 256
         }
         return stored

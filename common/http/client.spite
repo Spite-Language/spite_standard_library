@@ -2,6 +2,11 @@ var largest_body = 16777216
 var largest_idle = 8
 var _idle = List<Tcp.Connection>()
 var _idle_keys = List<String>()
+var _no_content_status = 204
+var _not_modified_status = 304
+var _first_success_status = 200
+var _most_header_lines = 200
+var _lowercase_f_code = 102
 
 func send(address: IpAddress, port: Integer, request: Http.Request): Http.Response? {
     var host = address._host_text()
@@ -112,7 +117,7 @@ func _read_response(connection: Tcp.Connection, request: Http.Request, first_lin
     var keep = not asked.contains("close") and (first_line.starts_with("HTTP/1.1") or asked.contains("keep-alive"))
     var declared = response.header("content-length")
     var encoding = response.header("transfer-encoding")
-    var bodiless = request.method == "HEAD" or status == 204 or status == 304 or status < 200
+    var bodiless = request.method == "HEAD" or status == _no_content_status or status == _not_modified_status or status < _first_success_status
     if bodiless {
         response._body = Buffer(0)
     } else if encoding {
@@ -141,7 +146,7 @@ func _read_response(connection: Tcp.Connection, request: Http.Request, first_lin
 
 func _read_headers(connection: Tcp.Connection, headers: Dictionary<String, String>): Boolean {
     var count = 0
-    while count < 200 {
+    while count < _most_header_lines {
         var line = connection.read_line()
         fallback line
         if line.is_empty() {
@@ -207,7 +212,7 @@ func _hex_value(line: String): Integer {
         var digit = -1
         if code >= 48 and code <= 57 {
             digit = code - 48
-        } else if code >= 97 and code <= 102 {
+        } else if code >= 97 and code <= _lowercase_f_code {
             digit = code - 87
         } else if code >= 65 and code <= 70 {
             digit = code - 55

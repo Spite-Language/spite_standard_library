@@ -49,24 +49,37 @@ var _table_lengths = Buffer(0)
 var _literal_mask: Long = 0
 var _distance_mask: Long = 0
 var _length_mask: Long = 0
+var _literal_room = 300
+var _all_lengths_room = 325
+var _table_lengths_room = 700
+var _literal_length_symbol_count = 286
+var _longest_match = 258
+var _first_length_symbol = 257
+var _longest_zero_run = 138
+var _low_byte_mask: Long = 255
+var _stored_length_plus_complement = 65535
+var _fixed_table_lengths_count = 320
+var _first_nine_bit_literal = 144
+var _first_eight_bit_length_symbol = 280
+var _fixed_literal_symbol_count = 288
 
 func compress(bytes: Buffer): Buffer {
     _source = bytes
     _source_length = bytes.count()
     _head = _integers(_hash_size)
     _previous = _integers(_window)
-    _literal_frequencies = _integers(300)
+    _literal_frequencies = _integers(_literal_room)
     _distance_frequencies = _integers(50)
-    _literal_lengths = _integers(300)
-    _literal_codes = _integers(300)
+    _literal_lengths = _integers(_literal_room)
+    _literal_codes = _integers(_literal_room)
     _distance_lengths = _integers(50)
     _distance_codes = _integers(50)
     _run_frequencies = _integers(25)
     _run_lengths = _integers(25)
     _run_codes = _integers(25)
-    _all_lengths = _integers(325)
-    _runs = _integers(325)
-    _run_extras = _integers(325)
+    _all_lengths = _integers(_all_lengths_room)
+    _runs = _integers(_all_lengths_room)
+    _run_extras = _integers(_all_lengths_room)
     _fill(_head, 0, _hash_size, -1)
     _fill(_previous, 0, _window, -1)
     var expected = _source_length / 2 + 64
@@ -106,7 +119,7 @@ func decompress(bytes: Buffer): Buffer? {
     _literal_table = _integers(32768)
     _distance_table = _integers(32768)
     _length_table = _integers(256)
-    _table_lengths = _integers(700)
+    _table_lengths = _integers(_table_lengths_room)
     _inflate_blocks()
     _input = Buffer(0)
     var result = _result
@@ -169,7 +182,7 @@ func _increment(room: Buffer, index: Integer) {
 func _start_block() {
     _symbols.clear()
     _extras.clear()
-    _fill(_literal_frequencies, 0, 286, 0)
+    _fill(_literal_frequencies, 0, _literal_length_symbol_count, 0)
     _fill(_distance_frequencies, 0, 30, 0)
 }
 
@@ -178,8 +191,8 @@ func _step(position: Integer): Integer {
     var best_distance = 0
     if position + 2 < _source_length {
         var limit = _source_length - position
-        if limit > 258 {
-            limit = 258
+        if limit > _longest_match {
+            limit = _longest_match
         }
         var hash = _hash_at(position)
         var candidate = _get(_head, hash)
@@ -257,7 +270,7 @@ func _add_symbol(symbol: Integer, extra: Integer) {
 func _add_match(match_length: Integer, distance: Integer) {
     var length_code = _code_for(_length_bases, match_length)
     var length_base = _entry(_length_bases, length_code)
-    var length_symbol = 257 + length_code
+    var length_symbol = _first_length_symbol + length_code
     var length_more = match_length - length_base
     _add_symbol(length_symbol, length_more)
     var distance_code = _code_for(_distance_bases, distance)
@@ -286,7 +299,7 @@ func _code_for(bases: List<Integer>, value: Integer): Integer {
 }
 
 func _write_block(last: Boolean) {
-    _build_code(_literal_frequencies, 286, 15, _literal_lengths, _literal_codes)
+    _build_code(_literal_frequencies, _literal_length_symbol_count, 15, _literal_lengths, _literal_codes)
     if _get(_distance_frequencies, 0) == 0 {
         _put(_distance_frequencies, 0, 1)
     }
@@ -312,7 +325,7 @@ func _write_symbols() {
         _write_symbol_code(_literal_lengths, _literal_codes, symbol)
         index = index + 1
         if symbol > 256 {
-            var length_code = symbol - 257
+            var length_code = symbol - _first_length_symbol
             var length_bits = _entry(_length_extra, length_code)
             var length_more = _entry(_extras, index - 1)
             _write_bits(length_more, length_bits)
@@ -333,7 +346,7 @@ func _write_symbol_code(lengths: Buffer, codes: Buffer, symbol: Integer) {
 }
 
 func _write_code_lengths() {
-    var literal_count = _trimmed_count(_literal_lengths, 286, 257)
+    var literal_count = _trimmed_count(_literal_lengths, _literal_length_symbol_count, _first_length_symbol)
     var distance_count = _trimmed_count(_distance_lengths, 30, 1)
     var index = 0
     while index < literal_count {
@@ -360,7 +373,7 @@ func _write_code_lengths() {
     while order_count > 4 and _order_length(order_count - 1) == 0 {
         order_count = order_count - 1
     }
-    _write_bits(literal_count - 257, 5)
+    _write_bits(literal_count - _first_length_symbol, 5)
     _write_bits(distance_count - 1, 5)
     _write_bits(order_count - 4, 4)
     index = 0
@@ -419,7 +432,7 @@ func _add_run(symbol: Integer, extra: Integer) {
 
 func _emit_run(value: Integer, repeat: Integer): Integer {
     if value == 0 and repeat >= 11 {
-        var zeros = repeat.minimum(138)
+        var zeros = repeat.minimum(_longest_zero_run)
         _add_run(18, zeros - 11)
         return zeros
     } else if value == 0 and repeat >= 3 {
@@ -628,7 +641,7 @@ func _write_bits(value: Integer, bits: Integer) {
     _bit_buffer = _bit_buffer.bits_or(shifted)
     _bit_count = _bit_count + bits
     while _bit_count >= 8 {
-        var low_bits = _bit_buffer.bits_and(255)
+        var low_bits = _bit_buffer.bits_and(_low_byte_mask)
         var low: Byte = low_bits
         _output.append(low)
         _bit_buffer = _bit_buffer.shifted_right(8)
@@ -651,7 +664,7 @@ func _write_code(code: Integer, bits: Integer) {
 
 func _flush() {
     while _bit_count > 0 {
-        var low_bits = _bit_buffer.bits_and(255)
+        var low_bits = _bit_buffer.bits_and(_low_byte_mask)
         var low: Byte = low_bits
         _output.append(low)
         _bit_buffer = _bit_buffer.shifted_right(8)
@@ -756,7 +769,7 @@ func _copy_stored() {
     var size = high * 256 + low
     var complement = complement_high * 256 + complement_low
     _position = _position + 4
-    _fail_when(size + complement != 65535 or _position + size > _input_length)
+    _fail_when(size + complement != _stored_length_plus_complement or _position + size > _input_length)
     fallback not _failed
     _result.append_buffer(_input, _position, size)
     _position = _position + size
@@ -780,7 +793,7 @@ func _decode_symbols() {
 }
 
 func _copy_match(symbol: Integer) {
-    var index = symbol - 257
+    var index = symbol - _first_length_symbol
     _fail_when(index >= 29)
     fallback not _failed
     var length_bits = _entry(_length_extra, index)
@@ -809,32 +822,32 @@ func _copy_match(symbol: Integer) {
 
 func _build_fixed_tables() {
     var index = 0
-    while index < 320 {
+    while index < _fixed_table_lengths_count {
         var bits = 5
-        if index < 144 {
+        if index < _first_nine_bit_literal {
             bits = 8
         } else if index < 256 {
             bits = 9
-        } else if index < 280 {
+        } else if index < _first_eight_bit_length_symbol {
             bits = 7
-        } else if index < 288 {
+        } else if index < _fixed_literal_symbol_count {
             bits = 8
         }
         _put(_table_lengths, index, bits)
         index = index + 1
     }
-    _literal_mask = _build_table(_literal_table, 0, 288)
-    _distance_mask = _build_table(_distance_table, 288, 32)
+    _literal_mask = _build_table(_literal_table, 0, _fixed_literal_symbol_count)
+    _distance_mask = _build_table(_distance_table, _fixed_literal_symbol_count, 32)
 }
 
 func _read_dynamic_tables() {
     var literal_bits = _read_bits(5)
     var distance_bits = _read_bits(5)
     var code_length_bits = _read_bits(4)
-    var literal_count = literal_bits + 257
+    var literal_count = literal_bits + _first_length_symbol
     var distance_count = distance_bits + 1
     var code_length_count = code_length_bits + 4
-    _fail_when(literal_count > 286 or distance_count > 30)
+    _fail_when(literal_count > _literal_length_symbol_count or distance_count > 30)
     _fill(_table_lengths, 0, 19, 0)
     var index = 0
     while index < code_length_count {

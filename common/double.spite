@@ -1,6 +1,10 @@
 # ../docs/memory.md#the-numbers
 
 var _buffer = Buffer(8)
+var _lowest_subnormal_exponent: Long = -1074
+var _significand_mask: Long = 4503599627370495
+var _special_exponent_field: Long = 2047
+var _exponent_bias_and_significand_bits: Long = 1075
 
 func Double(from: String): Double? {
     var text = from.trim()
@@ -174,7 +178,7 @@ func greater_than(other: Double): Boolean {
 
 func to_string(): String {
     var value = _value()
-    return _shortest_text(value, 9007199254740992, -1074, 17)
+    return _shortest_text(value, 9007199254740992, _lowest_subnormal_exponent, 17)
 }
 
 func to_debug(): String {
@@ -196,20 +200,20 @@ func _shortest_text(value: Double, significand_limit: Long, lowest_exponent: Lon
         return "-{magnitude}"
     }
     var field = bit_pattern.shifted_right(52)
-    var significand = bit_pattern.bits_and(4503599627370495)
-    if field == 2047 and significand == 0 {
+    var significand = bit_pattern.bits_and(_significand_mask)
+    if field == _special_exponent_field and significand == 0 {
         return "inf"
     }
-    if field == 2047 {
+    if field == _special_exponent_field {
         return "nan"
     }
     if bit_pattern == 0 {
         return "0"
     }
-    var exponent: Long = -1074
+    var exponent = _lowest_subnormal_exponent
     if field > 0 {
         significand = significand + 4503599627370496
-        exponent = field - 1075
+        exponent = field - _exponent_bias_and_significand_bits
     }
     while significand >= significand_limit or exponent < lowest_exponent {
         significand = significand / 2

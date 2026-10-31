@@ -1,9 +1,12 @@
 var sockets = DynamicLibrary("ws2_32.dll", 'identity', "")
 var nonblocking = false
+var _winsock_version_2_2 = 514
+var _nonblocking_io_control = -2147195266
+var _would_block_error = 10035
 
 func _start_sockets() {
     var information = Buffer(512)
-    sockets.WSAStartup(514, information)
+    sockets.WSAStartup(_winsock_version_2_2, information)
 }
 
 func _open_handle(family: Integer, as_ipv6: Boolean): Long {
@@ -55,7 +58,7 @@ func _switch_blocking(enabled: Boolean) {
         value = 1
     }
     mode.append_integer_little_endian(value)
-    sockets.ioctlsocket(handle, -2147195266, mode)
+    sockets.ioctlsocket(handle, _nonblocking_io_control, mode)
 }
 
 func _receive_now(room: Buffer, bytes: Integer): Integer {
@@ -64,7 +67,7 @@ func _receive_now(room: Buffer, bytes: Integer): Integer {
     if received > 0 {
         return received
     }
-    fallback received >= 0 or sockets.WSAGetLastError() != 10035
+    fallback received >= 0 or sockets.WSAGetLastError() != _would_block_error
     return -1
 }
 
