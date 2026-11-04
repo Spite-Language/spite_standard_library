@@ -25,6 +25,22 @@ func changes(): List<String> {
     return changed
 }
 
+# ../../spite_spec/specs/standard_library.md#system-classes
+func settled_changes(): List<String> {
+    _collect()
+    while not pending.is_empty() and not _is_quiet() {
+        var waiting: Duration? = _quiet_left()
+        _wait_for_event(waiting)
+        _collect()
+    }
+    var changed = List<String>()
+    if not pending.is_empty() {
+        changed = pending
+        pending = List<String>()
+    }
+    return changed
+}
+
 func wait_for_changes() {
     _collect()
     while pending.is_empty() or not _is_quiet() {
