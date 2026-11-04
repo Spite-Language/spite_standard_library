@@ -109,12 +109,7 @@ func _run_child(line: String): Integer? {
     return code
 }
 
-func _read_until_finished(
-    child: Long,
-    job: Long,
-    output_reading: Long,
-    errors_reading: Long,
-): Integer? {
+func _read_until_finished(child: Long, job: Long, output_reading: Long, errors_reading: Long): Integer? {
     var output_bytes = Buffer(0)
     var errors_bytes = Buffer(0)
     var started = kernel.GetTickCount64_as_long()
@@ -160,11 +155,7 @@ func _read_until_finished(
     return code
 }
 
-func _keep_what_was_read(
-    output_bytes: Buffer,
-    errors_bytes: Buffer,
-    errors_reading: Long,
-) {
+func _keep_what_was_read(output_bytes: Buffer, errors_bytes: Buffer, errors_reading: Long) {
     _output = output_bytes
     if errors_reading != 0 {
         _errors = errors_bytes

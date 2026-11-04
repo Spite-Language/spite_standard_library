@@ -310,7 +310,7 @@ func negate(): Float {
 func to_half_precision(): UnsignedShort {
     var pattern: Long = bits()
     var sign: Long = pattern / 2147483648
-    var exponent: Long = (pattern / 8388608) % 256
+    var exponent: Long = pattern / 8388608 % 256
     var mantissa: Long = pattern % 8388608
     var magnitude = _half_infinity
     if exponent == _special_exponent_field {

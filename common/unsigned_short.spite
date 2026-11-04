@@ -39,7 +39,7 @@ func to_buffer(): Buffer {
 func half_precision_to_float(): Float {
     var bits: Long = get_this()
     var sign: Long = bits / 32768
-    var exponent: Long = (bits / 1024) % 32
+    var exponent: Long = bits / 1024 % 32
     var mantissa: Long = bits % 1024
     var result: Float = 0.0
     if exponent == 31 {

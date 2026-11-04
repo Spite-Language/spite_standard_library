@@ -57,7 +57,12 @@ func to_date_time_in(zone: TimeZone): DateTime {
     var date = first_day + Period(days, 'days')
     var second_of_day_count: Integer = second_of_day
     var nanosecond: Integer = nanosecond_long
-    var time = Time(second_of_day_count / _seconds_per_hour, second_of_day_count / 60 % 60, second_of_day_count % 60, nanosecond)
+    var time = Time(
+        second_of_day_count / _seconds_per_hour,
+        second_of_day_count / 60 % 60,
+        second_of_day_count % 60,
+        nanosecond,
+    )
     return DateTime(date, time)
 }
 

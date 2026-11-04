@@ -12,8 +12,7 @@ func Environment() {
     _refuse_the_undeclared()
 }
 
-func _read_settings() {
-}
+func _read_settings() { }
 
 func load_from_file(path: Path): Boolean {
     var file = File(path)
@@ -67,12 +66,16 @@ func _refuse_if_undeclared(argument: String) {
     var name = _name_of(argument)
     fallback not _read_names.contains(name)
     if name.is_empty() {
-        console.error("error: '{argument}' is not a separator: every value on the command line is a named setting, given as --name=value")
+        console.error(
+            "error: '{argument}' is not a separator: every value on the command line is a named setting, given as --name=value",
+        )
         _program.exit(1)
     }
     var flag = name.replace("_", "-")
     var first = "error: '--{flag}' names no setting of Environment"
-    console.error("{first}: declare it in environment.spite, like 'var {name} = \"\"', and the program reads it as Environment().{name}")
+    console.error(
+        "{first}: declare it in environment.spite, like 'var {name} = \"\"', and the program reads it as Environment().{name}",
+    )
     _program.exit(1)
 }
 
@@ -154,7 +157,9 @@ func enum_setting(name: String, declared: String, names: String): String {
     var variable = name.upper_case()
     var first = "error: the setting Environment.{name} was given '{text}', which is not one of its values: {names}"
     var console = Console()
-    console.error("{first}: write --{flag}={declared} on the command line, or {variable}={declared} in the environment or a .env file")
+    console.error(
+        "{first}: write --{flag}={declared} on the command line, or {variable}={declared} in the environment or a .env file",
+    )
     _program.exit(1)
     return declared
 }

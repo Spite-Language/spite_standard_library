@@ -226,7 +226,7 @@ func _same_key(held: $key_type, key: $key_type): Boolean {
     if $key_type == String {
         return _same_text(held, key)
     } else if $key_type == Float or $key_type == Double {
-        return held == key or (held != held and key != key)
+        return held == key or held != held and key != key
     }
     return held == key
 }

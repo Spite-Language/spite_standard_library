@@ -108,7 +108,14 @@ func _yearly_offset_seconds_at(unix_seconds: Long): Integer {
     var days: Integer = days_long
     var date = first_day + Period(days, 'days')
     var year = date.year
-    var start_local = _change_local_seconds_in(year, _start_letter, _start_number, _start_week, _start_weekday, _start_time)
+    var start_local = _change_local_seconds_in(
+        year,
+        _start_letter,
+        _start_number,
+        _start_week,
+        _start_weekday,
+        _start_time,
+    )
     var end_local = _change_local_seconds_in(year, _end_letter, _end_number, _end_week, _end_weekday, _end_time)
     var start = start_local - standard_offset
     var end = end_local - daylight_offset
@@ -122,7 +129,14 @@ func _yearly_offset_seconds_at(unix_seconds: Long): Integer {
     return _standard_offset
 }
 
-func _change_local_seconds_in(year: Integer, letter: Integer, number: Integer, week: Integer, weekday: Integer, time_seconds: Integer): Long {
+func _change_local_seconds_in(
+    year: Integer,
+    letter: Integer,
+    number: Integer,
+    week: Integer,
+    weekday: Integer,
+    time_seconds: Integer,
+): Long {
     var day = _change_day_since_1970(year, letter, number, week, weekday)
     var time: Long = time_seconds
     return day * _seconds_per_day + time

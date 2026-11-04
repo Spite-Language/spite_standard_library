@@ -54,7 +54,15 @@ func _zeroed(size: Integer): Buffer {
 func _open_watch(folder: String, root: String, file_name: String): Boolean {
     var no_value: Long = 0
     var wide_folder = folder._to_wide()
-    var handle = kernel.CreateFileW_as_long(wide_folder, 1, 7, no_value, 3, _backup_semantics_and_overlapped_flags, no_value)
+    var handle = kernel.CreateFileW_as_long(
+        wide_folder,
+        1,
+        7,
+        no_value,
+        3,
+        _backup_semantics_and_overlapped_flags,
+        no_value,
+    )
     fallback handle != -1
     var overlap = _zeroed(32)
     var event = kernel.CreateEventW_as_long(no_value, 1, 0, no_value)

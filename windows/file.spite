@@ -29,7 +29,15 @@ func lock(): LockedFile? {
     var normal = 128
     var nothing: Long = 0
     var wide_path = path._to_wide()
-    var handle = kernel.CreateFileW_as_long(wide_path, read_and_write, share_everything, nothing, open_always, normal, nothing)
+    var handle = kernel.CreateFileW_as_long(
+        wide_path,
+        read_and_write,
+        share_everything,
+        nothing,
+        open_always,
+        normal,
+        nothing,
+    )
     fallback handle != -1
     var locked = LockedFile(handle)
     var held = locked._is_held()

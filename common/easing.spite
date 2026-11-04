@@ -1,6 +1,5 @@
 singleton
 
-
 func smooth_step(amount: Float): Float {
     var held = amount.clamp(0.0, 1.0)
     return held * held * (3.0 - 2.0 * held)

@@ -13,7 +13,16 @@ func _read_wide_string_at(at: Integer, characters: Integer): String? {
     var size = kernel.WideCharToMultiByte(_utf8_code_page, only_valid, wide, characters, no_room, 0, no_value, no_value)
     fallback size > 0
     var text = Buffer(size)
-    var written = kernel.WideCharToMultiByte(_utf8_code_page, only_valid, wide, characters, text, size, no_value, no_value)
+    var written = kernel.WideCharToMultiByte(
+        _utf8_code_page,
+        only_valid,
+        wide,
+        characters,
+        text,
+        size,
+        no_value,
+        no_value,
+    )
     fallback written == size
     text.take_written(written)
     return text.read_string_at(0, written)

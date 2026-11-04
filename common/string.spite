@@ -321,7 +321,6 @@ func _characters(): List<String> {
     return characters
 }
 
-
 func _as_date(): Date? {
     return _date_between(0, _length)
 }
@@ -624,7 +623,12 @@ func _offset_between(start: Integer, end: Integer): Integer? {
     return offset
 }
 
-func _annotation_agrees(is_first: Boolean, instant: Instant, offset_seconds: Integer, offset_is_unknown: Boolean): Boolean {
+func _annotation_agrees(
+    is_first: Boolean,
+    instant: Instant,
+    offset_seconds: Integer,
+    offset_is_unknown: Boolean,
+): Boolean {
     if contains("=") {
         return this == "u-ca=iso8601"
     }
@@ -851,8 +855,6 @@ func _cased_like(original: String, changed: String): String {
     }
     return changed
 }
-
-
 
 func _is_uncountable(word: String): Boolean {
     return uncountables.contains(word)

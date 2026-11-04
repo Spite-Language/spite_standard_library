@@ -195,7 +195,6 @@ func read_camel_attribute(attribute: Spite.AttributeDeclaration, created: $value
     _matched = true
 }
 
-
 func _read_enum(): $value_type {
     var name = _read_text()
     var symbol: $value_type? = name
@@ -206,7 +205,6 @@ func _read_enum(): $value_type {
     _fail("one of the names of {unnamed.class.name}")
     return unnamed
 }
-
 
 func _failed(): Boolean {
     return not _expected.is_empty()

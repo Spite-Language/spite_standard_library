@@ -304,7 +304,7 @@ func sort_by(measure: Spite.Function<$element_type, Integer>): List<$element_typ
                     var right_key = keys[right_index]
                     crash left_key
                     crash right_key
-                    takes_left = not (right_key < left_key)
+                    takes_left = not right_key < left_key
                 }
                 if takes_left {
                     var taken_left = order[left]
@@ -550,7 +550,7 @@ func sort_by_member(member: Spite.AttributeDeclaration): List<$element_type> {
                     var right_key = keys[right_index]
                     crash left_key
                     crash right_key
-                    takes_left = not (right_key < left_key)
+                    takes_left = not right_key < left_key
                 }
                 if takes_left {
                     var taken_left = order[left]
