@@ -1,11 +1,12 @@
 var _name = ""
 var _name_with_namespaces = ""
-var _owner: Spite.Class? = null
+var _owner: Spite.Class = Nothing
 var _members = Dictionary<String, Spite.Class>()
 
-func Union(starting_name: String) {
+func Union(starting_name: String, starting_name_with_namespaces: String, starting_owner: Spite.Class) {
     _name = starting_name
-    _name_with_namespaces = starting_name
+    _name_with_namespaces = starting_name_with_namespaces
+    _owner = starting_owner
 }
 
 func get_name(): String {
@@ -17,7 +18,6 @@ func get_name_with_namespaces(): String {
 }
 
 func get_owner(): Spite.Class {
-    crash _owner
     return _owner
 }
 

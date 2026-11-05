@@ -1,13 +1,24 @@
 var _name = ""
-var _class = Spite.Class("Nothing")
+var _class: Spite.Class = Nothing
 var _value: Anything? = null
 var _index = 0
-var _declaration: Spite.AttributeDeclaration? = null
-var _owner: Anything? = null
+var _declaration = Spite.AttributeDeclaration("", 0, Nothing, "")
+var _owner: Anything = ""
 
-func Attribute(starting_name: String, starting_index: Integer) {
+func Attribute(
+    starting_name: String,
+    starting_index: Integer,
+    starting_class: Spite.Class,
+    starting_declaration: Spite.AttributeDeclaration,
+    starting_owner: Anything,
+    starting_value: Anything?,
+) {
     _name = starting_name
     _index = starting_index
+    _class = starting_class
+    _declaration = starting_declaration
+    _owner = starting_owner
+    _value = starting_value
 }
 
 func get_name(): String {
@@ -27,12 +38,10 @@ func get_index(): Integer {
 }
 
 func get_declaration(): Spite.AttributeDeclaration {
-    crash _declaration
     return _declaration
 }
 
 func get_owner(): Anything {
-    crash _owner
     return _owner
 }
 

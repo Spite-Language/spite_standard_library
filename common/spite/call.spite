@@ -1,4 +1,4 @@
-var _declaration = Spite.FunctionDeclaration("", "", 0)
+var _declaration = Spite.FunctionDeclaration("", "", 0, Nothing, "", "")
 var _instance: Anything? = null
 var _arguments = Dictionary<String, Anything>()
 

@@ -2,7 +2,7 @@ var _name = ""
 var _hole = ""
 var _index = 0
 var _arguments = List<Spite.Argument>()
-var _returns: Spite.Class? = null
+var _returns: Spite.Class = Nothing
 var _is_resumable = false
 var _has_facts = false
 var _has_reach = false
@@ -11,12 +11,22 @@ var _called_on: Spite.Function<Anything, Dictionary<String, Anything>, Nothing>?
 var _reads = List<Spite.AttributeDeclaration>()
 var _writes = List<Spite.AttributeDeclaration>()
 var _signature = ""
-var _source_file: File? = null
+var _source_path = ""
 
-func FunctionDeclaration(starting_name: String, starting_hole: String, starting_index: Integer) {
+func FunctionDeclaration(
+    starting_name: String,
+    starting_hole: String,
+    starting_index: Integer,
+    starting_returns: Spite.Class,
+    starting_source_path: String,
+    starting_signature: String,
+) {
     _name = starting_name
     _hole = starting_hole
     _index = starting_index
+    _returns = starting_returns
+    _source_path = starting_source_path
+    _signature = starting_signature
 }
 
 func get_name(): String {
@@ -35,7 +45,7 @@ func get_arguments(): List<Spite.Argument> {
     return _arguments
 }
 
-func get_returns(): Spite.Class? {
+func get_returns(): Spite.Class {
     return _returns
 }
 
@@ -60,8 +70,7 @@ func get_writes(): List<Spite.AttributeDeclaration> {
 }
 
 func get_source_file(): File {
-    crash _source_file
-    return _source_file
+    return File(_source_path)
 }
 
 func _call_on(instance: Anything, arguments: Dictionary<String, Anything>) {

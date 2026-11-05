@@ -1,11 +1,13 @@
 var _name = ""
-var _declaration: Spite.FunctionDeclaration? = null
-var _owner: Anything? = null
+var _declaration = Spite.FunctionDeclaration("", "", 0, Nothing, "", "")
+var _owner: Anything = ""
 var _called: Spite.Function<Nothing>? = null
 var _value: Spite.Function<Nothing>? = null
 
-func Function(starting_name: String) {
+func Function(starting_name: String, starting_declaration: Spite.FunctionDeclaration, starting_owner: Anything) {
     _name = starting_name
+    _declaration = starting_declaration
+    _owner = starting_owner
 }
 
 func get_name(): String {
@@ -13,12 +15,10 @@ func get_name(): String {
 }
 
 func get_declaration(): Spite.FunctionDeclaration {
-    crash _declaration
     return _declaration
 }
 
 func get_owner(): Anything {
-    crash _owner
     return _owner
 }
 
@@ -26,7 +26,7 @@ func get_arguments(): List<Spite.Argument> {
     return declaration.arguments
 }
 
-func get_returns(): Spite.Class? {
+func get_returns(): Spite.Class {
     return declaration.returns
 }
 

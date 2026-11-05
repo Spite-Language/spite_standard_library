@@ -5,9 +5,10 @@ var _classes = List<Spite.Class>()
 var _namespaces = List<Spite.Namespace>()
 var _source_directories = List<Directory>()
 
-func Namespace(starting_name: String, starting_name_with_namespaces: String) {
+func Namespace(starting_name: String, starting_name_with_namespaces: String, starting_parent: Spite.Namespace?) {
     _name = starting_name
     _name_with_namespaces = starting_name_with_namespaces
+    _parent = starting_parent
 }
 
 func get_name(): String {

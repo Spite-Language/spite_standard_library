@@ -1,18 +1,25 @@
 var _name = ""
-var _class: Spite.Class? = null
+var _class: Spite.Class = Nothing
 var _index = 0
-var _source_file: File? = null
+var _source_path = ""
 
-func AttributeDeclaration(starting_name: String, starting_index: Integer) {
+func AttributeDeclaration(
+    starting_name: String,
+    starting_index: Integer,
+    starting_class: Spite.Class,
+    starting_source_path: String,
+) {
     _name = starting_name
     _index = starting_index
+    _class = starting_class
+    _source_path = starting_source_path
 }
 
 func get_name(): String {
     return _name
 }
 
-func get_class(): Spite.Class? {
+func get_class(): Spite.Class {
     return _class
 }
 
@@ -21,15 +28,11 @@ func get_index(): Integer {
 }
 
 func get_source_file(): File {
-    crash _source_file
-    return _source_file
+    return File(_source_path)
 }
 
 func get_is_singleton(): Boolean {
-    if _class {
-        return _class.is_singleton
-    }
-    return false
+    return _class.is_singleton
 }
 
 func to_string(): String {

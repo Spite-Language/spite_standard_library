@@ -8,7 +8,7 @@ var _is_list = false
 var _is_dictionary = false
 var _is_stateful = false
 var _is_fixed_size = false
-var _element_type: Spite.Class? = null
+var _generics = Dictionary<String, Spite.Class>()
 var _attributes = Dictionary<String, Spite.AttributeDeclaration>()
 var _functions = Dictionary<String, Spite.FunctionDeclaration>()
 var _enums = Dictionary<String, Spite.Enum>()
@@ -18,9 +18,32 @@ var _has_no_stand_in = false
 var _source_folder = ""
 var _source_files = List<File>()
 
-func Class(starting_name: String) {
+func Class(
+    starting_name: String,
+    starting_name_with_namespaces: String,
+    starting_namespace: Spite.Namespace?,
+    starting_is_singleton: Boolean,
+    starting_is_enum: Boolean,
+    starting_is_optional: Boolean,
+    starting_is_list: Boolean,
+    starting_is_dictionary: Boolean,
+    starting_is_stateful: Boolean,
+    starting_is_fixed_size: Boolean,
+    starting_has_no_stand_in: Boolean,
+    starting_source_folder: String,
+) {
     _name = starting_name
-    _name_with_namespaces = starting_name
+    _name_with_namespaces = starting_name_with_namespaces
+    _namespace = starting_namespace
+    _is_singleton = starting_is_singleton
+    _is_enum = starting_is_enum
+    _is_optional = starting_is_optional
+    _is_list = starting_is_list
+    _is_dictionary = starting_is_dictionary
+    _is_stateful = starting_is_stateful
+    _is_fixed_size = starting_is_fixed_size
+    _has_no_stand_in = starting_has_no_stand_in
+    _source_folder = starting_source_folder
 }
 
 func get_name(): String {
@@ -91,8 +114,8 @@ func get_is_dictionary(): Boolean {
     return _is_dictionary
 }
 
-func get_element_type(): Spite.Class? {
-    return _element_type
+func get_generics(): Dictionary<String, Spite.Class> {
+    return _generics
 }
 
 func fits_vector(): Boolean {
