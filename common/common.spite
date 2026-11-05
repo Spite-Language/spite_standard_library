@@ -1,0 +1,10 @@
+type Component {
+    sum(Component): Component
+    subtract(Component): Component
+    multiply(Component): Component
+    divide(Component): Component
+    minimum(Component): Component
+    maximum(Component): Component
+    equals(Component): Boolean
+    absolute(): Component
+}
