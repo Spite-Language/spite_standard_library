@@ -1,4 +1,15 @@
-generic $number_type: Common.Component
+generic $number_type: Vector2Component
+
+type Vector2Component {
+    sum(Vector2Component): Vector2Component
+    subtract(Vector2Component): Vector2Component
+    multiply(Vector2Component): Vector2Component
+    divide(Vector2Component): Vector2Component
+    minimum(Vector2Component): Vector2Component
+    maximum(Vector2Component): Vector2Component
+    equals(Vector2Component): Boolean
+    absolute(): Vector2Component
+}
 
 var x: $number_type = 0
 var y: $number_type = 0
