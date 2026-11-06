@@ -1,0 +1,131 @@
+var _repository = ""
+var _commit = ""
+var _folder = ""
+var _url_openings = ["https://", "http://", "ssh://", "git://", "file://"]
+var _local_openings = ["./", "../", "/", "\\"]
+var _commit_digits = "0123456789abcdef"
+var _shortest_commit = 7
+var _longest_commit = 40
+
+func GitPath(from: String): GitPath? {
+    var made = GitPath()
+    made.read(from)
+    fallback made.has_a_repository and made.has_a_commit and made.stays_inside
+    return made
+}
+
+func read(written: String) {
+    _repository = written
+    _commit = ""
+    _folder = ""
+    var last_at = _last_at_sign(written)
+    fallback last_at
+    var written_length = written.length()
+    var before = written.slice(0, last_at)
+    crash before
+    var pinned = written.slice(last_at + 1, written_length)
+    crash pinned
+    _repository = before
+    _commit = pinned
+    var slash = pinned.index_of("/")
+    fallback slash
+    var pinned_length = pinned.length()
+    var commit_part = pinned.slice(0, slash)
+    crash commit_part
+    var folder_part = pinned.slice(slash + 1, pinned_length)
+    crash folder_part
+    _commit = commit_part
+    _folder = folder_part
+}
+
+func get_repository(): String {
+    return _repository
+}
+
+func get_commit(): String {
+    return _commit
+}
+
+func get_folder(): String {
+    return _folder
+}
+
+func get_has_a_repository(): Boolean {
+    return is_local or is_remote
+}
+
+func get_has_a_commit(): Boolean {
+    var length = _commit.length()
+    fallback length >= _shortest_commit and length <= _longest_commit
+    var index = 0
+    while index < length {
+        var character = _commit[index]
+        fallback character and _commit_digits.contains(character)
+        index = index + 1
+    }
+    return true
+}
+
+func get_stays_inside(): Boolean {
+    var leaves = _folder.starts_with("..") or _folder.starts_with("/") or _folder.starts_with("\\")
+    return not leaves and not _has_a_drive(_folder)
+}
+
+func get_is_local(): Boolean {
+    var index = 0
+    while index < _local_openings.count() {
+        var opening = _local_openings[index]
+        if _repository.starts_with(opening) {
+            return true
+        }
+        index = index + 1
+    }
+    return _has_a_drive(_repository)
+}
+
+func get_is_remote(): Boolean {
+    if is_a_url {
+        return true
+    }
+    var segments = _repository.split("/")
+    var first = segments[0]
+    crash first
+    return first.contains(".") and not first.starts_with(".")
+}
+
+func get_is_a_url(): Boolean {
+    var index = 0
+    while index < _url_openings.count() {
+        var opening = _url_openings[index]
+        if _repository.starts_with(opening) {
+            return true
+        }
+        index = index + 1
+    }
+    return false
+}
+
+func to_string(): String {
+    if _folder.is_empty() {
+        return "{_repository}@{_commit}"
+    }
+    return "{_repository}@{_commit}/{_folder}"
+}
+
+func _last_at_sign(text: String): Integer? {
+    var found: Integer? = null
+    var index = 0
+    while index < text.length() {
+        var character = text[index]
+        if character == "@" {
+            found = index
+        }
+        index = index + 1
+    }
+    return found
+}
+
+func _has_a_drive(text: String): Boolean {
+    fallback text.length() >= 2
+    return text[1] == ":"
+}
