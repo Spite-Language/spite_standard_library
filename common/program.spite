@@ -1,9 +1,9 @@
 singleton
 
-var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
+var _library = DynamicLibrary("ucrtbase.dll", 'identity', "")
 
 func exit(code: Integer) {
-    library.exit(code)
+    _library.exit(code)
 }
 
 func live_allocations(): Long {

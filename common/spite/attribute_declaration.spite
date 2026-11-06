@@ -33,10 +33,6 @@ func get_source_file(): File {
     return File(source_path)
 }
 
-func get_is_singleton(): Boolean {
-    return _class.is_singleton
-}
-
 func to_string(): String {
     return _name
 }

@@ -22,46 +22,10 @@ func get_owner(): Anything {
     return _owner
 }
 
-func get_arguments(): List<Spite.Argument> {
-    return declaration.arguments
-}
-
-func get_returns(): Spite.Class {
-    return declaration.returns
-}
-
-func get_is_resumable(): Boolean {
-    return declaration.is_resumable
-}
-
-func get_returned_literal(): String {
-    return declaration.returned_literal
-}
-
-func get_reads(): List<Spite.AttributeDeclaration> {
-    return declaration.reads
-}
-
-func get_writes(): List<Spite.AttributeDeclaration> {
-    return declaration.writes
-}
-
-func get_source_file(): File {
-    return declaration.source_file
-}
-
 func call_function() {
     crash _called
     var called = _called
     called()
-}
-
-func argument_count(): Integer {
-    return declaration.argument_count()
-}
-
-func name_fits(pattern: String): Boolean {
-    return declaration.name_fits(pattern)
 }
 
 func to_string(): String {
