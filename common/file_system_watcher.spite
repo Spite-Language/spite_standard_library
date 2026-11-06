@@ -9,9 +9,11 @@ var last_change = Duration(0, 'nanoseconds')
 var _quiet_time = Duration(100, 'milliseconds')
 
 func watch_for_changes(target: Target): Boolean {
+    var target_path: Path? = target.path
+    crash target_path
     switch target {
-        Directory: return watch_folder(target.path)
-        File: return watch_file(target.path)
+        Directory: return watch_folder(target_path)
+        File: return watch_file(target_path)
     }
 }
 

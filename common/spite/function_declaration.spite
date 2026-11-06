@@ -70,7 +70,9 @@ func get_writes(): List<Spite.AttributeDeclaration> {
 }
 
 func get_source_file(): File {
-    return File(_source_path)
+    var source_path: Path? = _source_path
+    crash source_path
+    return File(source_path)
 }
 
 func _call_on(instance: Anything, arguments: Dictionary<String, Anything>) {

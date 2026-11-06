@@ -1,7 +1,8 @@
 var _text = "."
 var _written = "."
 
-func Path(from: String): Path {
+func Path(from: String): Path? {
+    fallback _is_a_path(from)
     var made = Path()
     made._text = made._normalised(from)
     made._written = from
@@ -51,7 +52,11 @@ func joined(other: Path): Path {
     if other.is_rooted {
         return other
     }
-    return "{_text}/{other._text}"
+    var together = "{_text}/{other._text}"
+    var made = Path()
+    made._text = made._normalised(together)
+    made._written = together
+    return made
 }
 
 func equals(other: Path): Boolean {
@@ -60,6 +65,16 @@ func equals(other: Path): Boolean {
 
 func to_string(): String {
     return _text
+}
+
+func _is_a_path(text: String): Boolean {
+    fallback not text.is_empty()
+    var index = 0
+    while index < text.length() {
+        fallback text.byte_at(index) != 0
+        index = index + 1
+    }
+    return true
 }
 
 func _normalised(written: String): String {

@@ -44,9 +44,15 @@ func get_was_stopped(): Boolean {
     return _was_stopped
 }
 
+func _command_names_a_file(): Boolean {
+    var command_path: Path? = command
+    fallback command_path
+    var file = File(command_path)
+    return file.exists()
+}
+
 func _command_line(): String {
-    var file = File(command)
-    var command_is_path = command.contains(" ") and file.exists()
+    var command_is_path = command.contains(" ") and _command_names_a_file()
     var line = command
     if command_is_path {
         line = "\"{command}\""
