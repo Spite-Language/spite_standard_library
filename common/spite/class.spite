@@ -15,7 +15,6 @@ var _enums = Dictionary<String, Spite.Enum>()
 var _unions = Dictionary<String, Spite.Union>()
 var _types = Dictionary<String, Spite.Type>()
 var _has_no_stand_in = false
-var _source_folder = ""
 var _source_files = List<File>()
 
 func Class(
@@ -30,7 +29,6 @@ func Class(
     starting_is_stateful: Boolean,
     starting_is_fixed_size: Boolean,
     starting_has_no_stand_in: Boolean,
-    starting_source_folder: String,
 ) {
     _name = starting_name
     _name_with_namespaces = starting_name_with_namespaces
@@ -43,7 +41,6 @@ func Class(
     _is_stateful = starting_is_stateful
     _is_fixed_size = starting_is_fixed_size
     _has_no_stand_in = starting_has_no_stand_in
-    _source_folder = starting_source_folder
 }
 
 func get_name(): String {
@@ -84,10 +81,6 @@ func get_is_singleton(): Boolean {
 
 func get_source_files(): List<File> {
     return _source_files
-}
-
-func source_folder(): String {
-    return _source_folder
 }
 
 func get_is_optional(): Boolean {
