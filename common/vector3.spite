@@ -1,14 +1,14 @@
 generic $number_type: Vector3Component
 
 type Vector3Component {
-    sum(Vector3Component): Vector3Component
-    subtract(Vector3Component): Vector3Component
-    multiply(Vector3Component): Vector3Component
-    divide(Vector3Component): Vector3Component
-    minimum(Vector3Component): Vector3Component
-    maximum(Vector3Component): Vector3Component
-    equals(Vector3Component): Boolean
-    absolute(): Vector3Component
+    sum: Spite.Function<Vector3Component, Vector3Component>
+    subtract: Spite.Function<Vector3Component, Vector3Component>
+    multiply: Spite.Function<Vector3Component, Vector3Component>
+    divide: Spite.Function<Vector3Component, Vector3Component>
+    minimum: Spite.Function<Vector3Component, Vector3Component>
+    maximum: Spite.Function<Vector3Component, Vector3Component>
+    equals: Spite.Function<Vector3Component, Boolean>
+    absolute: Spite.Function<Vector3Component>
 }
 
 var x: $number_type = 0

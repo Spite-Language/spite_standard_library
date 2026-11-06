@@ -1,11 +1,11 @@
 singleton
 
 type Printable {
-    to_string(): String
+    to_string: Spite.Function<String>
 }
 
 type Debuggable {
-    to_debug(): String
+    to_debug: Spite.Function<String>
 }
 
 var library = DynamicLibrary("ucrtbase.dll", 'identity', "")

@@ -10,17 +10,17 @@ enum RotationOrder {
 }
 
 type Part {
-    sum(Part): Part
-    subtract(Part): Part
-    multiply(Part): Part
-    divide(Part): Part
-    equals(Part): Boolean
-    less_than(Part): Boolean
-    greater_than(Part): Boolean
-    square_root(): Part
-    sine(): Part
-    cosine(): Part
-    arc_cosine(): Part
+    sum: Spite.Function<Part, Part>
+    subtract: Spite.Function<Part, Part>
+    multiply: Spite.Function<Part, Part>
+    divide: Spite.Function<Part, Part>
+    equals: Spite.Function<Part, Boolean>
+    less_than: Spite.Function<Part, Boolean>
+    greater_than: Spite.Function<Part, Boolean>
+    square_root: Spite.Function<Part>
+    sine: Spite.Function<Part>
+    cosine: Spite.Function<Part>
+    arc_cosine: Spite.Function<Part>
 }
 
 var x: $number_type = 0.0

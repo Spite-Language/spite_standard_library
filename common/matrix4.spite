@@ -1,14 +1,14 @@
 generic $number_type: Element
 
 type Element {
-    sum(Element): Element
-    subtract(Element): Element
-    multiply(Element): Element
-    divide(Element): Element
-    equals(Element): Boolean
-    less_than(Element): Boolean
-    square_root(): Element
-    tangent(): Element
+    sum: Spite.Function<Element, Element>
+    subtract: Spite.Function<Element, Element>
+    multiply: Spite.Function<Element, Element>
+    divide: Spite.Function<Element, Element>
+    equals: Spite.Function<Element, Boolean>
+    less_than: Spite.Function<Element, Boolean>
+    square_root: Spite.Function<Element>
+    tangent: Spite.Function<Element>
 }
 
 var column_0_row_0: $number_type = 1.0
