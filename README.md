@@ -2,7 +2,10 @@
 
 The classes every Spite program reaches by path: `load "../spite_standard_library/windows"` from a folder beside
 this one. `common/` holds the classes every system has, and `windows/`, `linux/` and `mac/` the parts of each
-system, which reopen the classes of `common/`. The compiler names no class of the library.
+system, which reopen the classes of `common/`. The compiler names no class of the library, except the ones in
+`spite/` it supplies to the programs that need them: `Spite.Fault`, `Spite.Settings`, `Spite.Asserts` and
+`Spite.CopyTable` (`common/spite/`, read by a program that loads `common/` alone too), which no program may name, and the reloader
+`Spite.HotReload` of a `--hot-reload` build (`common/spite/` and `windows/spite/`).
 
 What is left is in the [issues](https://github.com/Spite-Language/spite_standard_library/issues) of this
 repository, and the language's in the [compiler's](https://github.com/Spite-Language/spite_compiler/issues).
