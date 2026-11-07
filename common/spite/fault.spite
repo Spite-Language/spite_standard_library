@@ -1,0 +1,505 @@
+var _access_violation: Long = 3221225477
+var _stack_overflow: Long = 3221225725
+var _illegal_instruction: Long = 3221225501
+var _heap_corruption: Long = 3221226356
+var _integer_division_by_zero: Long = 3221225620
+var _longest_path = 260
+var _first_leading_byte = 192
+
+func report(code: Long, address: Long, detail: Long, accessed: Long, frame: Long) {
+    var site = _foreign_site()
+    var library = _foreign_library()
+    var console = Console()
+    var fields = List<String>()
+    fields.append("spite.fault")
+    var kind = kind_of(code, detail)
+    fields.append(kind)
+    var place = "-\t-\t-"
+    if site == 0 {
+        place = program_place(address)
+    }
+    fields.append(place)
+    if code == _access_violation {
+        var accessed_text = hexadecimal(accessed)
+        fields.append("address=0x{accessed_text}")
+    }
+    var code_text = hexadecimal(code)
+    if code == _heap_corruption {
+        fields.append("status=0x{code_text}")
+    } else {
+        fields.append("code=0x{code_text}")
+    }
+    var module = module_place(address)
+    fields.append("at={module}")
+    if site > 0 {
+        add_the_foreign_call(fields, site, library)
+    }
+    var joined = fields.join("\t")
+    console.print(joined)
+    if site == 0 {
+        named_frames(address, frame)
+    }
+}
+
+func add_the_foreign_call(fields: List<String>, site: Long, library: DynamicLibrary?) {
+    var written = _foreign_site_text(site)
+    var parts = written.split("\t")
+    var foreign = parts[0]
+    var called_from = parts[1]
+    crash foreign
+    crash called_from
+    fields.append(foreign)
+    if library {
+        fields.append("library={library.file_name}")
+    }
+    fields.append(called_from)
+}
+
+func program_place(address: Long): String {
+    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+    var own = kernel.GetModuleHandleA_as_long(0)
+    var table = _place_table()
+    var record = _read_long(table + 8)
+    while record != 0 {
+        var start = _read_long(record + 16)
+        var end = _read_long(record + 24)
+        if address >= start and address < end {
+            var record_count = _read_long(record)
+            var record_offset = address - start
+            return place_in(record_count, record + 32, record_offset)
+        }
+        record = _read_long(record + 8)
+    }
+    var code_offset = address - own - 4096
+    if code_offset < 0 {
+        return "-\t-\t-"
+    }
+    var count = _read_long(table)
+    return place_in(count, table + 16, code_offset)
+}
+
+func place_in(count: Long, entries: Long, code_offset: Long): String {
+    var at = entries
+    var found = "-\t-\t-"
+    var index: Long = 0
+    while index < count {
+        var start = _read_long(at)
+        var length = _read_long(at + 8)
+        if start > code_offset {
+            return found
+        }
+        found = text_at(at + 16, length)
+        var padded = (length + 7) / 8 * 8
+        at = at + 16 + padded
+        index = index + 1
+    }
+    return found
+}
+
+func text_at(at: Long, length: Long): String {
+    var written = ""
+    var index: Long = 0
+    while index < length {
+        var code = _read_byte(at + index)
+        var character: Integer = code
+        written.append_code(character)
+        index = index + 1
+    }
+    return written
+}
+
+func kind_of(code: Long, detail: Long): String {
+    if code == _access_violation {
+        return violation_of(detail)
+    }
+    if code == _stack_overflow {
+        return "stack-overflow"
+    }
+    if code == _illegal_instruction {
+        return "illegal-instruction"
+    }
+    if code == _heap_corruption {
+        return "heap-corruption"
+    }
+    if code == _integer_division_by_zero {
+        return "integer-division-by-zero"
+    }
+    return "fault"
+}
+
+func violation_of(detail: Long): String {
+    if detail == 0 {
+        return "read-violation"
+    }
+    if detail == 1 {
+        return "write-violation"
+    }
+    return "execute-violation"
+}
+
+func module_place(address: Long): String {
+    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+    var room = Buffer(8)
+    room.append_long_little_endian(0)
+    var found = kernel.GetModuleHandleExA(6, address, room)
+    var record = reload_record_of(address)
+    if found == 0 and record != 0 {
+        var reload_start = _read_long(record + 16)
+        var reload_offset = hexadecimal(address - reload_start)
+        return "reload+0x{reload_offset}"
+    }
+    if found == 0 {
+        var unknown = hexadecimal(address)
+        return "0x{unknown}"
+    }
+    var module = room.read_long_little_endian_at(0)
+    crash module
+    var name_room = Buffer(_longest_path)
+    var length = kernel.GetModuleFileNameA(module, name_room, _longest_path)
+    name_room.take_written(length)
+    var path = name_room.read_string_at(0, length)
+    crash path
+    var forward = path.replace("\\", "/")
+    var pieces = forward.split("/")
+    var last = pieces.count() - 1
+    var name = pieces[last]
+    crash name
+    var offset = hexadecimal(address - module)
+    return "{name}+0x{offset}"
+}
+
+func hexadecimal(value: Long): String {
+    var digits = "0123456789abcdef"
+    var written = ""
+    var rest = value
+    var count = 0
+    while count < 16 {
+        var nibble = rest.bits_and(15)
+        var digit = text_between(digits, nibble, nibble + 1)
+        written = "{digit}{written}"
+        rest = rest.shifted_right(4)
+        count = count + 1
+    }
+    var start = 0
+    while start < 15 and text_between(written, start, start + 1) == "0" {
+        start = start + 1
+    }
+    return text_between(written, start, 16)
+}
+
+func text_between(text: String, start: Integer, end: Integer): String {
+    var made = String()
+    var index = start
+    while index < end {
+        var code = text.byte_at(index)
+        made.append_code(code)
+        index = index + 1
+    }
+    return made
+}
+
+func crashed(head: String, shown: String) {
+    _crash_gate()
+    var line = head
+    if not shown.is_empty() {
+        var length = shown.length()
+        var values = text_between(shown, 2, length)
+        line = "{head} ({values})"
+    }
+    written_to_the_errors("{line}\n")
+}
+
+func written_to_the_errors(text: String) {
+    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+    var errors = kernel.GetStdHandle_as_long(-12)
+    var room = Buffer(8)
+    room.append_long_little_endian(0)
+    var length = text.length()
+    kernel.WriteFile(errors, text, length, room, 0)
+}
+
+func cut(text: String): String {
+    var length = text.length()
+    if length <= 80 {
+        return text
+    }
+    var end = 80
+    while end > 0 and is_a_continuation(text, end) {
+        end = end - 1
+    }
+    var kept = text_between(text, 0, end)
+    return "{kept}...({length} bytes)"
+}
+
+func is_a_continuation(text: String, at: Integer): Boolean {
+    var code = text.byte_at(at)
+    return code >= 128 and code < _first_leading_byte
+}
+
+func frames() {
+    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+    var own = kernel.GetModuleHandleA_as_long(0)
+    var code_start = own + 4096
+    var table = _call_table()
+    var at = _frame_pointer()
+    var walking = true
+    var steps = 0
+    var lines = 0
+    var previous = ""
+    var repeated = 0
+    while walking and steps < 256 {
+        var returned = _read_long(at + 8)
+        var offset = returned - code_start
+        var found = call_text_index(table, offset)
+        walking = found >= -1
+        if found >= 0 {
+            var text = call_text(table, found)
+            var frame_lines = text.split("\n")
+            var index = 0
+            while index < frame_lines.count() {
+                var frame_line = frame_lines[index]
+                if frame_line == previous {
+                    repeated = repeated + 1
+                } else {
+                    lines = written_frame(previous, repeated, lines)
+                    previous = frame_line
+                    repeated = 1
+                }
+                index = index + 1
+            }
+        }
+        var next = _read_long(at)
+        var is_the_caller = next > at and next - at < 16777216
+        walking = walking and is_the_caller
+        at = next
+        steps = steps + 1
+    }
+    lines = written_frame(previous, repeated, lines)
+    if walking or lines > 16 {
+        written_to_the_errors("spite.frame\tmore\n")
+    }
+}
+
+func written_frame(frame_line: String, repeated: Integer, lines: Integer): Integer {
+    if frame_line.is_empty() {
+        return lines
+    }
+    if lines >= 16 {
+        return lines + 1
+    }
+    if repeated > 1 {
+        written_to_the_errors("spite.frame\t{frame_line}\trepeated={repeated}\n")
+    } else {
+        written_to_the_errors("spite.frame\t{frame_line}\n")
+    }
+    return lines + 1
+}
+
+func call_text_index(table: Long, offset: Long): Long {
+    var count = _read_long(table)
+    var low: Long = 0
+    var high = count
+    while low < high {
+        var middle = (low + high) / 2
+        var entry = table + 8 + middle * 16
+        var start = _read_long(entry)
+        if start < offset {
+            low = middle + 1
+        } else {
+            high = middle
+        }
+    }
+    if low >= count {
+        return -2
+    }
+    var found = table + 8 + low * 16
+    var start = _read_long(found)
+    if start != offset {
+        return -2
+    }
+    return _read_long(found + 8)
+}
+
+func argument_not_taken(arguments: Dictionary<String, Anything>, taken: String, shown: String, listed: String) {
+    var names = taken.split("\t")
+    var keys = arguments.keys()
+    var index = 0
+    while index < keys.count() {
+        var key = keys[index]
+        if not names.contains(key) {
+            written_to_the_errors("spite: call() fills an argument '{key}' that '{shown}' does not have: it takes {listed}\n")
+            return
+        }
+        index = index + 1
+    }
+}
+
+func call_text(table: Long, index: Long): String {
+    var count = _read_long(table)
+    var texts = table + 8 + count * 16
+    var placed = _read_long(texts + 8 + index * 8)
+    var at = texts + placed
+    var length = _read_long(at)
+    return text_at(at + 8, length)
+}
+
+func _call_table(): Long
+
+func _frame_pointer(): Long
+
+func _crash_gate()
+
+func _foreign_site(): Long
+
+func _foreign_site_text(site: Long): String
+
+func _foreign_library(): DynamicLibrary?
+
+func _place_table(): Long
+
+func _read_long(at: Long): Long
+
+func _read_byte(at: Long): Long
+
+func named_frames(address: Long, frame: Long) {
+    var map = function_map_text()
+    fallback not map.is_empty()
+    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+    var own = kernel.GetModuleHandleA_as_long(0)
+    var code_start = own + 4096
+    var faulted = function_at(map, address, code_start)
+    written_to_the_errors("spite.function\t{faulted}\n")
+    var at = frame
+    var walking = at > 0
+    var steps = 0
+    var previous = ""
+    var repeated = 0
+    while walking and steps < 64 {
+        var returned = _read_long(at + 8)
+        var caller = function_at(map, returned, code_start)
+        walking = not caller.is_empty()
+        if walking and caller == previous {
+            repeated = repeated + 1
+        } else if walking {
+            written_caller(previous, repeated)
+            previous = caller
+            repeated = 1
+        }
+        var next = _read_long(at)
+        var is_the_caller = next > at and next - at < 16777216
+        walking = walking and is_the_caller
+        at = next
+        steps = steps + 1
+    }
+    written_caller(previous, repeated)
+}
+
+func written_caller(caller: String, repeated: Integer) {
+    fallback not caller.is_empty()
+    if repeated > 1 {
+        written_to_the_errors("spite.caller\t{caller}\trepeated={repeated}\n")
+    } else {
+        written_to_the_errors("spite.caller\t{caller}\n")
+    }
+}
+
+func function_map_text(): String {
+    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+    var name_room = Buffer(_longest_path)
+    var length = kernel.GetModuleFileNameA(0, name_room, _longest_path)
+    name_room.take_written(length)
+    var path = name_room.read_string_at(0, length)
+    fallback path and length >= 4
+    var stem = text_between(path, 0, length - 4)
+    var map_path = "{stem}.functions"
+    var handle = kernel.CreateFileA_as_long(map_path, 2147483648, 1, 0, 3, 128, 0)
+    fallback handle != -1
+    var size = kernel.GetFileSize(handle, 0)
+    if size <= 0 {
+        kernel.CloseHandle(handle)
+        return ""
+    }
+    var room = Buffer(size)
+    var read_room = Buffer(8)
+    read_room.append_long_little_endian(0)
+    kernel.ReadFile(handle, room, size, read_room, 0)
+    kernel.CloseHandle(handle)
+    room.take_written(size)
+    var text = room.read_string_at(0, size)
+    fallback text
+    return text
+}
+
+func function_at(map: String, address: Long, code_start: Long): String {
+    var reloaded = reloaded_function(address)
+    if not reloaded.is_empty() {
+        return reloaded
+    }
+    return function_of(map, address - code_start)
+}
+
+func reloaded_function(address: Long): String {
+    var record = reload_record_of(address)
+    fallback record != 0
+    var record_count = _read_long(record)
+    var start = _read_long(record + 16)
+    var place = place_in(record_count, record + 32, address - start)
+    var fields = place.split("\t")
+    var class_name = fields[1]
+    var function_name = fields[2]
+    if class_name and function_name and class_name != "-" {
+        return "{class_name}.{function_name}"
+    }
+    return ""
+}
+
+func reload_record_of(address: Long): Long {
+    var table = _place_table()
+    var record = _read_long(table + 8)
+    while record != 0 {
+        var start = _read_long(record + 16)
+        var end = _read_long(record + 24)
+        if address >= start and address < end {
+            return record
+        }
+        record = _read_long(record + 8)
+    }
+    return 0
+}
+
+func function_of(map: String, offset: Long): String {
+    fallback offset >= 0
+    var rows = map.split("\n")
+    var index = 1
+    while index < rows.count() {
+        var row = rows[index]
+        var fields = row.split("\t")
+        if fields.count() == 3 {
+            var start_text = fields[0]
+            var end_text = fields[1]
+            var key = fields[2]
+            var start = number_of_hexadecimal(start_text)
+            var end = number_of_hexadecimal(end_text)
+            if offset >= start and offset < end {
+                return key
+            }
+        }
+        index = index + 1
+    }
+    return ""
+}
+
+func number_of_hexadecimal(text: String): Long {
+    var value: Long = 0
+    var index = 0
+    while index < text.length() {
+        var code = text.byte_at(index)
+        var digit = code - 48
+        if code >= 97 {
+            digit = code - 87
+        }
+        value = value * 16 + digit
+        index = index + 1
+    }
+    return value
+}

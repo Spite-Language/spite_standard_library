@@ -1,0 +1,36 @@
+func check() {
+    fallback is_given_arguments()
+    var environment = Environment()
+    environment._refuse_the_undeclared()
+}
+
+func is_given_arguments(): Boolean {
+    var at = _command_line_address()
+    var quoted = false
+    var in_the_name = true
+    var code = wide_at(at)
+    while code != 0 {
+        if not in_the_name and code != 32 {
+            return true
+        }
+        if code == 34 {
+            quoted = not quoted
+        }
+        if code == 32 and not quoted {
+            in_the_name = false
+        }
+        at = at + 2
+        code = wide_at(at)
+    }
+    return false
+}
+
+func wide_at(at: Long): Long {
+    var low = _read_byte(at)
+    var high = _read_byte(at + 1)
+    return low + high * 256
+}
+
+func _command_line_address(): Long
+
+func _read_byte(at: Long): Long
