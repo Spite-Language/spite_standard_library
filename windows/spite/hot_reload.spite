@@ -1,0 +1,94 @@
+var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+var runtime = DynamicLibrary("ucrtbase.dll", 'identity', "")
+var _room_start: Long = 6442450944
+var _room_size: Long = 268435456
+var _granularity = 65536
+
+func compiler_line(executable: String, address: Long): String {
+    return "cd /d \"{working_folder}\" && \"{compiler}\" {arguments} --executable-path=\"{executable}\" --reload-at={address} 2>&1"
+}
+
+func reserve_the_room(): Boolean {
+    if next_address != 0 {
+        return true
+    }
+    var wanted: Long = _room_start
+    var size: Long = _room_size
+    var reserved = kernel.VirtualAlloc_as_long(wanted, size, 8192, 64)
+    fallback reserved == wanted
+    next_address = wanted
+    room_end = wanted + size
+    return true
+}
+
+func run_the_compiler(line: String): Integer {
+    compiler_output = ""
+    var handle = runtime._popen_as_long(line, "r")
+    if handle == 0 {
+        compiler_output = "the compiler could not be started: {line}"
+        return -1
+    }
+    var output_text = String()
+    var chunk = Buffer(4096)
+    var one: Long = 1
+    var wanted: Long = 4096
+    var got = runtime.fread_as_long(chunk, one, wanted, handle)
+    while got > 0 {
+        var got_count: Integer = got
+        chunk.take_written(got_count)
+        var byte_index = 0
+        while byte_index < got_count {
+            var held = chunk[byte_index]
+            crash held
+            output_text.append_code(held)
+            byte_index = byte_index + 1
+        }
+        got = runtime.fread_as_long(chunk, one, wanted, handle)
+    }
+    compiler_output = output_text
+    return runtime._pclose(handle)
+}
+
+func swap_in(path: String, address: Long): String {
+    var file_path: Path? = path
+    crash file_path
+    var file = File(file_path)
+    var bytes = file.read_as_buffer()
+    if not bytes {
+        return "the new code '{path}' cannot be read"
+    }
+    var loaded_at = bytes.read_long_little_endian_at(0)
+    var size = bytes.read_integer_little_endian_at(8)
+    var slot_count = bytes.read_integer_little_endian_at(12)
+    crash loaded_at
+    crash size
+    crash slot_count
+    var end = address + size
+    if loaded_at != address or end > room_end {
+        return "the new code '{path}' was compiled for another place than the room kept for it"
+    }
+    var committed = kernel.VirtualAlloc_as_long(address, size, 4096, 64)
+    if committed != address {
+        return "the room for the new code could not be committed (VirtualAlloc at {address} for {size} bytes)"
+    }
+    var image = bytes.read_buffer_at(16, size)
+    crash image
+    kernel.RtlMoveMemory(address, image, size)
+    var process = kernel.GetCurrentProcess_as_long()
+    kernel.FlushInstructionCache(process, address, size)
+    var pair = 0
+    while pair < slot_count {
+        var at = 16 + size + 16 * pair
+        var slot = bytes.read_long_little_endian_at(at)
+        var value = bytes.read_long_little_endian_at(at + 8)
+        crash slot
+        crash value
+        var room = Buffer(8)
+        room.append_long_little_endian(value)
+        kernel.RtlMoveMemory(slot, room, 8)
+        pair = pair + 1
+    }
+    var rounded = (size + _granularity - 1) / _granularity * _granularity
+    next_address = address + rounded
+    return ""
+}

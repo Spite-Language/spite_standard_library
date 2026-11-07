@@ -1,0 +1,159 @@
+singleton
+
+var console = Console()
+var program = Program()
+var reload = Reload()
+var watcher = FileSystemWatcher()
+var started = false
+var working_folder = ""
+var compiler = ""
+var arguments = ""
+var next_address: Long = 0
+var room_end: Long = 0
+var compiler_output = ""
+var last_answer = "no reload has run yet: 'reload' compiles the saved files now"
+var lost_the_manifest = ""
+var succeeded = true
+var quiet = false
+
+# ../../../spite_spec/specs/repl.md#live-reload-in-detail
+func start(built_in: String, built_by: String, built_with: String, watched_folders: List<String>) {
+    fallback not started
+    started = true
+    working_folder = built_in
+    compiler = built_by
+    arguments = built_with
+    watched_folders.each(watch)
+}
+
+func watch(path: String) {
+    var folder_path: Path? = path
+    crash folder_path
+    var folder = Directory(folder_path)
+    var watched = watcher.watch_for_changes(folder)
+    if not watched {
+        console.error("spite: the reload watcher cannot watch '{path}', so a file saved there reloads only through 'reload'")
+    }
+}
+
+func check_point() {
+    var changed = watcher.settled_changes()
+    if holds_saved_code(changed) {
+        var told = reload_now()
+        crash told == last_answer
+    }
+}
+
+func holds_saved_code(paths: List<String>): Boolean {
+    var index = 0
+    while index < paths.count() {
+        var path = paths[index]
+        var forward = path.replace("\\", "/")
+        if forward.ends_with(".spite") and not forward.contains("/.spite/") {
+            return true
+        }
+        index = index + 1
+    }
+    return false
+}
+
+func reload_now(): String {
+    succeeded = true
+    if not lost_the_manifest.is_empty() {
+        return refused(lost_the_manifest)
+    }
+    if not reserve_the_room() {
+        return refused("no room near the program could be reserved for the new code (VirtualAlloc at {next_address})")
+    }
+    var address = next_address
+    var executable = program.executable_path()
+    if not executable {
+        return refused("the program's own path could not be read (GetModuleFileNameA)")
+    }
+    var line = compiler_line(executable, address)
+    var status = run_the_compiler(line)
+    var told = compiler_output.trim()
+    if status != 0 {
+        if told.is_empty() {
+            told = "the compiler stopped with {status} and said nothing"
+        }
+        return refused(told)
+    }
+    var library_path = ""
+    var manifest_path = ""
+    var rebuilt = List<String>()
+    var said = List<String>()
+    var told_lines = told.split("\n")
+    var index = 0
+    while index < told_lines.count() {
+        var told_line = told_lines[index]
+        var plain = told_line.trim()
+        var plain_length = plain.length()
+        if plain.starts_with("library ") {
+            var sliced_library_path = plain.slice(8, plain_length)
+            crash sliced_library_path
+            library_path = sliced_library_path
+        } else if plain.starts_with("manifest ") {
+            var sliced_manifest_path = plain.slice(9, plain_length)
+            crash sliced_manifest_path
+            manifest_path = sliced_manifest_path
+        } else if not plain.is_empty() {
+            said.append(plain)
+        }
+        if plain.starts_with("rebuilt ") {
+            var names = plain.slice(8, plain_length)
+            crash names
+            var parts = names.split(", ")
+            parts.each(rebuilt.append)
+        }
+        index = index + 1
+    }
+    var answer = said.join("\n")
+    if library_path.is_empty() {
+        last_answer = answer
+        return last_answer
+    }
+    var swapped = swap_in(library_path, address)
+    if not swapped.is_empty() {
+        return refused(swapped)
+    }
+    keep_the_manifest(manifest_path)
+    reload.rebuilt.append(rebuilt)
+    last_answer = answer
+    if not quiet {
+        console.error("spite: {answer}")
+    }
+    return last_answer
+}
+
+func keep_the_manifest(pending: String) {
+    var pending_length = pending.length()
+    var stem_length = pending_length - 15
+    var kept = false
+    if stem_length > 0 and pending.ends_with(".reload_pending") {
+        var stem = pending.slice(0, stem_length)
+        crash stem
+        var host_path = "{stem}.reload_host"
+        var host_file_path: Path? = host_path
+        crash host_file_path
+        var host = File(host_file_path)
+        var cleared = not host.exists() or host.remove()
+        var pending_path: Path? = pending
+        crash pending_path
+        var renamed = File(pending_path)
+        kept = cleared and renamed.move_to(host_file_path)
+    }
+    if not kept {
+        lost_the_manifest = "the new code is swapped in, but its manifest '{pending}' could not take the place of the running program's, so a later reload would compile against code the program no longer runs: start the program again"
+        console.error("spite: {lost_the_manifest}")
+    }
+}
+
+func refused(why: String): String {
+    succeeded = false
+    last_answer = why
+    if not quiet {
+        console.error("spite: {why}")
+    }
+    return last_answer
+}
