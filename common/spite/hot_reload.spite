@@ -16,7 +16,7 @@ var lost_the_manifest = ""
 var succeeded = true
 var quiet = false
 
-# ../../../spite_spec/specs/repl.md#live-reload-in-detail
+# ../../../spite_documentation/repl.md#how-it-works
 func start(built_in: String, built_by: String, built_with: String, watched_folders: List<String>) {
     fallback not started
     started = true
