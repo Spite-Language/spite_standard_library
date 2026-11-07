@@ -3,10 +3,16 @@ var _name_with_namespaces = ""
 var _owner: Spite.Class = Nothing
 var _values = Dictionary<String, Spite.EnumValue>()
 
-func Enum(starting_name: String, starting_name_with_namespaces: String, starting_owner: Spite.Class) {
+func Enum(
+    starting_name: String,
+    starting_name_with_namespaces: String,
+    starting_owner: Spite.Class,
+    starting_values: Dictionary<String, Spite.EnumValue>,
+) {
     _name = starting_name
     _name_with_namespaces = starting_name_with_namespaces
     _owner = starting_owner
+    _values = starting_values
 }
 
 func get_name(): String {

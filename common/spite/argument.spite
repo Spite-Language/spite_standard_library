@@ -4,10 +4,18 @@ var _index = 0
 var _is_mutated = false
 var _has_facts = false
 
-func Argument(starting_name: String, starting_index: Integer, starting_class: Spite.Class) {
+func Argument(
+    starting_name: String,
+    starting_index: Integer,
+    starting_class: Spite.Class,
+    starting_is_mutated: Boolean,
+    starting_has_facts: Boolean,
+) {
     _name = starting_name
     _index = starting_index
     _class = starting_class
+    _is_mutated = starting_is_mutated
+    _has_facts = starting_has_facts
 }
 
 func get_name(): String {

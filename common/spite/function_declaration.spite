@@ -17,16 +17,32 @@ func FunctionDeclaration(
     starting_name: String,
     starting_hole: String,
     starting_index: Integer,
+    starting_arguments: List<Spite.Argument>,
     starting_returns: Spite.Class,
-    starting_source_path: String,
+    starting_is_resumable: Boolean,
+    starting_has_facts: Boolean,
+    starting_has_reach: Boolean,
+    starting_returned_literal: String?,
+    starting_called_on: Spite.Function<Anything, Dictionary<String, Anything>, Nothing>?,
+    starting_reads: List<Spite.AttributeDeclaration>,
+    starting_writes: List<Spite.AttributeDeclaration>,
     starting_signature: String,
+    starting_source_path: String,
 ) {
     _name = starting_name
     _hole = starting_hole
     _index = starting_index
+    _arguments = starting_arguments
     _returns = starting_returns
-    _source_path = starting_source_path
+    _is_resumable = starting_is_resumable
+    _has_facts = starting_has_facts
+    _has_reach = starting_has_reach
+    _returned_literal = starting_returned_literal
+    _called_on = starting_called_on
+    _reads = starting_reads
+    _writes = starting_writes
     _signature = starting_signature
+    _source_path = starting_source_path
 }
 
 func get_name(): String {

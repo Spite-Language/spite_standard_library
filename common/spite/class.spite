@@ -29,6 +29,13 @@ func Class(
     starting_is_stateful: Boolean,
     starting_is_fixed_size: Boolean,
     starting_has_no_stand_in: Boolean,
+    starting_generics: Dictionary<String, Spite.Class>,
+    starting_attributes: Dictionary<String, Spite.AttributeDeclaration>,
+    starting_functions: Dictionary<String, Spite.FunctionDeclaration>,
+    starting_enums: Dictionary<String, Spite.Enum>,
+    starting_unions: Dictionary<String, Spite.Union>,
+    starting_types: Dictionary<String, Spite.Type>,
+    starting_source_files: List<File>,
 ) {
     _name = starting_name
     _name_with_namespaces = starting_name_with_namespaces
@@ -41,6 +48,13 @@ func Class(
     _is_stateful = starting_is_stateful
     _is_fixed_size = starting_is_fixed_size
     _has_no_stand_in = starting_has_no_stand_in
+    _generics = starting_generics
+    _attributes = starting_attributes
+    _functions = starting_functions
+    _enums = starting_enums
+    _unions = starting_unions
+    _types = starting_types
+    _source_files = starting_source_files
 }
 
 func get_name(): String {
