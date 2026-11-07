@@ -27,7 +27,7 @@ func changes(): List<String> {
     return changed
 }
 
-# ../../spite_spec/specs/standard_library.md#system-classes
+# ../../spite_documentation/standard_library.md#watch-files-and-folders
 func settled_changes(): List<String> {
     _collect()
     while not pending.is_empty() and not _is_quiet() {

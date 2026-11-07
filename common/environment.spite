@@ -45,7 +45,7 @@ func _name_of(argument: String): String {
     return written.replace("-", "_")
 }
 
-# ../../spite_spec/specs/programs.md#program-settings-environment
+# ../../spite_documentation/programs.md#run-time-settings-environment
 func _refuse_the_undeclared() {
     var index = 0
     while index < _given.count() {
@@ -79,7 +79,7 @@ func _refuse_if_undeclared(argument: String) {
     _program.exit(1)
 }
 
-# ../../spite_spec/specs/compiler.md#flags-and-settings
+# ../../spite_documentation/compiler.md#pass-settings-to-the-program
 func _given_flags(): List<String> {
     _defers_the_undeclared = true
     var flags = List<String>()
