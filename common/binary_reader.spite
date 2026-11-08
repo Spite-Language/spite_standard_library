@@ -241,6 +241,7 @@ func _read_count(): Integer {
         var left: Long = held.count() - _at
         if result > left or scale > 34359738368 {
             _fail()
+            return 0
         }
     }
     return result

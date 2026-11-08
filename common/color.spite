@@ -88,11 +88,21 @@ func to_rgb_string(): String {
     if alpha_byte == _opaque_alpha_byte {
         return "rgb({red_byte}, {green_byte}, {blue_byte})"
     }
-    var alpha_rounded = _rounded(alpha, 1000.0)
+    var alpha_held = alpha.clamp(0.0, 1.0)
+    var alpha_rounded = _rounded(alpha_held, 1000.0)
     return "rgba({red_byte}, {green_byte}, {blue_byte}, {alpha_rounded})"
 }
 
 func to_hsl_string(): String {
+    var red_held = red.clamp(0.0, 1.0)
+    var green_held = green.clamp(0.0, 1.0)
+    var blue_held = blue.clamp(0.0, 1.0)
+    var alpha_held = alpha.clamp(0.0, 1.0)
+    var held = Color(red_held, green_held, blue_held, alpha_held)
+    return held._hsl_text()
+}
+
+func _hsl_text(): String {
     var highest = red.maximum(green)
     highest = highest.maximum(blue)
     var lowest = red.minimum(green)

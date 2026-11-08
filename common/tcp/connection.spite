@@ -1,6 +1,10 @@
 var handle: Long = -1
 var pending = ""
 var closed = true
+var _first_lead_byte = 192
+var _first_three_byte_lead = 224
+var _first_four_byte_lead = 240
+var _first_byte_no_character_starts_with = 248
 
 func read_line(): String? {
     var newline = pending.index_of("\n")
@@ -35,16 +39,45 @@ func read_as_string(): String? {
     var bytes = read_as_buffer()
     fallback bytes
     var text = bytes.read_as_string()
-    var added = 0
-    while not text and added < 3 and not closed {
-        var more = _chunk(true, 1)
+    var missing = _missing_from_last_character(bytes)
+    while not text and missing > 0 and not closed {
+        var more = _chunk(true, missing)
         var more_count = more.count()
         fallback more_count > 0
         bytes.append_buffer(more, 0, more_count)
         text = bytes.read_as_string()
-        added = added + 1
+        missing = missing - more_count
     }
     return text
+}
+
+func _missing_from_last_character(bytes: Buffer): Integer {
+    var count = bytes.count()
+    var at = count - 1
+    var oldest = count - 3
+    var lead = 0
+    while at >= 0 and at >= oldest and lead == 0 {
+        var read = bytes[at]
+        crash read
+        var code: Integer = read
+        fallback code >= 128
+        if code >= _first_lead_byte {
+            lead = code
+        } else {
+            at = at - 1
+        }
+    }
+    fallback lead >= _first_lead_byte
+    fallback lead < _first_byte_no_character_starts_with
+    var length = 4
+    if lead < _first_three_byte_lead {
+        length = 2
+    } else if lead < _first_four_byte_lead {
+        length = 3
+    }
+    var before = bytes.read_string_at(0, at)
+    fallback before
+    return length - (count - at)
 }
 
 func write_string(text: String): Boolean {

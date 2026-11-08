@@ -262,8 +262,10 @@ func spherical_interpolate(target: Quaternion<$number_type>, amount: $number_typ
 }
 
 func to_matrix(): Matrix4<$number_type> {
+    var rotation = Quaternion<$number_type>()
+    rotation.set_parts(x, y, z, w)
     var matrix = Matrix4<$number_type>()
-    matrix.rotation = this
+    matrix.rotation = rotation
     return matrix
 }
 
