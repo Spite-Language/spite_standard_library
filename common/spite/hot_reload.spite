@@ -119,6 +119,10 @@ func reload_now(): String {
     }
     keep_the_manifest(manifest_path)
     reload.rebuilt.append(rebuilt)
+    if rebuilt.contains("Environment") {
+        var environment = Environment()
+        environment._read_settings()
+    }
     last_answer = answer
     if not quiet {
         console.error("spite: {answer}")
