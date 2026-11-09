@@ -7,7 +7,7 @@ var _is_resumable = false
 var _has_facts = false
 var _has_reach = false
 var _returned_literal: String? = null
-var _called_on: Spite.Function<Anything, Dictionary<String, Anything>, Nothing>? = null
+var _called_on: Spite.Function<Anything, Dictionary<String, Anything?>, Nothing>? = null
 var _reads = List<Spite.AttributeDeclaration>()
 var _writes = List<Spite.AttributeDeclaration>()
 var _signature = ""
@@ -23,7 +23,7 @@ func FunctionDeclaration(
     starting_has_facts: Boolean,
     starting_has_reach: Boolean,
     starting_returned_literal: String?,
-    starting_called_on: Spite.Function<Anything, Dictionary<String, Anything>, Nothing>?,
+    starting_called_on: Spite.Function<Anything, Dictionary<String, Anything?>, Nothing>?,
     starting_reads: List<Spite.AttributeDeclaration>,
     starting_writes: List<Spite.AttributeDeclaration>,
     starting_signature: String,
@@ -91,7 +91,7 @@ func get_source_file(): File {
     return File(source_path)
 }
 
-func _call_on(instance: Anything, arguments: Dictionary<String, Anything>) {
+func _call_on(instance: Anything, arguments: Dictionary<String, Anything?>) {
     crash _called_on
     var called = _called_on
     called(instance, arguments)
