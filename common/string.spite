@@ -793,6 +793,107 @@ func _shifted_case(first: Integer, last: Integer, shift: Integer): String {
     return shifted
 }
 
+func snake_case(): String {
+    var words = _words()
+    var lowered = List<String>()
+    var index = 0
+    while index < words.count() {
+        var word = words[index]
+        var lower = word.lower_case()
+        lowered.append(lower)
+        index = index + 1
+    }
+    return lowered.join("_")
+}
+
+func camel_case(): String {
+    var words = _words()
+    var joined = String()
+    var index = 0
+    while index < words.count() {
+        var word = words[index]
+        if index == 0 {
+            var lower = word.lower_case()
+            joined._append_text(lower)
+        } else {
+            var raised = word._capitalized()
+            joined._append_text(raised)
+        }
+        index = index + 1
+    }
+    return joined
+}
+
+func pascal_case(): String {
+    var words = _words()
+    var joined = String()
+    var index = 0
+    while index < words.count() {
+        var word = words[index]
+        var raised = word._capitalized()
+        joined._append_text(raised)
+        index = index + 1
+    }
+    return joined
+}
+
+func _capitalized(): String {
+    var shaped = lower_case()
+    if _length > 0 {
+        var first = shaped.byte_at(0)
+        if first >= 97 and first <= _lowercase_z_code {
+            shaped._buffer._write_byte_at(0, first - 32)
+        }
+    }
+    return shaped
+}
+
+func _words(): List<String> {
+    var words = List<String>()
+    var word = String()
+    var index = 0
+    while index < _length {
+        var code = byte_at(index)
+        var cuts = _separates_words(code) or _starts_a_word_at(index)
+        if cuts and not word.is_empty() {
+            words.append(word)
+            word = String()
+        }
+        if not _separates_words(code) {
+            word.append_code(code)
+        }
+        index = index + 1
+    }
+    if not word.is_empty() {
+        words.append(word)
+    }
+    return words
+}
+
+func _separates_words(code: Integer): Boolean {
+    return code == 95 or code == 45 or code == 46 or code == 32
+}
+
+func _starts_a_word_at(index: Integer): Boolean {
+    fallback index > 0
+    var code = byte_at(index)
+    fallback _is_capital(code)
+    var before = byte_at(index - 1)
+    if _is_small_letter(before) or (before >= 48 and before <= 57) {
+        return true
+    }
+    var next = _code_at(index + 1)
+    return _is_capital(before) and _is_small_letter(next)
+}
+
+func _is_capital(code: Integer): Boolean {
+    return code >= 65 and code <= 90
+}
+
+func _is_small_letter(code: Integer): Boolean {
+    return code >= 97 and code <= _lowercase_z_code
+}
+
 func pluralize(): String {
     return _inflected(true)
 }
