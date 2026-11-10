@@ -1,6 +1,6 @@
 var _name = ""
 var _class: Spite.Class = Nothing
-# ../../../spite_documentation/functions_and_operators.md#anything-never-holds-null
+# ../../../spite_documentation/functions_and_operators.md#null-only-goes-where-a-t-is-wanted
 var _value: Anything? = null
 var _index = 0
 var _declaration = Spite.AttributeDeclaration("", 0, Nothing, "")

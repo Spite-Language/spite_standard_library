@@ -320,7 +320,7 @@ func call_text_index(table: Long, offset: Long): Long {
     return _read_long(found + 8)
 }
 
-# ../../../spite_documentation/functions_and_operators.md#anything-never-holds-null
+# ../../../spite_documentation/functions_and_operators.md#null-only-goes-where-a-t-is-wanted
 func argument_not_taken(arguments: Dictionary<String, Anything?>, taken: String, shown: String, listed: String) {
     var names = taken.split("\t")
     var keys = arguments.keys()
