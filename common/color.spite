@@ -1,10 +1,10 @@
-var red: Float = 0.0
-
-var green: Float = 0.0
-var blue: Float = 0.0
-var alpha: Float = 1.0
 var _opaque_alpha_byte = 255
 var _lowercase_f_code = 102
+var red: Float
+
+var green: Float
+var blue: Float
+var alpha: Float
 
 func Color(new_red: Float, new_green: Float, new_blue: Float, new_alpha: Float) {
     red = new_red

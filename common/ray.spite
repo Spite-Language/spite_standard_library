@@ -1,9 +1,9 @@
-var origin_x: Float = 0.0
-var origin_y: Float = 0.0
-var origin_z: Float = 0.0
-var direction_x: Float = 0.0
-var direction_y: Float = 0.0
 var direction_z: Float = -1.0
+var origin_x: Float
+var origin_y: Float
+var origin_z: Float
+var direction_x: Float
+var direction_y: Float
 
 func Ray(starting_origin: Vector3<Float>, starting_direction: Vector3<Float>) {
     origin_x = starting_origin.x

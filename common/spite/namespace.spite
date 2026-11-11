@@ -1,9 +1,9 @@
-var _name = ""
-var _name_with_namespaces = ""
-var _parent: Spite.Namespace? = null
-var _classes = List<Spite.Class>()
-var _namespaces = List<Spite.Namespace>()
-var _source_directories = List<Directory>()
+var _name: String
+var _name_with_namespaces: String
+var _parent: Spite.Namespace?
+var _classes: List<Spite.Class>
+var _namespaces: List<Spite.Namespace>
+var _source_directories: List<Directory>
 
 func Namespace(
     starting_name: String,

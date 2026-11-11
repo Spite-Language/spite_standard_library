@@ -1,5 +1,3 @@
-var command = ""
-var arguments = List<String>()
 var working_directory: Path? = null
 var environment_variables = Dictionary<String, String>()
 var with_errors = false
@@ -8,6 +6,8 @@ var time_limit: Duration? = null
 var _output: Buffer? = null
 var _errors: Buffer? = null
 var _was_stopped = false
+var command: String
+var arguments: List<String>
 
 func Process(starting_command: String, starting_arguments: List<String>) {
     command = starting_command

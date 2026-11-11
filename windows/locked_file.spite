@@ -1,7 +1,7 @@
 var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
-var _handle: Long = 0
 var _overlapped = Buffer(32)
 var _held = false
+var _handle: Long
 
 func LockedFile(handle: Long) {
     _handle = handle

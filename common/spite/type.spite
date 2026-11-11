@@ -1,5 +1,5 @@
-var _name = ""
-var _name_with_namespaces = ""
+var _name: String
+var _name_with_namespaces: String
 var _owner: Spite.Class = Nothing
 
 func Type(starting_name: String, starting_name_with_namespaces: String, starting_owner: Spite.Class) {

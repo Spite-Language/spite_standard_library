@@ -1,11 +1,11 @@
-var start_x: Float = 0.0
-var start_y: Float = 0.0
-var first_handle_x: Float = 0.0
-var first_handle_y: Float = 0.0
-var second_handle_x: Float = 1.0
-var second_handle_y: Float = 1.0
-var end_x: Float = 1.0
-var end_y: Float = 1.0
+var start_x: Float
+var start_y: Float
+var first_handle_x: Float
+var first_handle_y: Float
+var second_handle_x: Float
+var second_handle_y: Float
+var end_x: Float
+var end_y: Float
 
 func CubicBezier(
     start: Vector2<Float>,

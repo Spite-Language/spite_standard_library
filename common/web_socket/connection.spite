@@ -4,7 +4,6 @@ var _close_code: Integer? = null
 var _close_reason = ""
 var _last_pong: Buffer? = null
 var _connection = Tcp.Connection()
-var _masking = false
 var _close_sent = false
 var _final = false
 var _opcode = 0
@@ -43,6 +42,7 @@ var _sha1_first_quarter_constant: UnsignedInteger = 1518500249
 var _sha1_second_quarter_constant: UnsignedInteger = 1859775393
 var _sha1_third_quarter_constant: UnsignedInteger = 2400959708
 var _sha1_fourth_quarter_constant: UnsignedInteger = 3395469782
+var _masking: Boolean
 
 func Connection(connection: Tcp.Connection, masking: Boolean) {
     _connection = connection

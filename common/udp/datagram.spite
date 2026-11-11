@@ -1,6 +1,6 @@
 var _bytes = Buffer(0)
 var _sender_address = IpAddress()
-var _sender_port = 0
+var _sender_port: Integer
 
 func Datagram(bytes: Buffer, sender_address: IpAddress, sender_port: Integer) {
     _bytes = bytes

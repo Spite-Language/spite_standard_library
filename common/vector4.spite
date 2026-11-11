@@ -11,10 +11,10 @@ type Vector4Component {
     absolute: Spite.Function<Vector4Component>
 }
 
-var x: $number_type = 0
-var y: $number_type = 0
-var z: $number_type = 0
-var w: $number_type = 0
+var x: $number_type
+var y: $number_type
+var z: $number_type
+var w: $number_type
 
 func Vector4(starting_x: $number_type, starting_y: $number_type, starting_z: $number_type, starting_w: $number_type) {
     x = starting_x

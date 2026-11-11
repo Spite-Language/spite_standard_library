@@ -1,9 +1,9 @@
-var lowest_x: Float = 0.0
-var lowest_y: Float = 0.0
-var lowest_z: Float = 0.0
-var highest_x: Float = 0.0
-var highest_y: Float = 0.0
-var highest_z: Float = 0.0
+var lowest_x: Float
+var lowest_y: Float
+var lowest_z: Float
+var highest_x: Float
+var highest_y: Float
+var highest_z: Float
 
 func AxisAlignedBox(starting_lowest: Vector3<Float>, starting_highest: Vector3<Float>) {
     lowest_x = starting_lowest.x

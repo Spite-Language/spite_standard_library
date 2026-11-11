@@ -1,5 +1,5 @@
 var _bytes = Buffer(0)
-var _text = false
+var _text: Boolean
 
 func Message(starting_bytes: Buffer, starting_is_text: Boolean) {
     _bytes = starting_bytes

@@ -1,5 +1,5 @@
-var path = ""
 var _largest_buffer_length: Long = 2147483647
+var path: String
 
 func File(starting_path: Path) {
     path = starting_path.written

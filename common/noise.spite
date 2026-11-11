@@ -1,9 +1,9 @@
-var seed: UnsignedInteger = 0
 var _low_24_bits_mask: UnsignedInteger = 16777215
 var _x_hash_prime: UnsignedInteger = 374761393
 var _y_hash_prime: UnsignedInteger = 668265263
 var _z_hash_prime: UnsignedInteger = 2147483647
 var _mix_hash_prime: UnsignedInteger = 1274126177
+var seed: UnsignedInteger
 
 func Noise(starting_seed: UnsignedInteger) {
     seed = starting_seed

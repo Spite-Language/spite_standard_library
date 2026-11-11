@@ -1,8 +1,8 @@
-var _name = ""
+var _name: String
 var _class: Spite.Class = Nothing
-var _index = 0
-var _is_mutated = false
-var _has_facts = false
+var _index: Integer
+var _is_mutated: Boolean
+var _has_facts: Boolean
 
 func Argument(
     starting_name: String,

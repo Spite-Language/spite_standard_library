@@ -3,7 +3,7 @@ union Entry {
     File
 }
 
-var path = ""
+var path: String
 
 func Directory(starting_path: Path) {
     path = starting_path.written

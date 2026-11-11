@@ -1,21 +1,21 @@
-var _name = ""
-var _name_with_namespaces = ""
-var _namespace: Spite.Namespace? = null
-var _is_singleton = false
-var _is_enum = false
-var _is_optional = false
-var _is_list = false
-var _is_dictionary = false
-var _is_stateful = false
-var _is_fixed_size = false
-var _generics = Dictionary<String, Spite.Class>()
-var _attributes = Dictionary<String, Spite.AttributeDeclaration>()
-var _functions = Dictionary<String, Spite.FunctionDeclaration>()
-var _enums = Dictionary<String, Spite.Enum>()
-var _unions = Dictionary<String, Spite.Union>()
-var _types = Dictionary<String, Spite.Type>()
-var _has_no_stand_in = false
-var _source_files = List<File>()
+var _name: String
+var _name_with_namespaces: String
+var _namespace: Spite.Namespace?
+var _is_singleton: Boolean
+var _is_enum: Boolean
+var _is_optional: Boolean
+var _is_list: Boolean
+var _is_dictionary: Boolean
+var _is_stateful: Boolean
+var _is_fixed_size: Boolean
+var _generics: Dictionary<String, Spite.Class>
+var _attributes: Dictionary<String, Spite.AttributeDeclaration>
+var _functions: Dictionary<String, Spite.FunctionDeclaration>
+var _enums: Dictionary<String, Spite.Enum>
+var _unions: Dictionary<String, Spite.Union>
+var _types: Dictionary<String, Spite.Type>
+var _has_no_stand_in: Boolean
+var _source_files: List<File>
 
 func Class(
     starting_name: String,

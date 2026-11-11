@@ -11,8 +11,8 @@ type Vector2Component {
     absolute: Spite.Function<Vector2Component>
 }
 
-var x: $number_type = 0
-var y: $number_type = 0
+var x: $number_type
+var y: $number_type
 
 func Vector2(starting_x: $number_type, starting_y: $number_type) {
     x = starting_x

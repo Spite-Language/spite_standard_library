@@ -8,7 +8,7 @@ enum ContextPlace {
 
 var address: Long = 0
 var context: Long = 0
-var _function: Spite.Function? = null
+var _function: Spite.Function?
 var _cell: Long = 0
 
 func ForeignCallback(function: Spite.Function, _where_context: ContextPlace) {

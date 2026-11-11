@@ -1,7 +1,7 @@
-var _name = ""
+var _name: String
 var _class: Spite.Class = Nothing
-var _index = 0
-var _source_path = ""
+var _index: Integer
+var _source_path: String
 
 func AttributeDeclaration(
     starting_name: String,

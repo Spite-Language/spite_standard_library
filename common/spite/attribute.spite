@@ -1,10 +1,10 @@
-var _name = ""
+var _name: String
 var _class: Spite.Class = Nothing
 # ../../../spite_documentation/functions_and_operators.md#null-only-goes-where-a-t-is-wanted
-var _value: Anything? = null
-var _index = 0
+var _value: Anything?
+var _index: Integer
 var _declaration = Spite.AttributeDeclaration("", 0, Nothing, "")
-var _owner: Anything = ""
+var _owner: Anything
 
 func Attribute(
     starting_name: String,

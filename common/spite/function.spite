@@ -1,6 +1,6 @@
-var _name = ""
+var _name: String
 var _declaration = Spite.FunctionDeclaration("", "", 0, [], Nothing, false, false, false, null, null, [], [], "", "")
-var _owner: Anything = ""
+var _owner: Anything
 var _called: Spite.Function<Nothing> = _not_made
 var _value: Spite.Function<Nothing> = _not_made
 

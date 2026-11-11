@@ -1,7 +1,7 @@
-var _name = ""
-var _name_with_namespaces = ""
+var _name: String
+var _name_with_namespaces: String
 var _owner: Spite.Class = Nothing
-var _values = Dictionary<String, Spite.EnumValue>()
+var _values: Dictionary<String, Spite.EnumValue>
 
 func Enum(
     starting_name: String,

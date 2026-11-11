@@ -1,9 +1,9 @@
 var console = Console()
 var program = Program()
-var _namespace: Spite.Namespace? = null
-var _chosen: String? = null
 var _passed = 0
 var _failed = 0
+var _namespace: Spite.Namespace?
+var _chosen: String?
 
 func Test(starting_namespace: Spite.Namespace) {
     _namespace = starting_namespace
