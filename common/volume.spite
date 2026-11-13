@@ -1,0 +1,24 @@
+singleton
+
+var name: String
+
+# ../../spite_documentation/programs.md#preloaded-files
+func Volume(volume_name: String) {
+    name = volume_name
+}
+
+func file(path: String): File {
+    var place = _place_of(path)
+    return File(place)
+}
+
+func directory(path: String): Directory {
+    var place = _place_of(path)
+    return Directory(place)
+}
+
+func _place_of(path: String): Path {
+    var whole: Path? = "{name}://{path}"
+    crash whole
+    return whole
+}

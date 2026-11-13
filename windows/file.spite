@@ -3,12 +3,26 @@ var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
 var _hundred_nanoseconds_from_1601_to_1970: Long = 116444736000000000
 
 func exists(): Boolean {
+    if _has_volumes() {
+        var place = _place_on_a_volume()
+        if place {
+            var found = place._preloaded_file_index()
+            if found {
+                return true
+            }
+            return false
+        }
+    }
     var wide_path = path._to_wide()
     var attributes = kernel.GetFileAttributesW(wide_path)
     return attributes != -1 and attributes.bits_and(16) == 0
 }
 
 func remove(): Boolean {
+    if _has_volumes() {
+        var place = _place_on_a_volume()
+        fallback not place
+    }
     var wide_path = path._to_wide()
     var removed = library._wremove(wide_path)
     return removed == 0
@@ -23,6 +37,10 @@ func _rename_to(new_path: String): Boolean {
 }
 
 func lock(): LockedFile? {
+    if _has_volumes() {
+        var place = _place_on_a_volume()
+        fallback not place
+    }
     var read_and_write = -1073741824
     var share_everything = 7
     var open_always = 4

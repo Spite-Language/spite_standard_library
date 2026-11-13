@@ -15,6 +15,9 @@ func Process(starting_command: String, starting_arguments: List<String>) {
 }
 
 func run(): Integer? {
+    if _has_volumes() {
+        fallback _runs_on_the_disk()
+    }
     _output = null
     _errors = null
     _was_stopped = false
@@ -88,4 +91,15 @@ func _settings_prefix(): String {
         index = index + 1
     }
     return prefix
+}
+
+# ../../spite_documentation/programs.md#preloaded-files
+func _has_volumes(): Boolean
+
+func _runs_on_the_disk(): Boolean {
+    var command_path: Path? = command
+    fallback not command_path or not command_path.is_on_a_volume
+    var folder = working_directory
+    fallback not folder or not folder.is_on_a_volume
+    return true
 }

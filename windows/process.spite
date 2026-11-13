@@ -18,6 +18,9 @@ var _standard_error = -12
 var _finished_waiting = 0
 
 func run_attached(): Integer? {
+    if _has_volumes() {
+        fallback _runs_on_the_disk()
+    }
     var command_text = _command_line()
     var wide_command = command_text._to_wide()
     library._set_errno(0)

@@ -10,6 +10,10 @@ func Directory(starting_path: Path) {
 }
 
 func move_to(new_path: Path): Boolean {
+    if _has_volumes() {
+        var place = _place_on_a_volume()
+        fallback not place and not new_path.is_on_a_volume
+    }
     var file_there = File(new_path)
     var folder_there = Directory(new_path)
     var file_exists = file_there.exists()
@@ -23,6 +27,15 @@ func move_to(new_path: Path): Boolean {
 }
 
 func get_folder_name(): String {
+    if _has_volumes() {
+        var place = _place_on_a_volume()
+        if place {
+            var volume_name = place._volume_name_of_a_root()
+            if volume_name {
+                return volume_name
+            }
+        }
+    }
     var end = path.length()
     while end > 1 and path.byte_at(end - 1) == 47 {
         end = end - 1
@@ -96,4 +109,14 @@ func _sorted_names(want_folders: Boolean): List<String>? {
         index = index + 1
     }
     return names
+}
+
+# ../../spite_documentation/programs.md#preloaded-files
+func _has_volumes(): Boolean
+
+func _place_on_a_volume(): Path? {
+    var place: Path? = path
+    fallback place
+    fallback place.is_on_a_volume
+    return place
 }

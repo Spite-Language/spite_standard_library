@@ -3,12 +3,26 @@ var _find_data_bytes = 592
 var _longest_path_characters = 260
 
 func exists(): Boolean {
+    if _has_volumes() {
+        var place = _place_on_a_volume()
+        if place {
+            var found = place._preloaded_folder_index()
+            if found {
+                return true
+            }
+            return false
+        }
+    }
     var wide_path = path._to_wide()
     var attributes = kernel.GetFileAttributesW(wide_path)
     return attributes != -1 and attributes.bits_and(16) != 0
 }
 
 func create(): Boolean {
+    if _has_volumes() {
+        var place = _place_on_a_volume()
+        fallback not place
+    }
     var wide_path = path._to_wide()
     var created = kernel.CreateDirectoryW(wide_path, 0)
     return created != 0 or exists()
@@ -22,6 +36,12 @@ func _rename_to(new_path: String): Boolean {
 }
 
 func _entry_names(want_folders: Boolean): List<String>? {
+    if _has_volumes() {
+        var place = _place_on_a_volume()
+        if place {
+            return place._preloaded_names(want_folders)
+        }
+    }
     var names = List<String>()
     var found = Buffer(_find_data_bytes)
     var pattern = "{path}/*"

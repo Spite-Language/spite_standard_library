@@ -26,6 +26,12 @@ func get_extension(): String {
 }
 
 func get_parent(): Path {
+    if _has_volumes() {
+        var opening = _volume_opening(_text)
+        if opening {
+            return _parent_on_a_volume(opening)
+        }
+    }
     var parts = _text.split("/")
     var parent = Path()
     fallback parts.count() > 1
@@ -44,6 +50,12 @@ func get_written(): String {
 }
 
 func get_is_rooted(): Boolean {
+    if _has_volumes() {
+        var opening = _volume_opening(_text)
+        if opening {
+            return true
+        }
+    }
     var has_a_drive = _text.length() >= 2 and _text.byte_at(1) == 58
     return _text.starts_with("/") or has_a_drive
 }
@@ -78,6 +90,12 @@ func _is_a_path(text: String): Boolean {
 }
 
 func _normalised(written: String): String {
+    if _has_volumes() {
+        var opening = _volume_opening(written)
+        if opening {
+            return _normalised_on_a_volume(written, opening)
+        }
+    }
     var forward = written.replace("\\", "/")
     var is_rooted = forward.starts_with("/")
     var parts = forward.split("/")
@@ -112,4 +130,154 @@ func _keep(kept: List<String>, part: String, is_rooted: Boolean) {
     if not is_rooted {
         kept.append(part)
     }
+}
+
+# ../../spite_documentation/programs.md#preloaded-files
+func get_is_on_a_volume(): Boolean {
+    if _has_volumes() {
+        var opening = _volume_opening(_text)
+        if opening {
+            return true
+        }
+    }
+    return false
+}
+
+# ../../spite_documentation/programs.md#preloaded-files
+func _has_volumes(): Boolean
+
+func _preloaded_count(): Integer
+
+func _preloaded_path_at(index: Integer): String
+
+func _preloaded_bytes_at(index: Integer): Buffer
+
+func _volume_opening(text: String): String? {
+    var mark = "://"
+    var at = text.index_of(mark)
+    fallback at
+    fallback at > 1
+    var name = text.slice(0, at)
+    fallback name
+    var plain = not name.contains("/") and not name.contains("\\") and not name.contains(":")
+    fallback plain
+    var mark_length = mark.length()
+    return text.slice(0, at + mark_length)
+}
+
+func _normalised_on_a_volume(written: String, opening: String): String {
+    var opening_length = opening.length()
+    var written_length = written.length()
+    var rest = written.slice(opening_length, written_length)
+    crash rest
+    var inside = _normalised("/{rest}")
+    var inside_length = inside.length()
+    var without_the_root = inside.slice(1, inside_length)
+    crash without_the_root
+    return "{opening}{without_the_root}"
+}
+
+func _parent_on_a_volume(opening: String): Path {
+    var parent = Path()
+    parent._text = opening
+    var opening_length = opening.length()
+    var length = _text.length()
+    var rest = _text.slice(opening_length, length)
+    crash rest
+    var parts = rest.split("/")
+    if parts.count() > 1 {
+        crash parts.remove_last()
+        var kept = parts.join("/")
+        parent._text = "{opening}{kept}"
+    }
+    return parent
+}
+
+func _preloaded_file_index(): Integer? {
+    fallback not _text.ends_with("/")
+    return _preloaded_index_of(_text)
+}
+
+func _preloaded_folder_index(): Integer? {
+    var key = _folder_key()
+    return _preloaded_index_of(key)
+}
+
+func _folder_key(): String {
+    if _text.ends_with("/") {
+        return _text
+    }
+    return "{_text}/"
+}
+
+func _preloaded_index_of(key: String): Integer? {
+    var low = 0
+    var high = _preloaded_count()
+    while low < high {
+        var middle = (low + high) / 2
+        var here = _preloaded_path_at(middle)
+        if here == key {
+            return middle
+        }
+        if here < key {
+            low = middle + 1
+        } else {
+            high = middle
+        }
+    }
+    return null
+}
+
+func _preloaded_bytes(): Buffer? {
+    var found = _preloaded_file_index()
+    fallback found
+    return _preloaded_bytes_at(found)
+}
+
+func _preloaded_names(want_folders: Boolean): List<String>? {
+    var folder = _folder_key()
+    var start = _preloaded_index_of(folder)
+    fallback start
+    var names = List<String>()
+    var count = _preloaded_count()
+    var index = start + 1
+    var inside = true
+    while index < count and inside {
+        var entry = _preloaded_path_at(index)
+        inside = entry.starts_with(folder)
+        if inside {
+            _keep_a_child(names, folder, entry, want_folders)
+        }
+        index = index + 1
+    }
+    return names
+}
+
+func _keep_a_child(names: List<String>, folder: String, entry: String, want_folders: Boolean) {
+    var folder_length = folder.length()
+    var entry_length = entry.length()
+    var rest = entry.slice(folder_length, entry_length)
+    crash rest
+    var slash = rest.index_of("/")
+    if slash {
+        var last = rest.length() - 1
+        var is_a_child_folder = slash == last
+        if want_folders and is_a_child_folder {
+            var folder_name = rest.slice(0, slash)
+            crash folder_name
+            names.append(folder_name)
+        }
+        return
+    }
+    if not want_folders {
+        names.append(rest)
+    }
+}
+
+func _volume_name_of_a_root(): String? {
+    var mark = "://"
+    fallback _text.ends_with(mark)
+    var mark_length = mark.length()
+    var length = _text.length()
+    return _text.slice(0, length - mark_length)
 }

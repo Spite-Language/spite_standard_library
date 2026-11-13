@@ -5,7 +5,11 @@ this one. `common/` holds the classes every system has, and `windows/`, `linux/`
 system, which reopen the classes of `common/`. The compiler names no class of the library, except the ones in
 `spite/` it supplies to the programs that need them: `Spite.Fault`, `Spite.Settings`, `Spite.Asserts` and
 `Spite.CopyTable` (`common/spite/`, read by a program that loads `common/` alone too), which no program may name, and the reloader
-`Spite.HotReload` of a `--hot-reload` build (`common/spite/` and `windows/spite/`).
+`Spite.HotReload` of a `--hot-reload` build (`common/spite/` and `windows/spite/`). It also knows `Volume`, the files a
+program preloads ([programs.md](https://github.com/Spite-Language/spite_documentation/blob/master/programs.md#preloaded-files)): `File`, `Directory`, `Path`,
+`Process` and `FileSystemWatcher` ask `_has_volumes()`, which the compiler answers while compiling, so a program with
+no `preload` builds without the volume checks, and `Path` reads the preloaded table through `_preloaded_count`,
+`_preloaded_path_at` and `_preloaded_bytes_at`, whose bodies the compiler supplies.
 
 What is left is in the [issues](https://github.com/Spite-Language/spite_standard_library/issues) of this
 repository, and the language's in the [compiler's](https://github.com/Spite-Language/spite_compiler/issues).
