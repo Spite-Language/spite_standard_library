@@ -16,4 +16,5 @@ var debug_memory = false
 var trace_fallbacks = false
 var operating_system = "windows"
 var target_operating_system = "windows"
+var standard_library = ""
 var program = ""

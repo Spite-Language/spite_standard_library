@@ -1,10 +1,14 @@
 # The Spite standard library
 
-The classes every Spite program reaches by path: `load "../spite_standard_library/windows"` from a folder beside
-this one. `common/` holds the classes every system has, and `windows/`, `linux/` and `mac/` the parts of each
+The classes every Spite program has, with no `load` line: the compiler reads the folder of the system a program is
+compiled for, which loads `common/` itself. It takes this folder when it is cloned beside `spite_compiler` (the
+`spite_standard_library` folder nearest above the compiler's executable), or the one `--standard-library=<folder>`
+names, so a branch of the library is compiled with by giving its folder
+([compiler.md](https://github.com/Spite-Language/spite_documentation/blob/master/compiler.md#where-the-standard-library-comes-from)).
+`common/` holds the classes every system has, and `windows/`, `linux/` and `mac/` the parts of each
 system, which reopen the classes of `common/`. The compiler names no class of the library, except the ones in
 `spite/` it supplies to the programs that need them: `Spite.Fault`, `Spite.Settings`, `Spite.Asserts` and
-`Spite.CopyTable` (`common/spite/`, read by a program that loads `common/` alone too), which no program may name, and the reloader
+`Spite.CopyTable` (`common/spite/`), which no program may name, and the reloader
 `Spite.HotReload` of a `--hot-reload` build (`common/spite/` and `windows/spite/`). It also knows `Volume`, the files a
 program preloads ([programs.md](https://github.com/Spite-Language/spite_documentation/blob/master/programs.md#preloaded-files)): `File`, `Directory`, `Path`,
 `Process` and `FileSystemWatcher` ask `_has_volumes()`, which the compiler answers while compiling, so a program with
