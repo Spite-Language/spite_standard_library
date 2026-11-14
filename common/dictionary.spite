@@ -122,12 +122,37 @@ func to_debug(): String {
         var key = _keys[index]
         var value = _values[index]
         var key_text = key.to_debug()
-        var value_text = value.to_debug()
+        var value_text = _debugged(value)
         shown.append("{key_text}: {value_text}")
         index = index + 1
     }
     var joined = shown.join(", ")
     return "\{{joined}}"
+}
+
+func _debugged(held: $value_type): String {
+    if $value_type == Null {
+        return _debugged_or_null(held)
+    }
+    return held.to_debug()
+}
+
+func _debugged_or_null(held: $value_type): String {
+    if $value_type.value_type == Boolean {
+        return _flag_text(held)
+    } else if held {
+        return held.to_debug()
+    }
+    return "null"
+}
+
+func _flag_text(flag: $value_type): String {
+    if flag == true {
+        return "true"
+    } else if flag == false {
+        return "false"
+    }
+    return "null"
 }
 
 func _tag_of(key: $key_type): UnsignedInteger {

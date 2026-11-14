@@ -141,7 +141,7 @@ func join(separator: String): String {
         if $element_type == String {
             joined._append_text(held)
         } else {
-            var written = held.to_string()
+            var written = _written(held)
             joined._append_text(written)
         }
         index = index + 1
@@ -589,10 +589,51 @@ func to_debug(): String {
     var index = 0
     while index < _length {
         var held = _read_value(index)
-        var debugged = held.to_debug()
+        var debugged = _debugged(held)
         shown.append(debugged)
         index = index + 1
     }
     var joined = shown.join(", ")
     return "[{joined}]"
+}
+
+func _debugged(held: $element_type): String {
+    if $element_type == Null {
+        return _debugged_or_null(held)
+    }
+    return held.to_debug()
+}
+
+func _debugged_or_null(held: $element_type): String {
+    if $element_type.value_type == Boolean {
+        return _flag_text(held)
+    } else if held {
+        return held.to_debug()
+    }
+    return "null"
+}
+
+func _written(held: $element_type): String {
+    if $element_type == Null {
+        return _written_or_null(held)
+    }
+    return held.to_string()
+}
+
+func _written_or_null(held: $element_type): String {
+    if $element_type.value_type == Boolean {
+        return _flag_text(held)
+    } else if held {
+        return held.to_string()
+    }
+    return "null"
+}
+
+func _flag_text(flag: $element_type): String {
+    if flag == true {
+        return "true"
+    } else if flag == false {
+        return "false"
+    }
+    return "null"
 }
