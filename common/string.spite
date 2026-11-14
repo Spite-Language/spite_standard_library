@@ -61,6 +61,8 @@ var uncountables = [
 var _two_byte_lead_start = 192
 var _three_byte_lead_start = 224
 var _four_byte_lead_start = 240
+var _continuation_start = 128
+var _continuation_room = 64
 var _seconds_per_day: Long = 86400
 var _seconds_per_hour = 3600
 var _largest_integer = 2147483647
@@ -173,14 +175,32 @@ func _append_unsigned_whole(value: UnsignedLong) {
     _length = wanted
 }
 
-func get_at(index: Integer): String? {
+func get_at(index: Integer): Rune? {
     fallback index >= 0 and index < _length
-    var lead = _buffer._read_byte_at(index)
+    var lead: Integer = _buffer._read_byte_at(index)
     var size = _character_size(lead)
     fallback size > 0 and index + size <= _length
-    var character = String()
-    character._append_bytes(_buffer, index, size)
-    return character
+    var unicode = lead - _lead_start(size)
+    var place = 1
+    while place < size {
+        var following: Integer = _buffer._read_byte_at(index + place)
+        unicode = unicode * _continuation_room + following - _continuation_start
+        place = place + 1
+    }
+    return Rune(unicode)
+}
+
+func _lead_start(size: Integer): Integer {
+    if size == 2 {
+        return _two_byte_lead_start
+    }
+    if size == 3 {
+        return _three_byte_lead_start
+    }
+    if size == 4 {
+        return _four_byte_lead_start
+    }
+    return 0
 }
 
 func _character_size(lead: Integer): Integer {

@@ -1,0 +1,62 @@
+var _unicode = 0
+var _largest_unicode = 1114111
+var _lowest_surrogate = 55296
+var _highest_surrogate = 57343
+var _largest_one_byte = 127
+var _largest_two_bytes = 2047
+var _largest_three_bytes = 65535
+var _two_byte_lead_start = 192
+var _three_byte_lead_start = 224
+var _four_byte_lead_start = 240
+var _continuation_start = 128
+var _continuation_room = 64
+
+func Rune(unicode: Integer) {
+    crash unicode >= 0 and unicode <= _largest_unicode
+    crash unicode < _lowest_surrogate or unicode > _highest_surrogate
+    _unicode = unicode
+}
+
+func get_unicode(): Integer {
+    return _unicode
+}
+
+func equals(other: Rune): Boolean {
+    return _unicode == other._unicode
+}
+
+func to_string(): String {
+    var text = String()
+    if _unicode <= _largest_one_byte {
+        text.append_code(_unicode)
+        return text
+    }
+    if _unicode <= _largest_two_bytes {
+        _append_lead(text, _two_byte_lead_start, 1)
+        return text
+    }
+    if _unicode <= _largest_three_bytes {
+        _append_lead(text, _three_byte_lead_start, 2)
+        return text
+    }
+    _append_lead(text, _four_byte_lead_start, 3)
+    return text
+}
+
+func _append_lead(text: String, lead_start: Integer, continuations: Integer) {
+    var room = 1
+    var counted = 0
+    while counted < continuations {
+        room = room * _continuation_room
+        counted = counted + 1
+    }
+    var lead = lead_start + _unicode / room
+    text.append_code(lead)
+    var left = _unicode % room
+    while room > 1 {
+        room = room / _continuation_room
+        var continuation = _continuation_start + left / room
+        text.append_code(continuation)
+        left = left % room
+    }
+}

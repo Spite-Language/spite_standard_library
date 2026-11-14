@@ -313,8 +313,9 @@ func _needs_quotes(text: String): Boolean {
     var index = 0
     var special = " \t\n\"&|<>^"
     while index < text.length() {
-        var character = text[index]
-        crash character
+        var character_rune = text[index]
+        crash character_rune
+        var character = character_rune.to_string()
         if special.contains(character) {
             return true
         }
@@ -328,8 +329,9 @@ func _quoted_text(text: String): String {
     var backslashes = 0
     var index = 0
     while index < text.length() {
-        var character = text[index]
-        crash character
+        var character_rune = text[index]
+        crash character_rune
+        var character = character_rune.to_string()
         if character == "\\" {
             backslashes = backslashes + 1
         } else {
