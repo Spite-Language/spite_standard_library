@@ -419,6 +419,11 @@ func _compare_bytes(other: Buffer, at: Integer, wanted: Integer): Integer {
     return 0
 }
 
+func equals(other: Buffer): Boolean {
+    fallback item_count == other.item_count
+    return _compare_bytes(other, 0, item_count) == 0
+}
+
 func read_buffer_at(at: Integer, wanted: Integer): Buffer? {
     crash wanted >= 0
     fallback _inside(at, wanted)
@@ -437,6 +442,39 @@ func append_buffer(other: Buffer, start: Integer, wanted: Integer) {
         _write_byte_at(kept + index, copied)
         index = index + 1
     }
+}
+
+func write_buffer_at(at: Integer, other: Buffer, start: Integer, wanted: Integer) {
+    crash wanted >= 0 and _inside(at, wanted)
+    crash start >= 0 and start <= other.item_count - wanted
+    if at <= start {
+        _copy_forward(at, other, start, wanted)
+    } else {
+        _copy_backward(at, other, start, wanted)
+    }
+}
+
+func _copy_forward(at: Integer, other: Buffer, start: Integer, wanted: Integer) {
+    var index = 0
+    while index < wanted {
+        var copied = other._read_byte_at(start + index)
+        _write_byte_at(at + index, copied)
+        index = index + 1
+    }
+}
+
+func _copy_backward(at: Integer, other: Buffer, start: Integer, wanted: Integer) {
+    var index = wanted - 1
+    while index >= 0 {
+        var copied = other._read_byte_at(start + index)
+        _write_byte_at(at + index, copied)
+        index = index - 1
+    }
+}
+
+func append_string(text: String) {
+    var bytes = text.to_buffer()
+    append_buffer(bytes, 0, bytes.item_count)
 }
 
 func read_as_string(): String? {

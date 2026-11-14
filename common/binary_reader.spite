@@ -70,6 +70,8 @@ func _read(): $value_type {
         return _read_double()
     } else if $value_type == String {
         return _read_text()
+    } else if $value_type == Buffer {
+        return _read_buffer()
     } else if $value_type == Enum {
         return _read_enum()
     } else if $value_type == List {
@@ -258,6 +260,18 @@ func _read_text(): String {
     }
     _fail()
     return ""
+}
+
+func _read_buffer(): Buffer {
+    var count = _read_count()
+    if not _take(count) {
+        return Buffer(0)
+    }
+    var held = _buffer()
+    var start = _at - count
+    var bytes = held.read_buffer_at(start, count)
+    crash bytes
+    return bytes
 }
 
 func _read_index() {
