@@ -1,9 +1,9 @@
 # The Spite standard library
 
 The classes every Spite program has, with no `load` line: the compiler reads the folder of the system a program is
-compiled for, which loads `common/` itself. It takes this folder when it is cloned beside `spite_compiler` (the
-`spite_standard_library` folder nearest above the compiler's executable), or the one `--standard-library=<folder>`
-names, so a branch of the library is compiled with by giving its folder
+compiled for, which loads `common/` itself. The compiler preloads this folder when it is itself built and carries
+it inside its executable (`spite_standard_library://`), or reads the one `--standard-library-path=<folder>` names,
+so a branch of the library is compiled with by giving its folder
 ([compiler.md](https://github.com/Spite-Language/spite_documentation/blob/master/compiler.md#where-the-standard-library-comes-from)).
 `common/` holds the classes every system has, and `windows/`, `linux/` and `mac/` the parts of each
 system, which reopen the classes of `common/`. The compiler names no class of the library, except the ones in
