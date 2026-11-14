@@ -26,11 +26,9 @@ func get_extension(): String {
 }
 
 func get_parent(): Path {
-    if _has_volumes() {
-        var opening = _volume_opening(_text)
-        if opening {
-            return _parent_on_a_volume(opening)
-        }
+    var opening = _volume_opening(_text)
+    if opening {
+        return _parent_on_a_volume(opening)
     }
     var parts = _text.split("/")
     var parent = Path()
@@ -50,11 +48,9 @@ func get_written(): String {
 }
 
 func get_is_rooted(): Boolean {
-    if _has_volumes() {
-        var opening = _volume_opening(_text)
-        if opening {
-            return true
-        }
+    var opening = _volume_opening(_text)
+    if opening {
+        return true
     }
     var has_a_drive = _text.length() >= 2 and _text.byte_at(1) == 58
     return _text.starts_with("/") or has_a_drive
@@ -90,11 +86,9 @@ func _is_a_path(text: String): Boolean {
 }
 
 func _normalised(written: String): String {
-    if _has_volumes() {
-        var opening = _volume_opening(written)
-        if opening {
-            return _normalised_on_a_volume(written, opening)
-        }
+    var opening = _volume_opening(written)
+    if opening {
+        return _normalised_on_a_volume(written, opening)
     }
     var forward = written.replace("\\", "/")
     var is_rooted = forward.starts_with("/")
@@ -134,18 +128,14 @@ func _keep(kept: List<String>, part: String, is_rooted: Boolean) {
 
 # ../../spite_documentation/programs.md#preloaded-files
 func get_is_on_a_volume(): Boolean {
-    if _has_volumes() {
-        var opening = _volume_opening(_text)
-        if opening {
-            return true
-        }
+    var opening = _volume_opening(_text)
+    if opening {
+        return true
     }
     return false
 }
 
 # ../../spite_documentation/programs.md#preloaded-files
-func _has_volumes(): Boolean
-
 func _preloaded_count(): Integer
 
 func _preloaded_path_at(index: Integer): String
