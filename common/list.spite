@@ -255,7 +255,20 @@ func find(test: Spite.Function<$element_type, Boolean>): $element_type? {
     return null
 }
 
-func sum(measure: Spite.Function<$element_type, Integer>): Integer {
+# ../../spite_documentation/collections.md#sum-adds-the-members-up
+func sum(): $element_type? {
+    fallback _length != 0
+    var total = _read_value(0)
+    var index = 1
+    while index < _length {
+        var item = _read_value(index)
+        total = total + item
+        index = index + 1
+    }
+    return total
+}
+
+func sum_by(measure: Spite.Function<$element_type, Integer>): Integer {
     var total = 0
     var index = 0
     while index < _length {
