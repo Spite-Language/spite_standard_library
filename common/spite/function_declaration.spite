@@ -8,7 +8,7 @@ var _has_facts: Boolean
 var _has_reach: Boolean
 var _returned_literal: String?
 # ../../../spite_documentation/functions_and_operators.md#null-only-goes-where-a-t-is-wanted
-var _called_on: Spite.Function<Anything, Dictionary<String, Anything?>, Nothing>?
+var _called_on: Spite.Function<Anything, Dictionary<String, Anything?>, Anything?>?
 var _reads: List<Spite.AttributeDeclaration>
 var _writes: List<Spite.AttributeDeclaration>
 var _signature: String
@@ -24,7 +24,7 @@ func FunctionDeclaration(
     starting_has_facts: Boolean,
     starting_has_reach: Boolean,
     starting_returned_literal: String?,
-    starting_called_on: Spite.Function<Anything, Dictionary<String, Anything?>, Nothing>?,
+    starting_called_on: Spite.Function<Anything, Dictionary<String, Anything?>, Anything?>?,
     starting_reads: List<Spite.AttributeDeclaration>,
     starting_writes: List<Spite.AttributeDeclaration>,
     starting_signature: String,
@@ -92,10 +92,10 @@ func get_source_file(): File {
     return File(source_path)
 }
 
-func _call_on(instance: Anything, arguments: Dictionary<String, Anything?>) {
+func _call_on(instance: Anything, arguments: Dictionary<String, Anything?>): Anything? {
     crash _called_on
     var called = _called_on
-    called(instance, arguments)
+    return called(instance, arguments)
 }
 
 func argument_count(): Integer {

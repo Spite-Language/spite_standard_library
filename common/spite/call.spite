@@ -12,6 +12,6 @@ func get_arguments(): Dictionary<String, Anything?> {
     return _arguments
 }
 
-func call() {
-    _declaration._call_on(_instance, _arguments)
+func call(): Anything? {
+    return _declaration._call_on(_instance, _arguments)
 }
