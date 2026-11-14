@@ -53,6 +53,33 @@ func to_string(): String {
     return path
 }
 
+func remove_all(): Boolean {
+    var found = entries()
+    fallback found
+    var index = 0
+    while index < found.count() {
+        var entry = found[index]
+        var removed = _remove_entry(entry)
+        fallback removed
+        index = index + 1
+    }
+    return remove()
+}
+
+func _remove_entry(entry: Entry): Boolean {
+    switch entry {
+        File: return entry.remove()
+        Directory: return entry._remove_folder()
+    }
+}
+
+func _remove_folder(): Boolean {
+    if _is_a_link() {
+        return remove()
+    }
+    return remove_all()
+}
+
 func entries(): List<Entry>? {
     var result = List<Entry>()
     var folder_names = _sorted_names(true)

@@ -1,6 +1,7 @@
 var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
 var _find_data_bytes = 592
 var _longest_path_characters = 260
+var _reparse_point = 1024
 
 func exists(): Boolean {
     if _has_volumes() {
@@ -26,6 +27,18 @@ func create(): Boolean {
     var wide_path = path._to_wide()
     var created = kernel.CreateDirectoryW(wide_path, 0)
     return created != 0 or exists()
+}
+
+func remove(): Boolean {
+    var wide_path = path._to_wide()
+    var removed = kernel.RemoveDirectoryW(wide_path)
+    return removed != 0
+}
+
+func _is_a_link(): Boolean {
+    var wide_path = path._to_wide()
+    var attributes = kernel.GetFileAttributesW(wide_path)
+    return attributes != -1 and attributes.bits_and(_reparse_point) != 0
 }
 
 func _rename_to(new_path: String): Boolean {

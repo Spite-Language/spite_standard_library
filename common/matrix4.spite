@@ -27,6 +27,7 @@ var column_3_row_0: $number_type = 0.0
 var column_3_row_1: $number_type = 0.0
 var column_3_row_2: $number_type = 0.0
 var column_3_row_3: $number_type = 1.0
+var _side = 4
 
 func Matrix4() {
     crash $number_type == Float or $number_type == Double
@@ -49,6 +50,67 @@ func set_identity() {
     column_3_row_1 = 0.0
     column_3_row_2 = 0.0
     column_3_row_3 = 1.0
+}
+
+func set_at(column: Integer, row: Integer, value: $number_type) {
+    crash column >= 0 and column < _side and row >= 0 and row < _side
+    if column == 0 {
+        _set_in_column_0(row, value)
+    } else if column == 1 {
+        _set_in_column_1(row, value)
+    } else if column == 2 {
+        _set_in_column_2(row, value)
+    } else {
+        _set_in_column_3(row, value)
+    }
+}
+
+func _set_in_column_0(row: Integer, value: $number_type) {
+    if row == 0 {
+        column_0_row_0 = value
+    } else if row == 1 {
+        column_0_row_1 = value
+    } else if row == 2 {
+        column_0_row_2 = value
+    } else {
+        column_0_row_3 = value
+    }
+}
+
+func _set_in_column_1(row: Integer, value: $number_type) {
+    if row == 0 {
+        column_1_row_0 = value
+    } else if row == 1 {
+        column_1_row_1 = value
+    } else if row == 2 {
+        column_1_row_2 = value
+    } else {
+        column_1_row_3 = value
+    }
+}
+
+func _set_in_column_2(row: Integer, value: $number_type) {
+    if row == 0 {
+        column_2_row_0 = value
+    } else if row == 1 {
+        column_2_row_1 = value
+    } else if row == 2 {
+        column_2_row_2 = value
+    } else {
+        column_2_row_3 = value
+    }
+}
+
+func _set_in_column_3(row: Integer, value: $number_type) {
+    if row == 0 {
+        column_3_row_0 = value
+    } else if row == 1 {
+        column_3_row_1 = value
+    } else if row == 2 {
+        column_3_row_2 = value
+    } else {
+        column_3_row_3 = value
+    }
 }
 
 func multiply(other: Matrix4<$number_type>): Matrix4<$number_type> {
