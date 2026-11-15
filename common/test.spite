@@ -81,9 +81,8 @@ func _run_apart(named: String) {
         _failed = _failed + 1
         console.print("fail", named)
     }
-    if output {
-        _print_indented(output)
-    }
+    fallback output
+    _print_indented(output)
 }
 
 func _print_indented(output: String) {
