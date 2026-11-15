@@ -241,7 +241,7 @@ func frames() {
     var own = kernel.GetModuleHandleA_as_long(0)
     var code_start = own + 4096
     var table = _call_table()
-    var at = _frame_pointer()
+    var at = _callers()
     var walking = true
     var steps = 0
     var lines = 0
@@ -346,7 +346,7 @@ func call_text(table: Long, index: Long): String {
 
 func _call_table(): Long
 
-func _frame_pointer(): Long
+func _callers(): Long
 
 func _crash_gate()
 
