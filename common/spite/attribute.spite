@@ -5,6 +5,8 @@ var _value: Anything?
 var _index: Integer
 var _declaration = Spite.AttributeDeclaration("", 0, Nothing, "")
 var _owner: Anything
+# ../../../spite_documentation/reflection.md#known-only-at-run-time
+var _writer: Spite.Function<Anything?, Anything?>?
 
 func Attribute(
     starting_name: String,
@@ -13,6 +15,7 @@ func Attribute(
     starting_declaration: Spite.AttributeDeclaration,
     starting_owner: Anything,
     starting_value: Anything?,
+    starting_writer: Spite.Function<Anything?, Anything?>?,
 ) {
     _name = starting_name
     _index = starting_index
@@ -20,6 +23,7 @@ func Attribute(
     _declaration = starting_declaration
     _owner = starting_owner
     _value = starting_value
+    _writer = starting_writer
 }
 
 func get_name(): String {
@@ -32,6 +36,13 @@ func get_class(): Spite.Class {
 
 func get_value(): Anything? {
     return _value
+}
+
+func set_value(value: Anything?) {
+    var writer = _writer
+    crash writer
+    var written = writer(value)
+    _value = written
 }
 
 func get_index(): Integer {
