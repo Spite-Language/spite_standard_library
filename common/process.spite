@@ -99,7 +99,6 @@ func _has_volumes(): Boolean
 func _runs_on_the_disk(): Boolean {
     var command_path: Path? = command
     fallback not command_path or not command_path.is_on_a_volume
-    var folder = working_directory
-    fallback not folder or not folder.is_on_a_volume
+    fallback not working_directory or not working_directory.is_on_a_volume
     return true
 }

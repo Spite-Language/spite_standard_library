@@ -101,14 +101,14 @@ func write_attribute(attribute: Spite.AttributeDeclaration, shown: $value_type) 
     var class_name = $value_type.name
     attribute_json.path = "{class_name}.{name}"
     var attribute_text = attribute_json.write(shown[attribute])
-    var members = _members
-    crash members
     var given = keys[attribute]
     var key = "\"{name}\""
     if given and not keys.is_empty() {
         key = quoted(given)
     }
-    members.append("{key}:{attribute_text}")
+    var member = "{key}:{attribute_text}"
+    crash _members
+    _members.append(member)
 }
 
 func written_decimal(shown: $value_type): String {

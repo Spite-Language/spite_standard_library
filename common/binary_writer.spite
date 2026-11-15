@@ -191,7 +191,6 @@ func _write_index() {
 }
 
 func _target(): Buffer {
-    var target = _bytes
-    crash target
-    return target
+    crash _bytes
+    return _bytes
 }

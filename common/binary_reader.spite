@@ -361,7 +361,6 @@ func _load_double(): Double {
 }
 
 func _buffer(): Buffer {
-    var held = _source
-    crash held
-    return held
+    crash _source
+    return _source
 }
