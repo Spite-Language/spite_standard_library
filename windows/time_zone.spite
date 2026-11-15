@@ -1,4 +1,4 @@
-var _icu: DynamicLibrary? = null
+var _icu = DynamicLibrary("icu.dll", 'identity', "")
 var _calendar: Long = 0
 var _status = Buffer(0)
 var _earliest_icu_calendar_second: Long = -184303902528000
@@ -13,8 +13,6 @@ func _offset_seconds_at_unix(unix_seconds: Long): Integer {
 }
 
 func _open_calendar(): Boolean {
-    var icu = DynamicLibrary("icu.dll", 'identity', "")
-    _icu = icu
     _status = Buffer(4)
     _status.append_integer_little_endian(0)
     if _identifier.is_empty() {
@@ -27,21 +25,19 @@ func _open_calendar(): Boolean {
 }
 
 func drop() {
-    var icu = _icu
-    if icu and _calendar != 0 {
-        icu.ucal_close(_calendar)
+    if _calendar != 0 {
+        _icu.ucal_close(_calendar)
     }
 }
 
 func _calendar_offset_seconds_at(unix_seconds: Long): Integer {
-    var icu = _icu
-    crash icu and _calendar != 0
+    crash _calendar != 0
     crash unix_seconds >= _earliest_icu_calendar_second and unix_seconds <= _latest_icu_calendar_second
     _clear_status()
     var milliseconds: Double = unix_seconds * 1000
-    icu.ucal_setMillis(_calendar, milliseconds, _status)
-    var zone = icu.ucal_get(_calendar, 15, _status)
-    var daylight = icu.ucal_get(_calendar, 16, _status)
+    _icu.ucal_setMillis(_calendar, milliseconds, _status)
+    var zone = _icu.ucal_get(_calendar, 15, _status)
+    var daylight = _icu.ucal_get(_calendar, 16, _status)
     var status = _status_value()
     crash status <= 0
     return (zone + daylight) / 1000
@@ -68,8 +64,6 @@ func _zeroed(size: Integer): Buffer {
 }
 
 func _opened_calendar(): Long {
-    var icu = _icu
-    crash icu
     var length = _identifier.length()
     var characters = Buffer(length * 2 + 2)
     var index = 0
@@ -83,13 +77,13 @@ func _opened_calendar(): Long {
     var is_system = _zeroed(4)
     var canonical = _zeroed(512)
     _clear_status()
-    icu.ucal_getCanonicalTimeZoneID(characters, length, canonical, 256, is_system, _status)
+    _icu.ucal_getCanonicalTimeZoneID(characters, length, canonical, 256, is_system, _status)
     var canonical_status = _status_value()
     var system_flag = is_system[0]
     crash system_flag
     var handle: Long = 0
     if canonical_status <= 0 and system_flag != 0 {
-        handle = icu.ucal_open_as_long(characters, length, "", 1, _status)
+        handle = _icu.ucal_open_as_long(characters, length, "", 1, _status)
         var open_status = _status_value()
         if open_status > 0 {
             handle = 0
@@ -99,11 +93,9 @@ func _opened_calendar(): Long {
 }
 
 func _default_identifier(): String? {
-    var icu = _icu
-    crash icu
     var characters = _zeroed(512)
     _clear_status()
-    var length = icu.ucal_getDefaultTimeZone(characters, 256, _status)
+    var length = _icu.ucal_getDefaultTimeZone(characters, 256, _status)
     var status = _status_value()
     fallback status <= 0 and length >= 0 and length <= 256
     var identifier = String()

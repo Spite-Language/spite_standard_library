@@ -3,6 +3,7 @@ singleton
 var console = Console()
 var program = Program()
 var reload = Reload()
+var environment = Environment()
 var watcher = FileSystemWatcher()
 var started = false
 var working_folder = ""
@@ -120,7 +121,6 @@ func reload_now(): String {
     keep_the_manifest(manifest_path)
     reload.rebuilt.append(rebuilt)
     if rebuilt.contains("Environment") {
-        var environment = Environment()
         environment._read_settings()
     }
     last_answer = answer
