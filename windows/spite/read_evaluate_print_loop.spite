@@ -1,4 +1,5 @@
 var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+var runtime = DynamicLibrary("ucrtbase.dll", 'identity', "")
 var input: Long = 0
 var input_kind = 0
 var held = Buffer(0)
@@ -6,6 +7,8 @@ var held_callbacks = List<ForeignCallback>()
 var _control_c = 0
 var _control_break = 1
 var _interrupted = 130
+var _same_access = 2
+var _read_only = 0
 var _standard_input = -10
 var _disk = 1
 var _character = 2
@@ -18,7 +21,18 @@ var _return_key = 13
 
 # ../../../spite_documentation/repl.md#typing-spite-into-a-running-program
 func _start_reading() {
-    input = kernel.GetStdHandle_as_long(_standard_input)
+    var standard = kernel.GetStdHandle_as_long(_standard_input)
+    input = standard
+    var process = kernel.GetCurrentProcess_as_long()
+    var copied = Buffer(8)
+    var duplicated = kernel.DuplicateHandle(process, standard, process, copied, 0, 0, _same_access)
+    if duplicated != 0 {
+        copied.take_written(8)
+        var held = copied.read_long_little_endian_at(0)
+        crash held
+        input = held
+        leave_the_program_no_input()
+    }
     input_kind = kernel.GetFileType(input)
     var stopping = ForeignCallback(stop_at_once, 'no_context')
     var handled = kernel.SetConsoleCtrlHandler(stopping.address, 1)
@@ -28,6 +42,15 @@ func _start_reading() {
 }
 
 # ../../../spite_documentation/repl.md#input-and-ending
+func leave_the_program_no_input() {
+    var nothing_to_read = runtime._open("NUL", _read_only)
+    fallback nothing_to_read >= 0
+    var moved = runtime._dup2(nothing_to_read, 0)
+    fallback moved == 0
+    var closed = runtime._close(nothing_to_read)
+    crash closed == 0
+}
+
 func stop_at_once(kind: Integer): Integer {
     fallback kind == _control_c or kind == _control_break
     var process = kernel.GetCurrentProcess_as_long()

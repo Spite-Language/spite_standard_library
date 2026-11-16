@@ -1,8 +1,6 @@
 var input = 0
-var build = Build()
 
 func read_line(): String? {
-    fallback not build.repl
     if input == 0 {
         input = library._fdopen_as_long(0, "r")
     }
