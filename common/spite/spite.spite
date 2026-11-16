@@ -1,0 +1,5 @@
+union Anything {
+}
+
+union Nothing {
+}
