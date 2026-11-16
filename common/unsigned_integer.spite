@@ -4,6 +4,10 @@ var _buffer = Buffer(4)
 var _smallest_value: Long = 0
 var _largest_value: Long = 4294967295
 
+func UnsignedInteger(from: Null): UnsignedInteger? {
+    return 0
+}
+
 func UnsignedInteger(from: String): UnsignedInteger? {
     var value: Long? = from
     fallback value and value >= 0 and value <= UnsignedInteger.Largest()

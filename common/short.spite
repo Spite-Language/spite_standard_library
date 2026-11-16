@@ -4,6 +4,10 @@ var _buffer = Buffer(2)
 var _smallest_value: Long = -32768
 var _largest_value: Long = 32767
 
+func Short(from: Null): Short? {
+    return 0
+}
+
 func Short(from: String): Short? {
     var value: Long? = from
     fallback value and value >= Short.Smallest() and value <= Short.Largest()

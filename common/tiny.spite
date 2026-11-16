@@ -4,6 +4,10 @@ var _buffer = Buffer(1)
 var _smallest_value: Long = -128
 var _largest_value: Long = 127
 
+func Tiny(from: Null): Tiny? {
+    return 0
+}
+
 func Tiny(from: String): Tiny? {
     var value: Long? = from
     fallback value and value >= Tiny.Smallest() and value <= Tiny.Largest()

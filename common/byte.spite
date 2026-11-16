@@ -4,6 +4,10 @@ var _buffer = Buffer(1)
 var _smallest_value: Long = 0
 var _largest_value: Long = 255
 
+func Byte(from: Null): Byte? {
+    return 0
+}
+
 func Byte(from: String): Byte? {
     var value: Long? = from
     fallback value and value >= 0 and value <= Byte.Largest()

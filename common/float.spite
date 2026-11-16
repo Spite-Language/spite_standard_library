@@ -12,6 +12,10 @@ var _subnormal_shift_origin: Long = 126
 var _smallest_value: Double = -340282346638528859811704183484516925440.0
 var _largest_value: Double = 340282346638528859811704183484516925440.0
 
+func Float(from: Null): Float? {
+    return 0
+}
+
 func Float(from: String): Float? {
     var text = from.trim()
     var valid = text._is_decimal()

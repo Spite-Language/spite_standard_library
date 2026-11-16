@@ -8,6 +8,10 @@ var _float_not_a_number_bits: UnsignedInteger = 2143289344
 var _smallest_value: Long = 0
 var _largest_value: Long = 65535
 
+func UnsignedShort(from: Null): UnsignedShort? {
+    return 0
+}
+
 func UnsignedShort(from: String): UnsignedShort? {
     var value: Long? = from
     fallback value and value >= 0 and value <= UnsignedShort.Largest()

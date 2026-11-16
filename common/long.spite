@@ -4,6 +4,10 @@ var _buffer = Buffer(8)
 var _smallest_value_but_one: Long = -9223372036854775807
 var _largest_value: Long = 9223372036854775807
 
+func Long(from: Null): Long? {
+    return 0
+}
+
 func Long(from: String): Long? {
     var text = from.trim()
     var size = text._length
