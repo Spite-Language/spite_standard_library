@@ -39,9 +39,8 @@ func get_value(): Anything? {
 }
 
 func set_value(value: Anything?) {
-    var writer = _writer
-    crash writer
-    var written = writer(value)
+    crash _writer
+    var written = _writer(value)
     _value = written
 }
 
