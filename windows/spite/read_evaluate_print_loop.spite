@@ -1,0 +1,165 @@
+var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+var input: Long = 0
+var input_kind = 0
+var held = Buffer(0)
+var held_callbacks = List<ForeignCallback>()
+var _control_c = 0
+var _control_break = 1
+var _interrupted = 130
+var _standard_input = -10
+var _disk = 1
+var _character = 2
+var _pipe = 3
+var _room = 4096
+var _records = 64
+var _record_size = 20
+var _key_event = 1
+var _return_key = 13
+
+# ../../../spite_documentation/repl.md#typing-spite-into-a-running-program
+func _start_reading() {
+    input = kernel.GetStdHandle_as_long(_standard_input)
+    input_kind = kernel.GetFileType(input)
+    var stopping = ForeignCallback(stop_at_once, 'no_context')
+    var handled = kernel.SetConsoleCtrlHandler(stopping.address, 1)
+    if handled != 0 {
+        held_callbacks.append(stopping)
+    }
+}
+
+# ../../../spite_documentation/repl.md#input-and-ending
+func stop_at_once(kind: Integer): Integer {
+    fallback kind == _control_c or kind == _control_break
+    var process = kernel.GetCurrentProcess_as_long()
+    return kernel.TerminateProcess(process, _interrupted)
+}
+
+func _ready_line(): String? {
+    var line = _held_line()
+    if line {
+        return line
+    }
+    fallback not ended
+    fallback _input_waits()
+    _read_some()
+    return _held_line()
+}
+
+func _next_line(): String? {
+    var line = _held_line()
+    while not line and not ended {
+        _read_some()
+        line = _held_line()
+    }
+    if line {
+        return line
+    }
+    return _the_rest()
+}
+
+func _input_waits(): Boolean {
+    if input_kind == _pipe {
+        var available = Buffer(4)
+        var peeked = kernel.PeekNamedPipe(input, 0, 0, 0, available, 0)
+        if peeked == 0 {
+            return true
+        }
+        available.take_written(4)
+        var count = available.read_integer_little_endian_at(0)
+        crash count
+        return count > 0
+    }
+    if input_kind == _character {
+        return _console_holds_a_line()
+    }
+    return true
+}
+
+func _console_holds_a_line(): Boolean {
+    var waiting = Buffer(4)
+    var counted = kernel.GetNumberOfConsoleInputEvents(input, waiting)
+    if counted == 0 {
+        return true
+    }
+    var records = Buffer(_records * _record_size)
+    var read = Buffer(4)
+    var peeked = kernel.PeekConsoleInputA(input, records, _records, read)
+    fallback peeked != 0
+    read.take_written(4)
+    var count = read.read_integer_little_endian_at(0)
+    crash count
+    records.take_written(count * _record_size)
+    var index = 0
+    while index < count {
+        var at = index * _record_size
+        var kind = records.read_short_little_endian_at(at)
+        var down = records.read_integer_little_endian_at(at + 4)
+        var key = records.read_short_little_endian_at(at + 10)
+        crash kind and down and key
+        var kind_number: Integer = kind
+        var key_number: Integer = key
+        if kind_number == _key_event and down != 0 and key_number == _return_key {
+            return true
+        }
+        index = index + 1
+    }
+    return false
+}
+
+func _read_some() {
+    var room = Buffer(_room)
+    var read = Buffer(4)
+    var done = kernel.ReadFile(input, room, _room, read, 0)
+    if done == 0 {
+        ended = true
+        return
+    }
+    read.take_written(4)
+    var count = read.read_integer_little_endian_at(0)
+    crash count
+    if count == 0 {
+        ended = true
+        return
+    }
+    room.take_written(count)
+    held.append_buffer(room, 0, count)
+}
+
+func _held_line(): String? {
+    var index = 0
+    while index < held.count() {
+        var byte = held[index]
+        crash byte
+        var code: Integer = byte
+        if code == 10 {
+            return _taken(index, index + 1)
+        }
+        index = index + 1
+    }
+    return null
+}
+
+func _the_rest(): String? {
+    var count = held.count()
+    fallback count > 0
+    return _taken(count, count)
+}
+
+func _taken(end: Integer, after: Integer): String {
+    var length = end
+    if length > 0 {
+        var byte = held[length - 1]
+        crash byte
+        var last: Integer = byte
+        if last == 13 {
+            length = length - 1
+        }
+    }
+    var line = held.read_string_at(0, length)
+    crash line
+    var rest = Buffer(0)
+    var rest_count = held.count() - after
+    rest.append_buffer(held, after, rest_count)
+    held = rest
+    return line
+}

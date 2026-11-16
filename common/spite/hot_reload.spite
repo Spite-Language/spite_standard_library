@@ -12,10 +12,11 @@ var arguments = ""
 var next_address: Long = 0
 var room_end: Long = 0
 var compiler_output = ""
-var last_answer = "no reload has run yet: 'reload' compiles the saved files now"
+var last_answer = "no reload has run yet"
 var lost_the_manifest = ""
 var succeeded = true
 var quiet = false
+var session_facts = List<String>()
 
 # ../../../spite_documentation/repl.md#how-it-works
 func start(built_in: String, built_by: String, built_with: String, watched_folders: List<String>) {
@@ -33,7 +34,7 @@ func watch(path: String) {
     var folder = Directory(folder_path)
     var watched = watcher.watch_for_changes(folder)
     if not watched {
-        console.error("spite: the reload watcher cannot watch '{path}', so a file saved there reloads only through 'reload'")
+        console.error("spite: the reload watcher cannot watch '{path}', so a file saved there reloads only through a REPL's load")
     }
 }
 
@@ -98,6 +99,10 @@ func reload_now(): String {
             var sliced_manifest_path = plain.slice(9, plain_length)
             crash sliced_manifest_path
             manifest_path = sliced_manifest_path
+        } else if plain.starts_with("session ") {
+            var fact = plain.slice(8, plain_length)
+            crash fact
+            session_facts.append(fact)
         } else if not plain.is_empty() {
             said.append(plain)
         }
@@ -160,4 +165,49 @@ func refused(why: String): String {
         console.error("spite: {why}")
     }
     return last_answer
+}
+
+# ../../../spite_documentation/repl.md#typing-spite-into-a-running-program
+func session_path(): String {
+    var executable = program.executable_path()
+    crash executable
+    if executable.ends_with(".exe") {
+        var length = executable.length()
+        var stem = executable.slice(0, length - 4)
+        crash stem
+        return "{stem}.reload_session"
+    }
+    return "{executable}.reload_session"
+}
+
+func forget_the_left_session() {
+    var path = session_path()
+    var file_path: Path? = path
+    crash file_path
+    var left = File(file_path)
+    fallback left.exists()
+    var removed = left.remove()
+    if not removed {
+        console.error("spite: '{path}', left by an earlier run, cannot be removed, so a line may read what it holds")
+    }
+}
+
+func write_the_session(text: String): Boolean {
+    var path = session_path()
+    var file_path: Path? = path
+    crash file_path
+    var file = File(file_path)
+    return file.write_string("{text}\n")
+}
+
+func reload_the_session(text: String): String {
+    session_facts = List<String>()
+    if not write_the_session(text) {
+        var path = session_path()
+        return refused("a line is written to '{path}' for the compiler, and that file cannot be written")
+    }
+    quiet = true
+    var told = reload_now()
+    quiet = false
+    return told
 }

@@ -1,0 +1,365 @@
+singleton
+
+var console = Console()
+var program = Program()
+var reloader = Spite.HotReload()
+var kept_values = Dictionary<String, Anything>()
+var variable_names = List<String>()
+var variable_entries = List<String>()
+var function_names = List<String>()
+var function_entries = List<String>()
+var typed_at_the_console = List<String>()
+var typed_remotely = List<String>()
+var line_runner: Spite.Function<String?>? = null
+var reads_the_console = false
+var server: Tcp.Server? = null
+var client: Tcp.Connection? = null
+var is_running_a_line = false
+var ended = false
+var answer = ""
+var answered_class = ""
+var answered_well = true
+var last_line = ""
+var _opening_brace = 123
+var _closing_brace = 125
+var _quote = 34
+var _backslash = 92
+var _newline = 10
+var _carriage_return = 13
+var _tab = 9
+var _space = 32
+var _pause_milliseconds = 10
+
+# ../../../spite_documentation/repl.md#typing-spite-into-a-running-program
+func start(running_a_line: Spite.Function<String?>, console_asked: Boolean, port: Integer) {
+    line_runner = running_a_line
+    reads_the_console = console_asked
+    if port > 0 {
+        listen(port)
+    }
+    fallback reads_the_console
+    _start_reading()
+    console.write("spite> ")
+}
+
+# ../../../spite_documentation/repl.md#remote---repl-port
+func listen(port: Integer) {
+    var made = Tcp.Server()
+    if not made.listen_locally(port) {
+        console.error("error: the REPL could not listen on 127.0.0.1:{port}")
+        program.exit(1)
+    }
+    server = made
+}
+
+func kept(name: String): Anything? {
+    return kept_values[name]
+}
+
+func keep(name: String, value: Anything?) {
+    if value {
+        kept_values[name] = value
+    } else {
+        kept_values.remove_at(name)
+    }
+}
+
+# ../../../spite_documentation/repl.md#typing-spite-into-a-running-program
+func shown_value(value: Console.Debuggable): String {
+    if value.class == String {
+        return value
+    }
+    return value.to_debug()
+}
+
+func check_point() {
+    fallback not is_running_a_line
+    if reads_the_console {
+        var line = _ready_line()
+        if line {
+            hear_at_the_console(line)
+        }
+    }
+    serve_the_port_now()
+}
+
+func serve() {
+    if not server {
+        serve_the_console()
+        return
+    }
+    var pause = Duration(_pause_milliseconds, 'milliseconds')
+    var goes_on = true
+    while goes_on {
+        check_point()
+        program.sleep(pause)
+        goes_on = not reads_the_console or not ended
+    }
+}
+
+func serve_the_console() {
+    while not ended {
+        var line = _next_line()
+        if line {
+            hear_at_the_console(line)
+        }
+    }
+    console.print("")
+}
+
+# ../../../spite_documentation/repl.md#remote---repl-port
+func serve_the_port_now() {
+    fallback server
+    if not client {
+        client = server._accept_now()
+    }
+    fallback client
+    var line = client._read_line_now()
+    if not line {
+        if client.closed {
+            client = null
+        }
+        return
+    }
+    reloader.check_point()
+    var whole = whole_line_of(typed_remotely, line)
+    if not whole {
+        write_remotely("\{\"ok\":true,\"value\":\"\",\"type\":\"\",\"continues\":true}")
+        return
+    }
+    typed_remotely = List<String>()
+    hear(whole)
+    var escaped = json_escaped(answer)
+    if answered_well {
+        var class_escaped = json_escaped(answered_class)
+        write_remotely("\{\"ok\":true,\"value\":\"{escaped}\",\"type\":\"{class_escaped}\"}")
+    } else {
+        write_remotely("\{\"ok\":false,\"error\":\"{escaped}\"}")
+    }
+}
+
+func write_remotely(text: String) {
+    fallback client
+    var written = client.write_line(text)
+    fallback not written
+    client.close()
+    client = null
+}
+
+func hear_at_the_console(line: String) {
+    var whole = whole_line_of(typed_at_the_console, line)
+    if not whole {
+        console.write("...> ")
+        return
+    }
+    typed_at_the_console = List<String>()
+    hear(whole)
+    if not answer.is_empty() {
+        console.print(answer)
+    }
+    console.write("spite> ")
+}
+
+func whole_line_of(typed: List<String>, line: String): String? {
+    typed.append(line)
+    var whole = typed.join("\n")
+    fallback not opens_more_than_it_closes(whole)
+    return whole
+}
+
+func hear(whole: String) {
+    is_running_a_line = true
+    answer = ""
+    answered_class = ""
+    answered_well = true
+    var trimmed = whole.trim()
+    if trimmed.starts_with("load ") {
+        load_a_file(trimmed)
+    } else if trimmed.starts_with("func ") {
+        declare_a_function(whole)
+    } else if not trimmed.is_empty() {
+        run(whole)
+    }
+    is_running_a_line = false
+}
+
+func opens_more_than_it_closes(text: String): Boolean {
+    var depth = 0
+    var in_text = false
+    var index = 0
+    while index < text.length() {
+        var code = text.byte_at(index)
+        if in_text and code == _backslash {
+            index = index + 1
+        } else if code == _quote {
+            in_text = not in_text
+        } else if not in_text and code == _opening_brace {
+            depth = depth + 1
+        } else if not in_text and code == _closing_brace {
+            depth = depth - 1
+        }
+        index = index + 1
+    }
+    return depth > 0
+}
+
+func run(line: String) {
+    var compiled = compiled_with(function_entries, "", line)
+    fallback compiled
+    last_line = line
+    var facts = reloader.session_facts
+    var index = 0
+    while index < facts.count() {
+        var fact = facts[index]
+        if fact.starts_with("var\t") {
+            take_a_variable(fact)
+        } else if fact.starts_with("value\t") {
+            var parts = fact.split("\t")
+            var shown = parts[1]
+            crash shown
+            answered_class = shown
+        }
+        index = index + 1
+    }
+    crash line_runner
+    var shown = line_runner()
+    fallback shown
+    answer = shown
+}
+
+func take_a_variable(fact: String) {
+    var parts = fact.split("\t")
+    var name = parts[1]
+    crash name
+    var at = variable_names.index_of(name)
+    if at {
+        variable_names.remove_at(at)
+        variable_entries.remove_at(at)
+    }
+    if parts.count() == 3 {
+        variable_names.append(name)
+        variable_entries.append(fact)
+    }
+}
+
+func declare_a_function(text: String) {
+    var name = function_name_of(text)
+    var others_names = List<String>()
+    var others = List<String>()
+    var index = 0
+    while index < function_names.count() {
+        var each_name = function_names[index]
+        var each = function_entries[index]
+        crash each_name and each
+        if each_name != name {
+            others_names.append(each_name)
+            others.append(each)
+        }
+        index = index + 1
+    }
+    var lines = text.split("\n")
+    var entry = "func\t{lines.count()}\n{text}"
+    others.append(entry)
+    others_names.append(name)
+    var compiled = compiled_with(others, "", last_line)
+    fallback compiled
+    function_names = others_names
+    function_entries = others
+}
+
+func function_name_of(text: String): String {
+    var trimmed = text.trim()
+    var opening = trimmed.index_of("(")
+    fallback opening
+    var name = trimmed.slice(5, opening)
+    crash name
+    return name.trim()
+}
+
+func load_a_file(text: String) {
+    var length = text.length()
+    var rest = text.slice(5, length)
+    crash rest
+    var path = rest.trim()
+    if path.starts_with("\"") and path.ends_with("\"") and path.length() >= 2 {
+        var path_length = path.length()
+        var unquoted = path.slice(1, path_length - 1)
+        crash unquoted
+        path = unquoted
+    }
+    var compiled = compiled_with(function_entries, path, last_line)
+    if not compiled and not last_line.is_empty() {
+        last_line = ""
+        answered_well = true
+        compiled = compiled_with(function_entries, path, last_line)
+    }
+    fallback compiled
+    answer = compiled
+}
+
+func compiled_with(function_lines: List<String>, loaded: String, line: String): String? {
+    var entries = List<String>()
+    variable_entries.each(entries.append)
+    function_lines.each(entries.append)
+    if not loaded.is_empty() {
+        entries.append("load\t{loaded}")
+    }
+    if not line.is_empty() {
+        var line_lines = line.split("\n")
+        entries.append("line\t{line_lines.count()}\n{line}")
+    }
+    var session = entries.join("\n")
+    var told = reloader.reload_the_session(session)
+    if reloader.succeeded {
+        return told
+    }
+    answer = told
+    answered_well = false
+    var kept_entries = List<String>()
+    variable_entries.each(kept_entries.append)
+    function_entries.each(kept_entries.append)
+    var kept_session = kept_entries.join("\n")
+    var kept_written = reloader.write_the_session(kept_session)
+    if not kept_written {
+        console.error("spite: the session could not be put back as it was before this line")
+    }
+    return null
+}
+
+func json_escaped(text: String): String {
+    var written = String()
+    var digits = "0123456789abcdef"
+    var index = 0
+    while index < text.length() {
+        var code = text.byte_at(index)
+        if code == _quote {
+            append_each(written, "\\\"")
+        } else if code == _backslash {
+            append_each(written, "\\\\")
+        } else if code == _newline {
+            append_each(written, "\\n")
+        } else if code == _carriage_return {
+            append_each(written, "\\r")
+        } else if code == _tab {
+            append_each(written, "\\t")
+        } else if code < _space {
+            var high = digits.slice(code / 16, code / 16 + 1)
+            var low = digits.slice(code % 16, code % 16 + 1)
+            crash high and low
+            append_each(written, "\\u00{high}{low}")
+        } else {
+            written.append_code(code)
+        }
+        index = index + 1
+    }
+    return written
+}
+
+func append_each(written: String, piece: String) {
+    var index = 0
+    while index < piece.length() {
+        var code = piece.byte_at(index)
+        written.append_code(code)
+        index = index + 1
+    }
+}
