@@ -247,7 +247,7 @@ func _find_slot(key: $key_type, tag: UnsignedInteger): Integer {
     return -1
 }
 
-func _same_entries(other: Dictionary<$key_type, $value_type>): Boolean {
+func _has_equal_entries(other: Dictionary<$key_type, $value_type>): Boolean {
     fallback _keys.count() == other._keys.count()
     var index = 0
     while index < _keys.count() {
