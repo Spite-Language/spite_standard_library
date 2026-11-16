@@ -74,6 +74,11 @@ func swap_in(path: String, address: Long): String {
     var image = bytes.read_buffer_at(16, size)
     crash image
     kernel.RtlMoveMemory(address, image, size)
+    var imports_at = 16 + size + 16 * slot_count
+    var resolved = _resolve_the_imports(bytes, imports_at)
+    if not resolved.is_empty() {
+        return resolved
+    }
     var process = kernel.GetCurrentProcess_as_long()
     kernel.FlushInstructionCache(process, address, size)
     var pair = 0
@@ -90,5 +95,41 @@ func swap_in(path: String, address: Long): String {
     }
     var rounded = (size + _granularity - 1) / _granularity * _granularity
     next_address = address + rounded
+    return ""
+}
+
+# ../../../spite_compiler/HOT_RELOAD.md#system-functions-a-reload-adds
+func _resolve_the_imports(bytes: Buffer, start: Integer): String {
+    var import_count = bytes.read_integer_little_endian_at(start)
+    crash import_count
+    var at = start + 4
+    var index = 0
+    while index < import_count {
+        var cell = bytes.read_long_little_endian_at(at)
+        crash cell
+        at = at + 8
+        var library_length = bytes.read_integer_little_endian_at(at)
+        crash library_length
+        var library = bytes.read_string_at(at + 4, library_length)
+        crash library
+        at = at + 4 + library_length
+        var name_length = bytes.read_integer_little_endian_at(at)
+        crash name_length
+        var name = bytes.read_string_at(at + 4, name_length)
+        crash name
+        at = at + 4 + name_length
+        var handle = kernel.LoadLibraryA_as_long(library)
+        var found: Long = 0
+        if handle != 0 {
+            found = kernel.GetProcAddress_as_long(handle, name)
+        }
+        if found == 0 {
+            return "the new code calls '{name}' of the system, which '{library}' does not have"
+        }
+        var room = Buffer(8)
+        room.append_long_little_endian(found)
+        kernel.RtlMoveMemory(cell, room, 8)
+        index = index + 1
+    }
     return ""
 }
