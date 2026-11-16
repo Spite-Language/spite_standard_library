@@ -155,7 +155,7 @@ func read_attribute(attribute: Spite.AttributeDeclaration, created: $value_type)
     fallback not attribute.class.is_singleton
     var reader = BinaryReader<attribute.class>()
     var held = _buffer()
-    created[attribute] = reader._continue(held, _at, _failed)
+    created.attributes[attribute].value = reader._continue(held, _at, _failed)
     _at = reader._at
     _failed = reader._failed
 }

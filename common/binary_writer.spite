@@ -103,7 +103,7 @@ func write_attribute(attribute: Spite.AttributeDeclaration, value: $value_type) 
     fallback not attribute.class.is_singleton
     var writer = BinaryWriter<attribute.class>()
     var target = _target()
-    writer._append(value[attribute], target)
+    writer._append(value.attributes[attribute].value, target)
 }
 
 func _write_present(value: $value_type) {

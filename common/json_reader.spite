@@ -174,7 +174,7 @@ func read_attribute(attribute: Spite.AttributeDeclaration, created: $value_type)
     }
     fallback _key == key
     var attribute_json = JsonReader<attribute.class>()
-    created[attribute] = attribute_json._continue(_text, position, _expected)
+    created.attributes[attribute].value = attribute_json._continue(_text, position, _expected)
     position = attribute_json.position
     _expected = attribute_json._expected
     _matched = true
@@ -191,7 +191,7 @@ func read_camel_attribute(attribute: Spite.AttributeDeclaration, created: $value
     var pascal = name.pascal_case()
     fallback _key == camel or _key == pascal
     var attribute_json = JsonReader<attribute.class>()
-    created[attribute] = attribute_json._continue(_text, position, _expected)
+    created.attributes[attribute].value = attribute_json._continue(_text, position, _expected)
     position = attribute_json.position
     _expected = attribute_json._expected
     _matched = true
