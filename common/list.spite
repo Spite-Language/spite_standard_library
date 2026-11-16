@@ -25,6 +25,19 @@ func count(): Integer {
     return _length
 }
 
+# ../docs/memory.md#the-list
+func _same_items(other: List<$element_type>): Boolean {
+    fallback _length == other._length
+    var index = 0
+    while index < _length {
+        var mine = _read_value(index)
+        var theirs = other._read_value(index)
+        fallback mine == theirs
+        index = index + 1
+    }
+    return true
+}
+
 func is_empty(): Boolean {
     return _length == 0
 }

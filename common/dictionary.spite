@@ -247,13 +247,32 @@ func _find_slot(key: $key_type, tag: UnsignedInteger): Integer {
     return -1
 }
 
+func _same_entries(other: Dictionary<$key_type, $value_type>): Boolean {
+    fallback _keys.count() == other._keys.count()
+    var index = 0
+    while index < _keys.count() {
+        var key = _keys._read_value(index)
+        var tag = other._tag_of(key)
+        var slot = other._find_slot(key, tag)
+        fallback slot >= 0
+        var stored = other._slots._read_integer_at(slot * 8)
+        var theirs = other._values._read_value(stored - 1)
+        var mine = _values._read_value(index)
+        fallback mine == theirs
+        index = index + 1
+    }
+    return true
+}
+
 func _same_key(held: $key_type, key: $key_type): Boolean {
     if $key_type == String {
         return _same_text(held, key)
     } else if $key_type == Float or $key_type == Double {
         return held == key or held != held and key != key
     }
-    return held == key
+    var held_bits = _key_bits(held)
+    var key_bits = _key_bits(key)
+    return held_bits == key_bits
 }
 
 func _place(numbered: Integer, tag: UnsignedInteger) {
