@@ -43,17 +43,25 @@ func _read(): $value_type {
         }
         return flag == 1
     } else if $value_type == Byte {
-        return _read_byte()
+        var fitted: Byte? = _read_byte()
+        crash fitted
+        return fitted
     } else if $value_type == Tiny {
         var stored = _read_byte()
         if stored > _largest_tiny {
             stored = stored - 256
         }
-        return stored
+        var fitted: Tiny? = stored
+        crash fitted
+        return fitted
     } else if $value_type == Short {
-        return _read_short()
+        var fitted: Short? = _read_short()
+        crash fitted
+        return fitted
     } else if $value_type == UnsignedShort {
-        return _read_unsigned_short()
+        var fitted: UnsignedShort? = _read_unsigned_short()
+        crash fitted
+        return fitted
     } else if $value_type == Integer {
         return _read_integer()
     } else if $value_type == UnsignedInteger {
@@ -246,7 +254,9 @@ func _read_count(): Integer {
             return 0
         }
     }
-    return result
+    var count: Integer? = result
+    crash count
+    return count
 }
 
 func _read_text(): String {

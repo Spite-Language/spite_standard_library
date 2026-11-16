@@ -166,7 +166,9 @@ func _tag_of(key: $key_type): UnsignedInteger {
         var bits = _key_bits(key)
         hashed = bits._wrapping_multiply(_hash_multiplier)
     }
-    return hashed._shifted_right(32)
+    var fitted: UnsignedInteger? = hashed._shifted_right(32)
+    crash fitted
+    return fitted
 }
 
 func _decimal_bits(key: $key_type): UnsignedLong {
@@ -222,7 +224,9 @@ func _same_text(left: String, right: String): Boolean {
 }
 
 func _home_of(tag: UnsignedInteger): Integer {
-    return tag._shifted_right(_shift)
+    var fitted: Integer? = tag._shifted_right(_shift)
+    crash fitted
+    return fitted
 }
 
 func _find_slot(key: $key_type, tag: UnsignedInteger): Integer {

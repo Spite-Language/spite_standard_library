@@ -1,4 +1,4 @@
-var input = 0
+var input: Long = 0
 
 func read_line(): String? {
     if input == 0 {

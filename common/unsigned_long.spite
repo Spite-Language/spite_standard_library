@@ -15,6 +15,7 @@ func UnsignedLong(from: String): UnsignedLong? {
     var value: UnsignedLong = 0
     while index < size and text.byte_at(index) >= 48 and text.byte_at(index) <= 57 {
         var digit: UnsignedLong? = text.byte_at(index) - 48
+        crash digit
         var unsigned_long_largest = UnsignedLong.Largest()
         fallback value <= (unsigned_long_largest - digit) / 10
         value = value * 10 + digit

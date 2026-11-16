@@ -26,7 +26,8 @@ func compress(bytes: Buffer): Buffer {
     var total = bytes.count()
     var checksum = _crc32(bytes, 0, total)
     output.append_unsigned_integer_little_endian(checksum)
-    var size: UnsignedInteger = total
+    var size: UnsignedInteger? = total
+    crash size
     output.append_unsigned_integer_little_endian(size)
     return output
 }
@@ -77,7 +78,8 @@ func decompress(bytes: Buffer): Buffer? {
     fallback expected == computed
     var expected_size = bytes.read_unsigned_integer_little_endian_at(total - 4)
     fallback expected_size
-    var size: UnsignedInteger = output_count
+    var size: UnsignedInteger? = output_count
+    crash size
     fallback expected_size == size
     return output
 }
@@ -117,10 +119,12 @@ func _crc32(bytes: Buffer, from: Integer, total: Integer): UnsignedInteger {
     var crc = _crc_all_ones
     var index = from
     while index < total {
-        var byte_value: UnsignedInteger = _byte_at(bytes, index)
+        var byte_value: UnsignedInteger? = _byte_at(bytes, index)
+        crash byte_value
         var mixed = crc.bits_exclusive_or(byte_value)
         var slot_value = mixed.bits_and(_low_byte_mask)
-        var slot: Integer = slot_value
+        var slot: Integer? = slot_value
+        crash slot
         var looked = table.read_unsigned_integer_little_endian_at(slot * 4)
         crash looked
         var shifted = crc.shifted_right(8)

@@ -325,7 +325,9 @@ func to_half_precision(): UnsignedShort {
     } else {
         magnitude = _half_subnormal(exponent, mantissa)
     }
-    return sign * 32768 + magnitude
+    var half_bits: UnsignedShort? = sign * 32768 + magnitude
+    crash half_bits
+    return half_bits
 }
 
 func _half_special(mantissa: Long): Long {
@@ -339,7 +341,9 @@ func _half_subnormal(exponent: Long, mantissa: Long): Long {
     var shift = _subnormal_shift_origin - exponent
     fallback shift <= 25
     var one: Long = 1
-    var divisor = one.shifted_left(shift)
+    var places: Integer? = shift
+    crash places
+    var divisor = one.shifted_left(places)
     return _rounded_to_even(mantissa + 8388608, divisor)
 }
 

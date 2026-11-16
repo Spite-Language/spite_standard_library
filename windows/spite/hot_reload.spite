@@ -34,7 +34,8 @@ func run_the_compiler(line: String): Integer {
     var wanted: Long = 4096
     var got = runtime.fread_as_long(chunk, one, wanted, handle)
     while got > 0 {
-        var got_count: Integer = got
+        var got_count: Integer? = got
+        crash got_count
         chunk.take_written(got_count)
         var byte_index = 0
         while byte_index < got_count {

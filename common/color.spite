@@ -148,7 +148,9 @@ func _byte_of(channel: Float): Integer {
     crash channel == channel
     var held = channel.clamp(0.0, 1.0)
     var scaled = held * 255.0
-    return scaled.round()
+    var fitted: Integer? = scaled.round()
+    crash fitted
+    return fitted
 }
 
 func _byte_hex(channel: Float): String {

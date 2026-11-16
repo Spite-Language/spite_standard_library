@@ -66,7 +66,9 @@ func get_day_of_year(): Integer {
     var first = Date(_year, 1, 1)
     var first_day = first.days_since_1970
     var this_day = get_days_since_1970()
-    return this_day - first_day + 1
+    var fitted: Integer? = this_day - first_day + 1
+    crash fitted
+    return fitted
 }
 
 func get_weekday(): Weekday {
@@ -121,9 +123,11 @@ func sum(period: Period): Date {
         month_index = month_index + 12
     }
     var moved_year_long = (months - month_index) / 12
-    var moved_year: Integer = moved_year_long
+    var moved_year: Integer? = moved_year_long
+    crash moved_year
     var moved_month_long = month_index + 1
-    var moved_month: Integer = moved_month_long
+    var moved_month: Integer? = moved_month_long
+    crash moved_month
     var day = _day
     var last_day = _days_in(moved_year, moved_month)
     if day > last_day {
@@ -144,7 +148,8 @@ func period_until(other: Date): Period {
     var days: Long = other._day - _day
     if months > 0 and days < 0 {
         months = months - 1
-        var whole_months_count: Integer = months
+        var whole_months_count: Integer? = months
+        crash whole_months_count
         var whole_months = Period(whole_months_count, 'months')
         var moved = this + whole_months
         days = moved.days_until(other)
@@ -154,10 +159,12 @@ func period_until(other: Date): Period {
         days = days - other_days_in_month
     }
     var years_long = months / 12
-    var years_count: Integer = years_long
+    var years_count: Integer? = years_long
+    crash years_count
     var months_long = months % 12
     var months_count: Integer = months_long
-    var days_count: Integer = days
+    var days_count: Integer? = days
+    crash days_count
     var whole_years = Period(years_count, 'years')
     var left_over_months = Period(months_count, 'months')
     var whole_days = Period(days_count, 'days')
@@ -220,9 +227,12 @@ func _from_days(days_since_1970: Long): Date {
         month = shifted_month - 9
         year = year + 1
     }
-    var year_count: Integer = year
-    var month_count: Integer = month
-    var day_count: Integer = day
+    var year_count: Integer? = year
+    crash year_count
+    var month_count: Integer? = month
+    crash month_count
+    var day_count: Integer? = day
+    crash day_count
     return Date(year_count, month_count, day_count)
 }
 

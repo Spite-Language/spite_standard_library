@@ -14,8 +14,10 @@ func value_2d(x_position: Float, y_position: Float): Float {
     var cell_y = y_position.floor()
     var fraction_x = _fade(x_position - cell_x)
     var fraction_y = _fade(y_position - cell_y)
-    var left: Integer = cell_x
-    var bottom: Integer = cell_y
+    var left: Integer? = cell_x
+    crash left
+    var bottom: Integer? = cell_y
+    crash bottom
     var lower_left = _lattice_value(left, bottom, 0)
     var lower_right = _lattice_value(left + 1, bottom, 0)
     var upper_left = _lattice_value(left, bottom + 1, 0)
@@ -32,9 +34,12 @@ func value_3d(x_position: Float, y_position: Float, z_position: Float): Float {
     var fraction_x = _fade(x_position - cell_x)
     var fraction_y = _fade(y_position - cell_y)
     var fraction_z = _fade(z_position - cell_z)
-    var left: Integer = cell_x
-    var bottom: Integer = cell_y
-    var back: Integer = cell_z
+    var left: Integer? = cell_x
+    crash left
+    var bottom: Integer? = cell_y
+    crash bottom
+    var back: Integer? = cell_z
+    crash back
     var near_layer = _value_layer(left, bottom, back, fraction_x, fraction_y)
     var far_layer = _value_layer(left, bottom, back + 1, fraction_x, fraction_y)
     return near_layer + (far_layer - near_layer) * fraction_z
@@ -47,8 +52,10 @@ func gradient_2d(x_position: Float, y_position: Float): Float {
     var offset_y = y_position - cell_y
     var fraction_x = _fade(offset_x)
     var fraction_y = _fade(offset_y)
-    var left: Integer = cell_x
-    var bottom: Integer = cell_y
+    var left: Integer? = cell_x
+    crash left
+    var bottom: Integer? = cell_y
+    crash bottom
     var lower_left = _gradient_dot_2d(left, bottom, offset_x, offset_y)
     var lower_right = _gradient_dot_2d(left + 1, bottom, offset_x - 1.0, offset_y)
     var upper_left = _gradient_dot_2d(left, bottom + 1, offset_x, offset_y - 1.0)
@@ -65,9 +72,12 @@ func gradient_3d(x_position: Float, y_position: Float, z_position: Float): Float
     var offset_x = x_position - cell_x
     var offset_y = y_position - cell_y
     var offset_z = z_position - cell_z
-    var left: Integer = cell_x
-    var bottom: Integer = cell_y
-    var back: Integer = cell_z
+    var left: Integer? = cell_x
+    crash left
+    var bottom: Integer? = cell_y
+    crash bottom
+    var back: Integer? = cell_z
+    crash back
     var near_layer = _gradient_layer(left, bottom, back, offset_x, offset_y, offset_z)
     var far_layer = _gradient_layer(left, bottom, back + 1, offset_x, offset_y, offset_z - 1.0)
     var fraction_z = _fade(offset_z)

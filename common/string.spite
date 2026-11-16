@@ -90,7 +90,9 @@ func byte_at(index: Integer): Integer {
 }
 
 func append_code(code: Integer) {
-    _buffer.append(code)
+    var written: Byte? = code
+    crash written
+    _buffer.append(written)
     _length = _length + 1
 }
 
@@ -145,7 +147,9 @@ func _append_whole(value: Long) {
         if remainder < 0 {
             remainder = 0 - remainder
         }
-        _buffer._write_byte_at(position, remainder + 48)
+        var digit: Byte? = remainder + 48
+        crash digit
+        _buffer._write_byte_at(position, digit)
         position = position - 1
         left = left / 10
         more = left != 0
@@ -486,10 +490,14 @@ func _as_period(): Period? {
         }
         var unit = _code_at(number_end)
         if unit == 89 and order < 1 {
-            years = signed
+            var narrow_signed: Integer? = signed
+            crash narrow_signed
+            years = narrow_signed
             order = 1
         } else if unit == 77 and order < 2 {
-            months = signed
+            var narrow_signed: Integer? = signed
+            crash narrow_signed
+            months = narrow_signed
             order = 2
         } else if unit == 87 and order < 3 {
             days = signed * 7
@@ -503,7 +511,8 @@ func _as_period(): Period? {
         index = number_end + 1
     }
     fallback days <= _largest_integer and days >= -_largest_integer
-    var days_count: Integer = days
+    var days_count: Integer? = days
+    crash days_count
     var whole_years = Period(years, 'years')
     var whole_months = Period(months, 'months')
     var whole_days = Period(days_count, 'days')
@@ -806,7 +815,9 @@ func _shifted_case(first: Integer, last: Integer, shift: Integer): String {
     while index < _length {
         var code: Integer = _buffer._read_byte_at(index)
         if code >= first and code <= last {
-            shifted._buffer._write_byte_at(index, code + shift)
+            var turned: Byte? = code + shift
+            crash turned
+            shifted._buffer._write_byte_at(index, turned)
         }
         index = index + 1
     }

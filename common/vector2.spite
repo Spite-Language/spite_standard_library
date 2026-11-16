@@ -125,7 +125,9 @@ func _square_root(squared: $number_type): $number_type {
         return squared.square_root()
     }
     var wide: Double = squared
-    return wide.square_root()
+    var fitted: $number_type? = wide.square_root()
+    crash fitted
+    return fitted
 }
 
 func to_string(): String {

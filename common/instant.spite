@@ -53,10 +53,13 @@ func to_date_time_in(zone: TimeZone): DateTime {
     }
     var first_day = Date(_unix_epoch_year, 1, 1)
     var days_long = (seconds - second_of_day) / _seconds_per_day
-    var days: Integer = days_long
+    var days: Integer? = days_long
+    crash days
     var date = first_day + Period(days, 'days')
-    var second_of_day_count: Integer = second_of_day
-    var nanosecond: Integer = nanosecond_long
+    var second_of_day_count: Integer? = second_of_day
+    crash second_of_day_count
+    var nanosecond: Integer? = nanosecond_long
+    crash nanosecond
     var time = Time(
         second_of_day_count / _seconds_per_hour,
         second_of_day_count / 60 % 60,

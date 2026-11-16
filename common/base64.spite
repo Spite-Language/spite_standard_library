@@ -115,7 +115,8 @@ func _decoded(text: String, url: Boolean): Buffer? {
 func _append_byte(bytes: Buffer, group: Integer, shift: Integer) {
     var moved = group.shifted_right(shift)
     var low_bits = moved.bits_and(_low_byte_mask)
-    var value: Byte = low_bits
+    var value: Byte? = low_bits
+    crash value
     bytes.append(value)
 }
 

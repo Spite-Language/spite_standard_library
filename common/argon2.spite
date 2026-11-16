@@ -500,9 +500,12 @@ func _fill_segment(
         var high = random_value.bits_as_unsigned()
         if pass > 0 or slice > 0 {
             var upper = high.shifted_right(32)
-            var wide_lanes: UnsignedLong = lanes
+            var wide_lanes: UnsignedLong? = lanes
+            crash wide_lanes
             var picked = upper % wide_lanes
-            reference_lane = picked
+            var narrow_picked: Integer? = picked
+            crash narrow_picked
+            reference_lane = narrow_picked
         }
         var same_lane = reference_lane == lane
         var area = _reference_area(pass, slice, index, same_lane, lane_length, segment_length)
@@ -510,10 +513,12 @@ func _fill_segment(
         var low = high.bits_and(mask)
         var squared = low * low
         squared = squared.shifted_right(32)
-        var wide_area: UnsignedLong = area
+        var wide_area: UnsignedLong? = area
+        crash wide_area
         var scaled = wide_area * squared
         scaled = scaled.shifted_right(32)
-        var scaled_count: Integer = scaled
+        var scaled_count: Integer? = scaled
+        crash scaled_count
         var relative = area - 1 - scaled_count
         var start: Long = 0
         if pass > 0 and slice < 3 {

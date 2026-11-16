@@ -243,7 +243,9 @@ func _shortest_text(value: Double, significand_limit: Long, lowest_exponent: Lon
         var candidate = _rounded_digits(digits, precision)
         var candidate_exponent = digits_exponent + candidate.length() - precision
         if precision < candidate.length() {
-            var sliced_candidate = candidate.slice(0, precision)
+            var cut: Integer? = precision
+            crash cut
+            var sliced_candidate = candidate.slice(0, cut)
             crash sliced_candidate
             candidate = sliced_candidate
         }
@@ -261,7 +263,9 @@ func _shortest_text(value: Double, significand_limit: Long, lowest_exponent: Lon
     var rounded = _rounded_digits(digits, most_digits)
     var rounded_exponent = digits_exponent + rounded.length() - most_digits
     if most_digits < rounded.length() {
-        var sliced_rounded = rounded.slice(0, most_digits)
+        var cut: Integer? = most_digits
+        crash cut
+        var sliced_rounded = rounded.slice(0, cut)
         crash sliced_rounded
         rounded = sliced_rounded
     }
@@ -315,7 +319,8 @@ func _exact_digits(multiplier: Long, exponent: Long): String {
             var digit = limb / divisor % 10
             var started = not digits.is_empty() or digit != 0
             if started {
-                var code: Integer = digit + 48
+                var code: Integer? = digit + 48
+                crash code
                 digits.append_code(code)
             }
             divisor = divisor / 10
@@ -370,12 +375,15 @@ func _rounded_digits(digits: String, count: Long): String {
     codes.append(48)
     var index: Long = 0
     while index < count {
-        var code = digits.byte_at(index)
+        var place: Integer? = index
+        crash place
+        var code = digits.byte_at(place)
         codes.append(code)
         index = index + 1
     }
     if _rounds_up(digits, count) {
-        var position: Integer = count
+        var position: Integer? = count
+        crash position
         while _code_in(codes, position) == 57 {
             codes[position] = 48
             position = position - 1
@@ -406,18 +414,20 @@ func _code_in(codes: List<Integer>, position: Integer): Integer {
 }
 
 func _rounds_up(digits: String, count: Long): Boolean {
-    var next = digits.byte_at(count)
+    var place: Integer? = count
+    crash place
+    var next = digits.byte_at(place)
     if next != 53 {
         return next > 53
     }
-    var index = count + 1
+    var index = place + 1
     while index < digits.length() {
         if digits.byte_at(index) != 48 {
             return true
         }
         index = index + 1
     }
-    var last = digits.byte_at(count - 1)
+    var last = digits.byte_at(place - 1)
     return last % 2 == 1
 }
 
@@ -485,9 +495,11 @@ func _fixed_text(digits: String, exponent: Long): String {
         var trailing = _zeros(exponent + 1 - length)
         return "{digits}{trailing}"
     }
-    var whole = digits.slice(0, exponent + 1)
+    var point: Integer? = exponent + 1
+    crash point
+    var whole = digits.slice(0, point)
     crash whole
-    var fraction = digits.slice(exponent + 1, length)
+    var fraction = digits.slice(point, length)
     crash fraction
     return "{whole}.{fraction}"
 }

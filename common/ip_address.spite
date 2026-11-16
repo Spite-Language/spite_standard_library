@@ -357,16 +357,20 @@ func _system_address(port: Integer, as_ipv6: Boolean): Buffer {
         index = index + 1
     }
     var family = _system_family(as_ipv6)
-    var narrow_family: UnsignedShort = family
+    var narrow_family: UnsignedShort? = family
+    crash narrow_family
     address.write_unsigned_short_little_endian_at(0, narrow_family)
     var narrow_port: UnsignedShort? = port
+    crash narrow_port
     address.write_unsigned_short_big_endian_at(2, narrow_port)
     if not as_ipv6 {
         index = 0
         while index < 4 {
             var byte = _parts[index]
             crash byte
-            address[4 + index] = byte
+            var narrow_byte: Byte? = byte
+            crash narrow_byte
+            address[4 + index] = narrow_byte
             index = index + 1
         }
         return address
@@ -378,7 +382,9 @@ func _system_address(port: Integer, as_ipv6: Boolean): Buffer {
         while index < 4 {
             var byte = _parts[index]
             crash byte
-            address[20 + index] = byte
+            var narrow_byte: Byte? = byte
+            crash narrow_byte
+            address[20 + index] = narrow_byte
             index = index + 1
         }
         return address
@@ -387,7 +393,8 @@ func _system_address(port: Integer, as_ipv6: Boolean): Buffer {
     while index < 8 {
         var group = _parts[index]
         crash group
-        var narrow_group: UnsignedShort = group
+        var narrow_group: UnsignedShort? = group
+        crash narrow_group
         address.write_unsigned_short_big_endian_at(8 + index * 2, narrow_group)
         index = index + 1
     }

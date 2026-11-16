@@ -173,12 +173,14 @@ func append_buffer(bytes: Buffer): Long? {
 }
 
 func _read_into_buffer(handle: Long, wanted: Long): Buffer? {
-    var counted: Integer = wanted
+    var counted: Integer? = wanted
+    crash counted
     var bytes = Buffer(counted)
     if wanted > 0 {
         var got = _read_into(bytes, wanted, handle)
         fallback got >= 0 and got <= wanted
-        var got_count: Integer = got
+        var got_count: Integer? = got
+        crash got_count
         bytes.take_written(got_count)
     }
     return bytes
@@ -224,8 +226,10 @@ func _preloaded_part(place: Path, position: Long, count: Integer): Buffer? {
     if available <= 0 {
         return Buffer(0)
     }
-    var start: Integer = position
-    var wanted: Integer = available
+    var start: Integer? = position
+    crash start
+    var wanted: Integer? = available
+    crash wanted
     var part = Buffer(wanted)
     part.append_buffer(preloaded, start, wanted)
     return part

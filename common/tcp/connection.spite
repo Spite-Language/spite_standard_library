@@ -258,7 +258,9 @@ func _take_pending(count: Integer): Buffer {
     var index = 0
     while index < taken {
         var code = pending.byte_at(index)
-        bytes.append(code)
+        var narrow_code: Byte? = code
+        crash narrow_code
+        bytes.append(narrow_code)
         index = index + 1
     }
     if taken > 0 {

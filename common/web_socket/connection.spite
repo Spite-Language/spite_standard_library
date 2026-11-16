@@ -266,10 +266,15 @@ func _send_frame(opcode: Integer, payload: Buffer): Boolean {
     }
     var frame = Buffer(count + 14)
     var opening = 128 + opcode
-    frame.append(opening)
-    frame.append(length_mark)
+    var narrow_opening: Byte? = opening
+    crash narrow_opening
+    frame.append(narrow_opening)
+    var narrow_length_mark: Byte? = length_mark
+    crash narrow_length_mark
+    frame.append(narrow_length_mark)
     if extended == 2 {
-        var short_length: UnsignedShort = count
+        var short_length: UnsignedShort? = count
+        crash short_length
         frame.append_unsigned_short_big_endian(short_length)
     } else if extended == 8 {
         var long_length: Long = count
@@ -284,7 +289,9 @@ func _send_frame(opcode: Integer, payload: Buffer): Boolean {
             var key = _byte_of(mask, index % 4)
             var value = _byte_of(payload, index)
             var masked = value.bits_exclusive_or(key)
-            frame.append(masked)
+            var narrow_masked: Byte? = masked
+            crash narrow_masked
+            frame.append(narrow_masked)
             index = index + 1
         }
     } else {
@@ -302,8 +309,12 @@ func _send_close(code: Integer) {
     if code != _no_status_code {
         var high = code.shifted_right(8)
         var low = code.bits_and(_low_byte_mask)
-        payload.append(high)
-        payload.append(low)
+        var narrow_high: Byte? = high
+        crash narrow_high
+        payload.append(narrow_high)
+        var narrow_low: Byte? = low
+        crash narrow_low
+        payload.append(narrow_low)
     }
     _send_control(8, payload)
     _close_sent = true
@@ -357,7 +368,8 @@ func _read_frame(already: Integer): Buffer? {
         mask = _read_bytes(4)
         fallback mask
     }
-    var count: Integer = length
+    var count: Integer? = length
+    crash count
     var payload = _read_bytes(count)
     fallback payload
     if masked {
@@ -367,7 +379,9 @@ func _read_frame(already: Integer): Buffer? {
             var key = _byte_of(mask, index % 4)
             var value = _byte_of(payload, index)
             var unmasked = value.bits_exclusive_or(key)
-            payload[index] = unmasked
+            var narrow_unmasked: Byte? = unmasked
+            crash narrow_unmasked
+            payload[index] = narrow_unmasked
             index = index + 1
         }
     }
@@ -490,7 +504,9 @@ func _sha1(source: Buffer): Buffer {
     var copied = 0
     while copied < length {
         var held = _byte_of(source, copied)
-        block[copied] = held
+        var narrow_held: Byte? = held
+        crash narrow_held
+        block[copied] = narrow_held
         copied = copied + 1
     }
     block[length] = 128

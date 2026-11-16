@@ -101,7 +101,8 @@ func text_at(at: Long, length: Long): String {
     var index: Long = 0
     while index < length {
         var code = _read_byte(at + index)
-        var character: Integer = code
+        var character: Integer? = code
+        crash character
         written.append_code(character)
         index = index + 1
     }
@@ -174,7 +175,9 @@ func hexadecimal(value: Long): String {
     var rest = value
     var count = 0
     while count < 16 {
-        var nibble = rest.bits_and(15)
+        var masked = rest.bits_and(15)
+        var nibble: Integer? = masked
+        crash nibble
         var digit = text_between(digits, nibble, nibble + 1)
         written = "{digit}{written}"
         rest = rest.shifted_right(4)

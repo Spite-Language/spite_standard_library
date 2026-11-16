@@ -35,7 +35,9 @@ func TimeZone(identifier: String, offset: Duration) {
     var seconds = offset.total('seconds')
     crash seconds > -_seconds_per_day and seconds < _seconds_per_day
     _identifier = identifier
-    _first_offset = seconds
+    var first_offset: Integer? = seconds
+    crash first_offset
+    _first_offset = first_offset
 }
 
 func get_identifier(): String {
@@ -105,7 +107,8 @@ func _yearly_offset_seconds_at(unix_seconds: Long): Integer {
     }
     var first_day = Date(_unix_epoch_year, 1, 1)
     var days_long = (local_seconds - second_of_day) / _seconds_per_day
-    var days: Integer = days_long
+    var days: Integer? = days_long
+    crash days
     var date = first_day + Period(days, 'days')
     var year = date.year
     var start_local = _change_local_seconds_in(
@@ -176,7 +179,8 @@ func _read_tzif(data: Buffer): Boolean {
     if version != 0 {
         var first_block = _tzif_block_bytes(data, 0, 4)
         fallback first_block <= 100000000
-        var first_block_integer: Integer = first_block
+        var first_block_integer: Integer? = first_block
+        crash first_block_integer
         header = first_block_integer + 44
         time_bytes = 8
         fallback _is_tzif_header_at(data, header)
@@ -188,11 +192,14 @@ func _read_tzif(data: Buffer): Boolean {
     var block_end_long = block + header_long + 44
     var length: Long = data.count()
     fallback type_count != 0 and block_end_long <= length
-    var block_end: Integer = block_end_long
+    var block_end: Integer? = block_end_long
+    crash block_end
     var times = header + 44
-    var time_count_integer: Integer = time_count
+    var time_count_integer: Integer? = time_count
+    crash time_count_integer
     var indices = time_count_integer * time_bytes + times
-    var time_count_integer: Integer = time_count
+    var time_count_integer: Integer? = time_count
+    crash time_count_integer
     var types = time_count_integer + indices
     var first_offset = _tzif_offset_of_type(data, types)
     fallback first_offset
