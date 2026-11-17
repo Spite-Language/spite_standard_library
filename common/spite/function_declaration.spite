@@ -1,8 +1,14 @@
+union Returned {
+    Spite.Class
+    Spite.Union
+    Spite.Type
+}
+
 var _name: String
 var _hole: String
 var _index: Integer
 var _arguments: List<Spite.Argument>
-var _returns: Spite.Class = Nothing
+var _returns: Returned
 var _is_resumable: Boolean
 var _has_facts: Boolean
 var _has_reach: Boolean
@@ -19,7 +25,7 @@ func FunctionDeclaration(
     starting_hole: String,
     starting_index: Integer,
     starting_arguments: List<Spite.Argument>,
-    starting_returns: Spite.Class,
+    starting_returns: Returned,
     starting_is_resumable: Boolean,
     starting_has_facts: Boolean,
     starting_has_reach: Boolean,
@@ -62,7 +68,7 @@ func get_arguments(): List<Spite.Argument> {
     return _arguments
 }
 
-func get_returns(): Spite.Class {
+func get_returns(): Returned {
     return _returns
 }
 
