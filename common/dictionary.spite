@@ -166,9 +166,7 @@ func _tag_of(key: $key_type): UnsignedInteger {
         var bits = _key_bits(key)
         hashed = bits._wrapping_multiply(_hash_multiplier)
     }
-    var fitted: UnsignedInteger? = hashed._shifted_right(32)
-    crash fitted
-    return fitted
+    return hashed._shifted_right(32)
 }
 
 func _decimal_bits(key: $key_type): UnsignedLong {
