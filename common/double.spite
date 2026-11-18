@@ -323,8 +323,7 @@ func _exact_digits(multiplier: Long, exponent: Long): String {
             var digit = limb / divisor % 10
             var started = not digits.is_empty() or digit != 0
             if started {
-                var code: Integer? = digit + 48
-                crash code
+                var code: Integer = digit + 48
                 digits.append_code(code)
             }
             divisor = divisor / 10
@@ -499,8 +498,7 @@ func _fixed_text(digits: String, exponent: Long): String {
         var trailing = _zeros(exponent + 1 - length)
         return "{digits}{trailing}"
     }
-    var point: Integer? = exponent + 1
-    crash point
+    var point: Integer = exponent + 1
     var whole = digits.slice(0, point)
     crash whole
     var fraction = digits.slice(point, length)

@@ -147,8 +147,7 @@ func _append_whole(value: Long) {
         if remainder < 0 {
             remainder = 0 - remainder
         }
-        var digit: Byte? = remainder + 48
-        crash digit
+        var digit: Byte = remainder + 48
         _buffer._write_byte_at(position, digit)
         position = position - 1
         left = left / 10
@@ -511,8 +510,7 @@ func _as_period(): Period? {
         index = number_end + 1
     }
     fallback days <= _largest_integer and days >= -_largest_integer
-    var days_count: Integer? = days
-    crash days_count
+    var days_count: Integer = days
     var whole_years = Period(years, 'years')
     var whole_months = Period(months, 'months')
     var whole_days = Period(days_count, 'days')

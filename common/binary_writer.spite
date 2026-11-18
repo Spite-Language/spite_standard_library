@@ -119,16 +119,14 @@ func _write_present(value: $value_type) {
 
 func _write_byte(value: Integer) {
     var low_bits = value.bits_and(_low_byte_mask)
-    var byte: Byte? = low_bits
-    crash byte
+    var byte: Byte = low_bits
     var target = _target()
     target.append(byte)
 }
 
 func _write_short(value: Integer) {
     var low_bits = value.bits_and(_low_short_mask)
-    var short: UnsignedShort? = low_bits
-    crash short
+    var short: UnsignedShort = low_bits
     var target = _target()
     target.append_unsigned_short_little_endian(short)
 }

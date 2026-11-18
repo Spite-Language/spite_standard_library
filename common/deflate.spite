@@ -759,8 +759,7 @@ func _write_bits(value: Integer, bits: Integer) {
     _bit_count = _bit_count + bits
     while _bit_count >= 8 {
         var low_bits = _bit_buffer.bits_and(_low_byte_mask)
-        var low: Byte? = low_bits
-        crash low
+        var low: Byte = low_bits
         _output.append(low)
         _bit_buffer = _bit_buffer.shifted_right(8)
         _bit_count = _bit_count - 8
@@ -783,8 +782,7 @@ func _write_code(code: Integer, bits: Integer) {
 func _flush() {
     while _bit_count > 0 {
         var low_bits = _bit_buffer.bits_and(_low_byte_mask)
-        var low: Byte? = low_bits
-        crash low
+        var low: Byte = low_bits
         _output.append(low)
         _bit_buffer = _bit_buffer.shifted_right(8)
         _bit_count = _bit_count - 8

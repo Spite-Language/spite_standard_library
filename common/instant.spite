@@ -56,8 +56,7 @@ func to_date_time_in(zone: TimeZone): DateTime {
     var days: Integer? = days_long
     crash days
     var date = first_day + Period(days, 'days')
-    var second_of_day_count: Integer? = second_of_day
-    crash second_of_day_count
+    var second_of_day_count: Integer = second_of_day
     var nanosecond: Integer? = nanosecond_long
     crash nanosecond
     var time = Time(

@@ -35,8 +35,7 @@ func TimeZone(identifier: String, offset: Duration) {
     var seconds = offset.total('seconds')
     crash seconds > -_seconds_per_day and seconds < _seconds_per_day
     _identifier = identifier
-    var first_offset: Integer? = seconds
-    crash first_offset
+    var first_offset: Integer = seconds
     _first_offset = first_offset
 }
 

@@ -228,8 +228,7 @@ func _preloaded_part(place: Path, position: Long, count: Integer): Buffer? {
     }
     var start: Integer? = position
     crash start
-    var wanted: Integer? = available
-    crash wanted
+    var wanted: Integer = available
     var part = Buffer(wanted)
     part.append_buffer(preloaded, start, wanted)
     return part

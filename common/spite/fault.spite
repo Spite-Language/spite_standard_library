@@ -176,8 +176,7 @@ func hexadecimal(value: Long): String {
     var count = 0
     while count < 16 {
         var masked = rest.bits_and(15)
-        var nibble: Integer? = masked
-        crash nibble
+        var nibble: Integer = masked
         var digit = text_between(digits, nibble, nibble + 1)
         written = "{digit}{written}"
         rest = rest.shifted_right(4)

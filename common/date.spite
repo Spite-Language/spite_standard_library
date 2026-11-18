@@ -126,8 +126,7 @@ func sum(period: Period): Date {
     var moved_year: Integer? = moved_year_long
     crash moved_year
     var moved_month_long = month_index + 1
-    var moved_month: Integer? = moved_month_long
-    crash moved_month
+    var moved_month: Integer = moved_month_long
     var day = _day
     var last_day = _days_in(moved_year, moved_month)
     if day > last_day {
@@ -148,8 +147,7 @@ func period_until(other: Date): Period {
     var days: Long = other._day - _day
     if months > 0 and days < 0 {
         months = months - 1
-        var whole_months_count: Integer? = months
-        crash whole_months_count
+        var whole_months_count: Integer = months
         var whole_months = Period(whole_months_count, 'months')
         var moved = this + whole_months
         days = moved.days_until(other)
@@ -159,8 +157,7 @@ func period_until(other: Date): Period {
         days = days - other_days_in_month
     }
     var years_long = months / 12
-    var years_count: Integer? = years_long
-    crash years_count
+    var years_count: Integer = years_long
     var months_long = months % 12
     var months_count: Integer = months_long
     var days_count: Integer? = days

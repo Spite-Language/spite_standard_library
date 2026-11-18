@@ -312,8 +312,7 @@ func _send_close(code: Integer) {
         var narrow_high: Byte? = high
         crash narrow_high
         payload.append(narrow_high)
-        var narrow_low: Byte? = low
-        crash narrow_low
+        var narrow_low: Byte = low
         payload.append(narrow_low)
     }
     _send_control(8, payload)
