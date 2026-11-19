@@ -83,6 +83,12 @@ func remove_at(index: Integer) {
     _shrink_to(_length - 1)
 }
 
+func remove(value: $element_type) {
+    var found = index_of(value)
+    fallback found
+    remove_at(found)
+}
+
 func remove_last(): $element_type? {
     if _length > 0 {
         var back = _read_value(_length - 1)

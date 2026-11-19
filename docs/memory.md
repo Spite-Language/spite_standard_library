@@ -141,7 +141,7 @@ func _write_value(index: Integer, value: $element_type)
 
 The list keeps the count of the items it holds and the room they are in, and it answers `count` and
 `is_empty`. An item is added with `append`, `prepend` and `insert`, and read with `get_at` and
-`set_at`; `first` and `last` answer the item at the ends, and `remove_at`, `remove_first` and
+`set_at`; `first` and `last` answer the item at the ends, and `remove_at`, `remove`, `remove_first` and
 `remove_last` take one away. `contains` and `index_of` look for an item, `join` puts the items
 together with a separator, `copy` answers a list of the same items, and `each` calls a function with
 every item.
