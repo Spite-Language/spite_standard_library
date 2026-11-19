@@ -1,0 +1,99 @@
+# ../../spite_documentation/collections.md#observer-tells-who-subscribed
+
+generic $value
+
+var _function: Spite.Function<$value, Nothing>? = null
+var _next: Observer<$value>? = null
+var _count = 0
+var _notifying = 0
+var _has_holes = false
+
+func subscribe(function: Spite.Function<$value, Nothing>) {
+    fallback not _holds(function)
+    var added = Observer<$value>()
+    added._function = function
+    _link_at_the_end(added)
+    _count = _count + 1
+}
+
+func unsubscribe(function: Spite.Function<$value, Nothing>) {
+    var link = _next
+    while link {
+        var held = link._function
+        if held and held == function {
+            link._function = null
+            _has_holes = true
+        }
+        link = link._next
+    }
+    if _notifying == 0 {
+        _close_the_holes()
+    }
+}
+
+func notify(value: $value) {
+    _notifying = _notifying + 1
+    var remaining = _count
+    var link = _next
+    while link and remaining > 0 {
+        var held = link._function
+        if held {
+            held(value)
+        }
+        remaining = remaining - 1
+        link = link._next
+    }
+    _notifying = _notifying - 1
+    if _notifying == 0 {
+        _close_the_holes()
+    }
+}
+
+func _holds(function: Spite.Function<$value, Nothing>): Boolean {
+    var link = _next
+    while link {
+        var held = link._function
+        if held and held == function {
+            return true
+        }
+        link = link._next
+    }
+    return false
+}
+
+func _link_at_the_end(added: Observer<$value>) {
+    var last: Observer<$value> = this
+    var following = last._next
+    while following {
+        last = following
+        following = last._next
+    }
+    last._next = added
+}
+
+func _close_the_holes() {
+    fallback _has_holes
+    _has_holes = false
+    _count = 0
+    var last: Observer<$value> = this
+    var link = _next
+    _next = null
+    while link {
+        var following = link._next
+        link._next = null
+        if link._function {
+            last._next = link
+            last = link
+            _count = _count + 1
+        }
+        link = following
+    }
+}
+
+func copy(): Observer<$value> {
+    return Observer<$value>()
+}
+
+func deep_copy(): Observer<$value> {
+    return Observer<$value>()
+}

@@ -12,6 +12,7 @@ var _hash_multiplier: UnsignedLong = 6364136223846793005
 var _canonical_not_a_number_bits: UnsignedLong = 9221120237041090560
 var _text_hash_offset_basis: UnsignedLong = 1469598103934665603
 var _text_hash_prime: UnsignedLong = 1099511628211
+var _observer = Observer<DictionaryChange<$key_type, $value_type>>()
 
 func _key_bits(key: $key_type): UnsignedLong
 
@@ -41,6 +42,16 @@ func sum_by(measure: Spite.Function<$value_type, Integer>): Integer {
     return _values.sum_by(measure)
 }
 
+# ../../spite_documentation/collections.md#a-dictionary-tells-its-changes
+func subscribe(function: Spite.Function<DictionaryChange<$key_type, $value_type>, Nothing>) {
+    _observer.subscribe(function)
+}
+
+# ../../spite_documentation/collections.md#a-dictionary-tells-its-changes
+func unsubscribe(function: Spite.Function<DictionaryChange<$key_type, $value_type>, Nothing>) {
+    _observer.unsubscribe(function)
+}
+
 func get_at(key: $key_type): $value_type? {
     var tag = _tag_of(key)
     var slot = _find_slot(key, tag)
@@ -56,9 +67,12 @@ func set_at(key: $key_type, value: $value_type) {
     var slot = _find_slot(key, tag)
     if slot >= 0 {
         var stored = _slots._read_integer_at(slot * 8)
+        var change = DictionaryChange<$key_type, $value_type>('set', key, value)
         _values._write_value(stored - 1, value)
+        _observer.notify(change)
         return
     }
+    var added = DictionaryChange<$key_type, $value_type>('added', key, value)
     var position = _keys.count()
     if (position + 1) * 2 > _slot_count {
         _grow()
@@ -66,6 +80,7 @@ func set_at(key: $key_type, value: $value_type) {
     _place(position + 1, tag)
     _keys.append(key)
     _values.append(value)
+    _observer.notify(added)
 }
 
 func remove_at(key: $key_type) {
@@ -77,6 +92,8 @@ func remove_at(key: $key_type) {
     _renumber_after(stored)
     _keys.remove_at(stored - 1)
     _values.remove_at(stored - 1)
+    var change = DictionaryChange<$key_type, $value_type>('removed', key, null)
+    _observer.notify(change)
 }
 
 func clear() {
@@ -85,6 +102,8 @@ func clear() {
     _slots = Buffer(0)
     _slot_count = 0
     _shift = 32
+    var change = DictionaryChange<$key_type, $value_type>('cleared', null, null)
+    _observer.notify(change)
 }
 
 func copy(): Dictionary<$key_type, $value_type> {

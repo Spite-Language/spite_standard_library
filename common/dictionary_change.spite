@@ -1,0 +1,21 @@
+# ../../spite_documentation/collections.md#a-dictionary-tells-its-changes
+
+generic $key_type
+generic $value_type
+
+enum Kind {
+    'added'
+    'set'
+    'removed'
+    'cleared'
+}
+
+var kind: Kind
+var key: $key_type?
+var value: $value_type?
+
+func DictionaryChange(starting_kind: Kind, starting_key: $key_type?, starting_value: $value_type?) {
+    kind = starting_kind
+    key = starting_key
+    value = starting_value
+}

@@ -5,6 +5,7 @@ generic $element_type
 var _buffer = Buffer(0)
 var _length = 0
 var _capacity = 0
+var _observer = Observer<ListChange<$element_type>>()
 
 func _read_value(index: Integer): $element_type
 
@@ -43,8 +44,10 @@ func is_empty(): Boolean {
 }
 
 func append(value: $element_type) {
+    var change = ListChange<$element_type>('appended', _length, value)
     _write_value(_length, value)
     _length = _length + 1
+    _observer.notify(change)
 }
 
 func prepend(value: $element_type) {
@@ -53,9 +56,11 @@ func prepend(value: $element_type) {
 
 func insert(index: Integer, value: $element_type) {
     var at = index.clamp(0, _length)
+    var change = ListChange<$element_type>('inserted', at, value)
     if at == _length {
         _write_value(_length, value)
         _length = _length + 1
+        _observer.notify(change)
         return
     }
     var final_item = _read_value(_length - 1)
@@ -63,6 +68,17 @@ func insert(index: Integer, value: $element_type) {
     _move_values_up(at, _length - 1 - at)
     _write_value(at, value)
     _length = _length + 1
+    _observer.notify(change)
+}
+
+# ../../spite_documentation/collections.md#a-list-tells-its-changes
+func subscribe(function: Spite.Function<ListChange<$element_type>, Nothing>) {
+    _observer.subscribe(function)
+}
+
+# ../../spite_documentation/collections.md#a-list-tells-its-changes
+func unsubscribe(function: Spite.Function<ListChange<$element_type>, Nothing>) {
+    _observer.unsubscribe(function)
 }
 
 func get_at(index: Integer): $element_type? {
@@ -74,13 +90,18 @@ func get_at(index: Integer): $element_type? {
 
 func set_at(index: Integer, value: $element_type) {
     crash index >= 0 and index < _length
+    var change = ListChange<$element_type>('set', index, value)
     _write_value(index, value)
+    _observer.notify(change)
 }
 
 func remove_at(index: Integer) {
     crash index >= 0 and index < _length
+    var removed = _read_value(index)
+    var change = ListChange<$element_type>('removed', index, removed)
     _move_values(index + 1, index, _length - index - 1)
     _shrink_to(_length - 1)
+    _observer.notify(change)
 }
 
 func remove(value: $element_type) {
@@ -93,6 +114,8 @@ func remove_last(): $element_type? {
     if _length > 0 {
         var back = _read_value(_length - 1)
         _shrink_to(_length - 1)
+        var change = ListChange<$element_type>('removed', _length, back)
+        _observer.notify(change)
         return back
     }
     return null
@@ -123,6 +146,8 @@ func last(): $element_type? {
 
 func clear() {
     _shrink_to(0)
+    var change = ListChange<$element_type>('cleared', 0, null)
+    _observer.notify(change)
 }
 
 func contains(value: $element_type): Boolean {
@@ -225,6 +250,8 @@ func remove_where(test: Spite.Function<$element_type, Boolean>) {
         index = index + 1
     }
     _shrink_to(kept)
+    var change = ListChange<$element_type>('rewritten', 0, null)
+    _observer.notify(change)
 }
 
 func count_where(test: Spite.Function<$element_type, Boolean>): Integer {
@@ -399,6 +426,8 @@ func reverse() {
         low = low + 1
         high = high - 1
     }
+    var change = ListChange<$element_type>('rewritten', 0, null)
+    _observer.notify(change)
 }
 
 func swap(first_index: Integer, second_index: Integer) {
@@ -407,11 +436,17 @@ func swap(first_index: Integer, second_index: Integer) {
     var second = _read_value(second_index)
     _write_value(first_index, second)
     _write_value(second_index, front)
+    var first_change = ListChange<$element_type>('set', first_index, second)
+    _observer.notify(first_change)
+    var second_change = ListChange<$element_type>('set', second_index, front)
+    _observer.notify(second_change)
 }
 
 func truncate(kept_count: Integer) {
     if kept_count >= 0 and kept_count < _length {
         _shrink_to(kept_count)
+        var change = ListChange<$element_type>('rewritten', kept_count, null)
+        _observer.notify(change)
     }
 }
 
@@ -420,6 +455,10 @@ func remove_swapping(index: Integer) {
     var back = _read_value(_length - 1)
     _write_value(index, back)
     _shrink_to(_length - 1)
+    var moved = ListChange<$element_type>('set', index, back)
+    _observer.notify(moved)
+    var removed = ListChange<$element_type>('removed', _length, null)
+    _observer.notify(removed)
 }
 
 func filter_member(member: Spite.AttributeDeclaration): List<$element_type> {
@@ -447,6 +486,8 @@ func remove_where_member(member: Spite.AttributeDeclaration) {
         index = index + 1
     }
     _shrink_to(kept)
+    var change = ListChange<$element_type>('rewritten', 0, null)
+    _observer.notify(change)
 }
 
 func count_member(member: Spite.AttributeDeclaration): Integer {
