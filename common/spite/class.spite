@@ -1,6 +1,6 @@
 var _name: String
-var _name_with_namespaces: String
-var _namespace: Spite.Namespace?
+var _name_with_outer_classes: String
+var _outer_class: Spite.Class?
 var _is_singleton: Boolean
 var _is_enum: Boolean
 var _is_optional: Boolean
@@ -16,11 +16,13 @@ var _unions: Dictionary<String, Spite.Union>
 var _types: Dictionary<String, Spite.Type>
 var _has_no_stand_in: Boolean
 var _source_files: List<File>
+var _source_directories: List<Directory>
+var _nested_classes: List<Spite.Class>
 
 func Class(
     starting_name: String,
-    starting_name_with_namespaces: String,
-    starting_namespace: Spite.Namespace?,
+    starting_name_with_outer_classes: String,
+    starting_outer_class: Spite.Class?,
     starting_is_singleton: Boolean,
     starting_is_enum: Boolean,
     starting_is_optional: Boolean,
@@ -36,10 +38,12 @@ func Class(
     starting_unions: Dictionary<String, Spite.Union>,
     starting_types: Dictionary<String, Spite.Type>,
     starting_source_files: List<File>,
+    starting_source_directories: List<Directory>,
+    starting_nested_classes: List<Spite.Class>,
 ) {
     _name = starting_name
-    _name_with_namespaces = starting_name_with_namespaces
-    _namespace = starting_namespace
+    _name_with_outer_classes = starting_name_with_outer_classes
+    _outer_class = starting_outer_class
     _is_singleton = starting_is_singleton
     _is_enum = starting_is_enum
     _is_optional = starting_is_optional
@@ -55,18 +59,24 @@ func Class(
     _unions = starting_unions
     _types = starting_types
     _source_files = starting_source_files
+    _source_directories = starting_source_directories
+    _nested_classes = starting_nested_classes
 }
 
 func get_name(): String {
     return _name
 }
 
-func get_name_with_namespaces(): String {
-    return _name_with_namespaces
+func get_name_with_outer_classes(): String {
+    return _name_with_outer_classes
 }
 
-func get_namespace(): Spite.Namespace? {
-    return _namespace
+func get_outer_class(): Spite.Class? {
+    return _outer_class
+}
+
+func get_nested_classes(): List<Spite.Class> {
+    return _nested_classes
 }
 
 func get_attributes(): Dictionary<String, Spite.AttributeDeclaration> {
@@ -95,6 +105,10 @@ func get_is_singleton(): Boolean {
 
 func get_source_files(): List<File> {
     return _source_files
+}
+
+func get_source_directories(): List<Directory> {
+    return _source_directories
 }
 
 func get_is_optional(): Boolean {
@@ -176,7 +190,7 @@ func satisfies_type(_wanted: Spite.Type): Boolean {
 }
 
 func equals(other: Class): Boolean {
-    return _name_with_namespaces == other._name_with_namespaces
+    return _name_with_outer_classes == other._name_with_outer_classes
 }
 
 func to_string(): String {

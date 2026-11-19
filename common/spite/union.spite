@@ -1,16 +1,16 @@
 var _name: String
-var _name_with_namespaces: String
+var _name_with_outer_classes: String
 var _owner: Spite.Class = Nothing
 var _members: Dictionary<String, Spite.Class>
 
 func Union(
     starting_name: String,
-    starting_name_with_namespaces: String,
+    starting_name_with_outer_classes: String,
     starting_owner: Spite.Class,
     starting_members: Dictionary<String, Spite.Class>,
 ) {
     _name = starting_name
-    _name_with_namespaces = starting_name_with_namespaces
+    _name_with_outer_classes = starting_name_with_outer_classes
     _owner = starting_owner
     _members = starting_members
 }
@@ -19,8 +19,8 @@ func get_name(): String {
     return _name
 }
 
-func get_name_with_namespaces(): String {
-    return _name_with_namespaces
+func get_name_with_outer_classes(): String {
+    return _name_with_outer_classes
 }
 
 func get_owner(): Spite.Class {
@@ -32,7 +32,7 @@ func get_members(): Dictionary<String, Spite.Class> {
 }
 
 func equals(other: Union): Boolean {
-    return _name_with_namespaces == other._name_with_namespaces
+    return _name_with_outer_classes == other._name_with_outer_classes
 }
 
 func to_string(): String {

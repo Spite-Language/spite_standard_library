@@ -2,17 +2,17 @@ var console = Console()
 var program = Program()
 var _passed = 0
 var _failed = 0
-var _namespace: Spite.Namespace?
+var _tested: Spite.Class?
 var _chosen: String?
 
-func Test(starting_namespace: Spite.Namespace) {
-    _namespace = starting_namespace
+func Test(starting_tested: Spite.Class) {
+    _tested = starting_tested
     _chosen = program.environment("SPITE_TEST")
 }
 
 func run() {
-    crash _namespace
-    _run_namespace(_namespace)
+    crash _tested
+    _run_nested(_tested)
     fallback not _chosen
     var total = _passed + _failed
     console.print(total, "tests,", _passed, "passed,", _failed, "failed")
@@ -21,19 +21,18 @@ func run() {
     }
 }
 
-func _run_namespace(walked: Spite.Namespace) {
-    var classes = walked.classes
+func _run_nested(walked: Spite.Class) {
+    var classes = walked.nested_classes
     var index = 0
     while index < classes.count() {
         var tested = classes[index]
         _run_class(tested)
         index = index + 1
     }
-    var below = walked.namespaces
     var below_index = 0
-    while below_index < below.count() {
-        var inner = below[below_index]
-        _run_namespace(inner)
+    while below_index < classes.count() {
+        var inner = classes[below_index]
+        _run_nested(inner)
         below_index = below_index + 1
     }
 }
@@ -55,7 +54,7 @@ func _is_test(name: String): Boolean {
 }
 
 func _run_function(tested: Spite.Class, declaration: Spite.FunctionDeclaration) {
-    var named = "{tested.name_with_namespaces}.{declaration.name}"
+    var named = "{tested.name_with_outer_classes}.{declaration.name}"
     if not _chosen {
         _run_apart(named)
     } else if _chosen == named {

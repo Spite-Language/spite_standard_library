@@ -1,10 +1,10 @@
 var _name: String
-var _name_with_namespaces: String
+var _name_with_outer_classes: String
 var _owner: Spite.Class = Nothing
 
-func Type(starting_name: String, starting_name_with_namespaces: String, starting_owner: Spite.Class) {
+func Type(starting_name: String, starting_name_with_outer_classes: String, starting_owner: Spite.Class) {
     _name = starting_name
-    _name_with_namespaces = starting_name_with_namespaces
+    _name_with_outer_classes = starting_name_with_outer_classes
     _owner = starting_owner
 }
 
@@ -12,8 +12,8 @@ func get_name(): String {
     return _name
 }
 
-func get_name_with_namespaces(): String {
-    return _name_with_namespaces
+func get_name_with_outer_classes(): String {
+    return _name_with_outer_classes
 }
 
 func get_owner(): Spite.Class {
@@ -21,7 +21,7 @@ func get_owner(): Spite.Class {
 }
 
 func equals(other: Type): Boolean {
-    return _name_with_namespaces == other._name_with_namespaces
+    return _name_with_outer_classes == other._name_with_outer_classes
 }
 
 func to_string(): String {
