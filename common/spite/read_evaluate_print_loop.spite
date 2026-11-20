@@ -3,7 +3,6 @@ singleton
 var console = Console()
 var program = Program()
 var reloader = Spite.HotReload()
-var kept_values = Dictionary<String, Anything>()
 var variable_names = List<String>()
 var variable_entries = List<String>()
 var function_names = List<String>()
@@ -50,18 +49,6 @@ func listen(port: Integer) {
         program.exit(1)
     }
     server = made
-}
-
-func kept(name: String): Anything? {
-    return kept_values[name]
-}
-
-func keep(name: String, value: Anything?) {
-    if value {
-        kept_values[name] = value
-    } else {
-        kept_values.remove_at(name)
-    }
 }
 
 # ../../../spite_documentation/repl.md#typing-spite-into-a-running-program

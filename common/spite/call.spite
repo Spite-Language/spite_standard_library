@@ -1,17 +1,14 @@
-var _declaration = Spite.FunctionDeclaration("", "", 0, [], Nothing, false, false, false, null, null, [], [], "", "")
-var _instance: Anything
-# ../../../spite_documentation/functions_and_operators.md#null-only-goes-where-a-t-is-wanted
-var _arguments = Dictionary<String, Anything?>()
+# ../../../spite_documentation/reflection.md#a-call-built-before-it-runs
+generic $instance
 
-func Call(starting_declaration: Spite.FunctionDeclaration, starting_instance: Anything) {
+var _declaration = Spite.FunctionDeclaration("", "", 0, [], Nothing, false, false, false, null, null, [], [], "", "")
+var _instance: $instance
+
+func Call(starting_declaration: Spite.FunctionDeclaration, starting_instance: $instance) {
     _declaration = starting_declaration
     _instance = starting_instance
 }
 
-func get_arguments(): Dictionary<String, Anything?> {
-    return _arguments
-}
-
-func call(): Anything? {
-    return _declaration._call_on(_instance, _arguments)
+func call() {
+    _declaration._call_on(_instance)
 }

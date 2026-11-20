@@ -1,19 +1,16 @@
 var _name: String
 var _declaration = Spite.FunctionDeclaration("", "", 0, [], Nothing, false, false, false, null, null, [], [], "", "")
-var _owner: Anything
 var _called: Spite.Function<Nothing> = _not_made
 var _value: Spite.Function<Nothing> = _not_made
 
 func Function(
     starting_name: String,
     starting_declaration: Spite.FunctionDeclaration,
-    starting_owner: Anything,
     starting_called: Spite.Function<Nothing>,
     starting_value: Spite.Function<Nothing>,
 ) {
     _name = starting_name
     _declaration = starting_declaration
-    _owner = starting_owner
     _called = starting_called
     _value = starting_value
 }
@@ -28,10 +25,6 @@ func get_name(): String {
 
 func get_declaration(): Spite.FunctionDeclaration {
     return _declaration
-}
-
-func get_owner(): Anything {
-    return _owner
 }
 
 func call_function() {

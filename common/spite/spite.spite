@@ -1,5 +1,2 @@
-union Anything {
-}
-
 union Nothing {
 }

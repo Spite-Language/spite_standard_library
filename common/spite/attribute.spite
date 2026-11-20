@@ -1,27 +1,25 @@
+# ../../../spite_documentation/reflection.md#spiteattribute
+generic $value
+
 var _name: String
 var _class: Spite.Class = Nothing
-# ../../../spite_documentation/functions_and_operators.md#null-only-goes-where-a-t-is-wanted
-var _value: Anything?
+var _value: $value
 var _index: Integer
 var _declaration = Spite.AttributeDeclaration("", 0, Nothing, "")
-var _owner: Anything
-# ../../../spite_documentation/reflection.md#known-only-at-run-time
-var _writer: Spite.Function<Anything?, Anything?>?
+var _writer: Spite.Function<$value, Nothing>?
 
 func Attribute(
     starting_name: String,
     starting_index: Integer,
     starting_class: Spite.Class,
     starting_declaration: Spite.AttributeDeclaration,
-    starting_owner: Anything,
-    starting_value: Anything?,
-    starting_writer: Spite.Function<Anything?, Anything?>?,
+    starting_value: $value,
+    starting_writer: Spite.Function<$value, Nothing>?,
 ) {
     _name = starting_name
     _index = starting_index
     _class = starting_class
     _declaration = starting_declaration
-    _owner = starting_owner
     _value = starting_value
     _writer = starting_writer
 }
@@ -34,14 +32,14 @@ func get_class(): Spite.Class {
     return _class
 }
 
-func get_value(): Anything? {
+func get_value(): $value {
     return _value
 }
 
-func set_value(value: Anything?) {
+func set_value(value: $value) {
     crash _writer
-    var written = _writer(value)
-    _value = written
+    _writer(value)
+    _value = value
 }
 
 func get_index(): Integer {
@@ -50,10 +48,6 @@ func get_index(): Integer {
 
 func get_declaration(): Spite.AttributeDeclaration {
     return _declaration
-}
-
-func get_owner(): Anything {
-    return _owner
 }
 
 func to_string(): String {
