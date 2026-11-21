@@ -9,6 +9,7 @@ var _notifying = 0
 var _has_holes = false
 
 func subscribe(function: Spite.Function<$value, Nothing>) {
+    _let_go_of_the_freed()
     fallback not _holds(function)
     var added = Observer<$value>()
     added._function = function
@@ -20,7 +21,10 @@ func unsubscribe(function: Spite.Function<$value, Nothing>) {
     var link = _next
     while link {
         var held = link._function
-        if held and held == function {
+        if held and _is_bound_to_a_freed_object(held) {
+            link._function = null
+            _has_holes = true
+        } else if held and held == function {
             link._function = null
             _has_holes = true
         }
@@ -37,7 +41,10 @@ func notify(value: $value) {
     var link = _next
     while link and remaining > 0 {
         var held = link._function
-        if held {
+        if held and _is_bound_to_a_freed_object(held) {
+            link._function = null
+            _has_holes = true
+        } else if held {
             held(value)
         }
         remaining = remaining - 1
@@ -60,6 +67,23 @@ func _holds(function: Spite.Function<$value, Nothing>): Boolean {
     }
     return false
 }
+
+func _let_go_of_the_freed() {
+    var link = _next
+    while link {
+        var held = link._function
+        if held and _is_bound_to_a_freed_object(held) {
+            link._function = null
+            _has_holes = true
+        }
+        link = link._next
+    }
+    if _notifying == 0 {
+        _close_the_holes()
+    }
+}
+
+func _is_bound_to_a_freed_object(function: Spite.Function<$value, Nothing>): Boolean
 
 func _link_at_the_end(added: Observer<$value>) {
     var last: Observer<$value> = this
