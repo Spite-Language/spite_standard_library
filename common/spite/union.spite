@@ -31,6 +31,10 @@ func get_members(): Dictionary<String, Spite.Class> {
     return _members
 }
 
+func satisfies_type(_wanted: Spite.Type): Boolean {
+    crash
+}
+
 func equals(other: Union): Boolean {
     return _name_with_outer_classes == other._name_with_outer_classes
 }
