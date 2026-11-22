@@ -12,14 +12,13 @@ var _count = 0
 var _holes = 0
 var _swept_at = 0
 var _notifying = 0
-var _spreading: UnsignedLong = 6364136223846793005
-var _deepest_bit = 63
-var _fewest_to_sweep = 8
 
 func subscribe(function: Spite.Function<$value, Nothing>) {
     fallback not _is_bound_to_a_freed_object(function)
-    var hash = _spread_hash_of(function)
-    fallback not _holds(function, hash)
+    _place_in_the_tree_when_bare()
+    var hash = _hash_bits_of(function)
+    var held = _link_holding(function, hash)
+    fallback not held
     var added = Observer<$value>()
     added._function = _held_back(function)
     added._hash = hash
@@ -31,18 +30,11 @@ func subscribe(function: Spite.Function<$value, Nothing>) {
 
 func unsubscribe(function: Spite.Function<$value, Nothing>) {
     fallback not _is_bound_to_a_freed_object(function)
-    var hash = _spread_hash_of(function)
-    var link = _child_on_the_way(this, hash, 0)
-    var depth = 1
-    while link {
-        var held = link._function
-        if held and _is_bound_to_a_freed_object(held) {
-            _clear(link)
-        } else if held and link._hash == hash and held == function {
-            _clear(link)
-        }
-        link = _child_on_the_way(link, hash, depth)
-        depth = depth + 1
+    _place_in_the_tree_when_bare()
+    var hash = _hash_bits_of(function)
+    var held = _link_holding(function, hash)
+    if held {
+        _clear(held)
     }
     _close_the_holes_when_many()
 }
@@ -73,15 +65,12 @@ func _hash_of(function: Spite.Function<$value, Nothing>): Long
 
 func _is_bound_to_a_freed_object(function: Spite.Function<$value, Nothing>): Boolean
 
-func _spread_hash_of(function: Spite.Function<$value, Nothing>): UnsignedLong {
+func _hash_bits_of(function: Spite.Function<$value, Nothing>): UnsignedLong {
     var hash = _hash_of(function)
-    var bits = hash._bits_as_unsigned()
-    var spread = bits._wrapping_multiply(_spreading)
-    var folded = spread._shifted_right(29)
-    return spread._bits_xor(folded)
+    return hash._bits_as_unsigned()
 }
 
-func _holds(function: Spite.Function<$value, Nothing>, hash: UnsignedLong): Boolean {
+func _link_holding(function: Spite.Function<$value, Nothing>, hash: UnsignedLong): Observer<$value>? {
     var link = _child_on_the_way(this, hash, 0)
     var depth = 1
     while link {
@@ -89,12 +78,12 @@ func _holds(function: Spite.Function<$value, Nothing>, hash: UnsignedLong): Bool
         if held and _is_bound_to_a_freed_object(held) {
             _clear(link)
         } else if held and link._hash == hash and held == function {
-            return true
+            return link
         }
         link = _child_on_the_way(link, hash, depth)
         depth = depth + 1
     }
-    return false
+    return null
 }
 
 func _child_on_the_way(from: Observer<$value>, hash: UnsignedLong, depth: Integer): Observer<$value>? {
@@ -105,7 +94,8 @@ func _child_on_the_way(from: Observer<$value>, hash: UnsignedLong, depth: Intege
 }
 
 func _goes_one_way(hash: UnsignedLong, depth: Integer): Boolean {
-    var bit = depth.minimum(_deepest_bit)
+    var deepest_bit = 63
+    var bit = depth.minimum(deepest_bit)
     var shifted = hash._shifted_right(bit)
     var lowest = shifted._bits_and(1)
     return lowest == 1
@@ -143,7 +133,8 @@ func _clear(link: Observer<$value>) {
 }
 
 func _let_go_of_the_freed_when_grown() {
-    fallback _count >= _fewest_to_sweep and _count >= _swept_at * 2
+    var fewest_to_sweep = 8
+    fallback _count >= fewest_to_sweep and _count >= _swept_at * 2
     _swept_at = _count
     var link = _next
     while link {
@@ -176,12 +167,22 @@ func _close_the_holes() {
         link._one = null
         if link._function {
             _link_at_the_end(link)
-            _place_in_the_tree(link)
             _count = _count + 1
         }
         link = following
     }
     _swept_at = _swept_at.minimum(_count)
+}
+
+func _place_in_the_tree_when_bare() {
+    fallback _count > 0 and not _zero and not _one
+    var link = _next
+    while link {
+        if link._function {
+            _place_in_the_tree(link)
+        }
+        link = link._next
+    }
 }
 
 func copy(): Observer<$value> {
