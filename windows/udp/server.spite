@@ -54,7 +54,7 @@ func _socket_startup(version: Integer, information: Buffer){
 }
 
 func _socket(family: Integer, kind: Integer, protocol: Integer): Long {
-    return _sockets.socket_as_long(family, kind, protocol)
+    return _sockets.socket(family, kind, protocol)
 }
 
 func _set_socket_option(socket: Long, level: Integer, option: Integer, value: Buffer, length: Integer){

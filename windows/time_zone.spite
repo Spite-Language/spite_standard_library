@@ -135,7 +135,7 @@ func _canonical_time_zone_identifier(
 }
 
 func _calendar_of(identifier: Buffer, length: Integer, locale: String, kind: Integer, status: Buffer): Long {
-    return _icu.ucal_open_as_long(identifier, length, locale, kind, status)
+    return _icu.ucal_open(identifier, length, locale, kind, status)
 }
 
 func _default_time_zone(room: Buffer, capacity: Integer, status: Buffer): Integer {

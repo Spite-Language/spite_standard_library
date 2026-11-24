@@ -403,7 +403,7 @@ func _wait_for_single_object(handle: Long, milliseconds: Integer): Integer {
 }
 
 func _tick_count(): Long {
-    return kernel.GetTickCount64_as_long()
+    return kernel.GetTickCount64()
 }
 
 func _terminate_job_object(job: Long, exit_code: Integer){
@@ -431,7 +431,7 @@ func _resume_thread(thread: Long){
 }
 
 func _create_job_object(security: Long, name: Long): Long {
-    return kernel.CreateJobObjectA_as_long(security, name)
+    return kernel.CreateJobObjectA(security, name)
 }
 
 func _set_information_job_object(job: Long, kind: Integer, information: Buffer, size: Integer){
@@ -451,7 +451,7 @@ func _set_handle_information(handle: Long, mask: Integer, flags: Integer){
 }
 
 func _standard_handle(kind: Integer): Long {
-    return kernel.GetStdHandle_as_long(kind)
+    return kernel.GetStdHandle(kind)
 }
 
 func _duplicate_handle(

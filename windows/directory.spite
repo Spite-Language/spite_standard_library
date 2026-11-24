@@ -103,7 +103,7 @@ func _move_file(path: Buffer, new_path: Buffer, flags: Integer): Integer {
 }
 
 func _find_first_file(pattern: Buffer, found: Buffer): Long {
-    return kernel.FindFirstFileW_as_long(pattern, found)
+    return kernel.FindFirstFileW(pattern, found)
 }
 
 func _find_next_file(search: Long, found: Buffer): Integer {

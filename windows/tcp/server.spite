@@ -110,7 +110,7 @@ func _socket_startup(version: Integer, information: Buffer){
 }
 
 func _socket(family: Integer, kind: Integer, protocol: Integer): Long {
-    return sockets.socket_as_long(family, kind, protocol)
+    return sockets.socket(family, kind, protocol)
 }
 
 func _set_socket_option(socket: Long, level: Integer, option: Integer, value: Buffer, length: Integer){
@@ -126,7 +126,7 @@ func _listen(socket: Long, backlog: Integer): Integer {
 }
 
 func _accept(socket: Long, address: Long, length: Long): Long {
-    return sockets.accept_as_long(socket, address, length)
+    return sockets.accept(socket, address, length)
 }
 
 func _control_socket(socket: Long, command: Integer, argument: Buffer){

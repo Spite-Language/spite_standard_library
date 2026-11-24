@@ -129,7 +129,7 @@ func _sleep_for(milliseconds: Long) {
 }
 
 func _create_waitable_timer(security: Long, name: Long, flags: Integer, access: Integer): Long {
-    return kernel.CreateWaitableTimerExW_as_long(security, name, flags, access)
+    return kernel.CreateWaitableTimerExW(security, name, flags, access)
 }
 
 func _close_handle(handle: Long){
@@ -164,7 +164,7 @@ func _environment_variable(name: Buffer, room: Buffer, size: Integer): Integer {
 }
 
 func _command_line_address(): Long {
-    return kernel.GetCommandLineW_as_long()
+    return kernel.GetCommandLineW()
 }
 
 func _wide_text_length(address: Long): Integer {

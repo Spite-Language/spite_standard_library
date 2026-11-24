@@ -26,7 +26,7 @@ func Float(from: String): Float? {
 
 func _decimal_of(text: String, end: Long): Float {
     var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.strtof_as_float(text, end)
+    return library.strtof(text, end)
 }
 
 func Pi(): Float {
@@ -49,12 +49,12 @@ func Infinity(): Float {
 
 func NotANumber(): Float {
     var pattern: UnsignedInteger = 2143289344
-    return pattern.bits_as_float()
+    return pattern.bits()
 }
 
 func Largest(): Float {
     var pattern: UnsignedInteger = 2139095039
-    return pattern.bits_as_float()
+    return pattern.bits()
 }
 
 func Smallest(): Float {

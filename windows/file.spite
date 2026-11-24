@@ -78,7 +78,7 @@ func _seek(handle: Long, offset: Long, origin: Integer): Integer {
 }
 
 func _tell(handle: Long): Long {
-    return library._ftelli64_as_long(handle)
+    return library._ftelli64(handle)
 }
 
 func _read_into(room: Buffer, bytes: Long, handle: Long): Long {
@@ -135,23 +135,23 @@ func _create_file(
     flags: Integer,
     template: Long,
 ): Long {
-    return kernel.CreateFileW_as_long(path, access, sharing, security, disposition, flags, template)
+    return kernel.CreateFileW(path, access, sharing, security, disposition, flags, template)
 }
 
 func _open_file(path: Buffer, mode: Buffer): Long {
-    return library._wfopen_as_long(path, mode)
+    return library._wfopen(path, mode)
 }
 
 func _read_items(room: Buffer, size: Long, count: Long, handle: Long): Long {
-    return library.fread_as_long(room, size, count, handle)
+    return library.fread(room, size, count, handle)
 }
 
 func _write_items(room: Buffer, size: Long, count: Long, handle: Long): Long {
-    return library.fwrite_as_long(room, size, count, handle)
+    return library.fwrite(room, size, count, handle)
 }
 
 func _write_text_items(text: String, size: Long, count: Long, handle: Long): Long {
-    return library.fwrite_as_long(text, size, count, handle)
+    return library.fwrite(text, size, count, handle)
 }
 
 func _file_attributes_of(path: Buffer, level: Integer, data: Buffer): Integer {

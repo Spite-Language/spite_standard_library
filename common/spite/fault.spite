@@ -329,7 +329,7 @@ func call_text(table: Long, index: Long): String {
 
 func _module_handle(name: Long): Long {
     var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
-    return kernel.GetModuleHandleA_as_long(name)
+    return kernel.GetModuleHandleA(name)
 }
 
 func _module_handle_ex(flags: Integer, address: Long, room: Buffer): Integer {
@@ -344,7 +344,7 @@ func _module_file_name(module: Long, room: Buffer, size: Integer): Integer {
 
 func _standard_handle(kind: Integer): Long {
     var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
-    return kernel.GetStdHandle_as_long(kind)
+    return kernel.GetStdHandle(kind)
 }
 
 func _write_file(handle: Long, text: String, length: Integer, written: Buffer, overlapped: Long){
@@ -362,7 +362,7 @@ func _create_file(
     template: Long,
 ): Long {
     var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
-    return kernel.CreateFileA_as_long(path, access, sharing, security, disposition, flags, template)
+    return kernel.CreateFileA(path, access, sharing, security, disposition, flags, template)
 }
 
 func _file_size(handle: Long, high: Long): Integer {

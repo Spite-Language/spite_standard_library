@@ -42,11 +42,11 @@ func _ends_with_byte(bytes: Buffer, wanted: Integer): Boolean {
 }
 
 func _open_stream(file: Integer, mode: String): Long {
-    return library._fdopen_as_long(file, mode)
+    return library._fdopen(file, mode)
 }
 
 func _read_text_line(room: Buffer, size: Integer, stream: Long): Long {
-    return library.fgets_as_long(room, size, stream)
+    return library.fgets(room, size, stream)
 }
 
 func _text_length(text: Buffer): Integer {

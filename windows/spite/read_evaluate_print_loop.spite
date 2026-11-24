@@ -188,11 +188,11 @@ func _taken(end: Integer, after: Integer): String {
 }
 
 func _standard_handle(kind: Integer): Long {
-    return kernel.GetStdHandle_as_long(kind)
+    return kernel.GetStdHandle(kind)
 }
 
 func _current_process(): Long {
-    return kernel.GetCurrentProcess_as_long()
+    return kernel.GetCurrentProcess()
 }
 
 func _duplicate_handle(

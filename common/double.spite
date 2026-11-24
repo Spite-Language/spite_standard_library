@@ -22,7 +22,7 @@ func Double(from: String): Double? {
 
 func _decimal_of(text: String, end: Long): Double {
     var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.strtod_as_double(text, end)
+    return library.strtod(text, end)
 }
 
 func Pi(): Double {
@@ -50,7 +50,7 @@ func NotANumber(): Double {
 
 func Largest(): Double {
     var pattern: Long = 9218868437227405311
-    return pattern.bits_as_double()
+    return pattern.bits()
 }
 
 func Smallest(): Double {

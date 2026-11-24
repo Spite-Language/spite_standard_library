@@ -136,15 +136,15 @@ func _resolve_the_imports(bytes: Buffer, start: Integer): String {
 }
 
 func _virtual_allocate(address: Long, size: Long, allocation: Integer, protection: Integer): Long {
-    return kernel.VirtualAlloc_as_long(address, size, allocation, protection)
+    return kernel.VirtualAlloc(address, size, allocation, protection)
 }
 
 func _open_pipe(command: String, mode: String): Long {
-    return runtime._popen_as_long(command, mode)
+    return runtime._popen(command, mode)
 }
 
 func _read_items(room: Buffer, size: Long, count: Long, handle: Long): Long {
-    return runtime.fread_as_long(room, size, count, handle)
+    return runtime.fread(room, size, count, handle)
 }
 
 func _close_pipe(handle: Long): Integer {
@@ -156,7 +156,7 @@ func _move_memory(destination: Long, source: Buffer, size: Integer) {
 }
 
 func _current_process(): Long {
-    return kernel.GetCurrentProcess_as_long()
+    return kernel.GetCurrentProcess()
 }
 
 func _flush_instruction_cache(process: Long, address: Long, size: Integer){
@@ -164,9 +164,9 @@ func _flush_instruction_cache(process: Long, address: Long, size: Integer){
 }
 
 func _load_library(name: String): Long {
-    return kernel.LoadLibraryA_as_long(name)
+    return kernel.LoadLibraryA(name)
 }
 
 func _procedure_address(module: Long, name: String): Long {
-    return kernel.GetProcAddress_as_long(module, name)
+    return kernel.GetProcAddress(module, name)
 }

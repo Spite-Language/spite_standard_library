@@ -254,11 +254,11 @@ func _create_file(
     flags: Integer,
     template: Long,
 ): Long {
-    return kernel.CreateFileW_as_long(path, access, sharing, security, disposition, flags, template)
+    return kernel.CreateFileW(path, access, sharing, security, disposition, flags, template)
 }
 
 func _create_event(security: Long, manual_reset: Integer, initial_state: Integer, name: Long): Long {
-    return kernel.CreateEventW_as_long(security, manual_reset, initial_state, name)
+    return kernel.CreateEventW(security, manual_reset, initial_state, name)
 }
 
 func _reset_event(event: Long){
