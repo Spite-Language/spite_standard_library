@@ -45,7 +45,7 @@ func NotANumber(): Double {
 
 func Largest(): Double {
     var pattern: Long = 9218868437227405311
-    return pattern.bits()
+    return pattern.bits_as_double()
 }
 
 func Smallest(): Double {

@@ -44,12 +44,12 @@ func Infinity(): Float {
 
 func NotANumber(): Float {
     var pattern: UnsignedInteger = 2143289344
-    return pattern.bits()
+    return pattern.bits_as_float()
 }
 
 func Largest(): Float {
     var pattern: UnsignedInteger = 2139095039
-    return pattern.bits()
+    return pattern.bits_as_float()
 }
 
 func Smallest(): Float {
