@@ -137,6 +137,6 @@ func _close_socket(socket: Long) {
     sockets.closesocket(socket)
 }
 
-func _poll(sockets: Buffer, count: Integer, milliseconds: Long): Integer {
-    return sockets.WSAPoll(sockets, count, milliseconds)
+func _poll(watched: Buffer, count: Integer, milliseconds: Long): Integer {
+    return sockets.WSAPoll(watched, count, milliseconds)
 }
