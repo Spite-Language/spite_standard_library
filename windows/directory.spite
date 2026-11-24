@@ -15,7 +15,7 @@ func exists(): Boolean {
         }
     }
     var wide_path = path._to_wide()
-    var attributes = kernel.GetFileAttributesW(wide_path)
+    var attributes = _file_attributes(wide_path)
     return attributes != -1 and attributes.bits_and(16) != 0
 }
 
@@ -25,26 +25,26 @@ func create(): Boolean {
         fallback not place
     }
     var wide_path = path._to_wide()
-    var created = kernel.CreateDirectoryW(wide_path, 0)
+    var created = _create_directory(wide_path, 0)
     return created != 0 or exists()
 }
 
 func remove(): Boolean {
     var wide_path = path._to_wide()
-    var removed = kernel.RemoveDirectoryW(wide_path)
+    var removed = _remove_directory(wide_path)
     return removed != 0
 }
 
 func _is_a_link(): Boolean {
     var wide_path = path._to_wide()
-    var attributes = kernel.GetFileAttributesW(wide_path)
+    var attributes = _file_attributes(wide_path)
     return attributes != -1 and attributes.bits_and(_reparse_point) != 0
 }
 
 func _rename_to(new_path: String): Boolean {
     var wide_path = path._to_wide()
     var wide_new_path = new_path._to_wide()
-    var moved = kernel.MoveFileExW(wide_path, wide_new_path, 0)
+    var moved = _move_file(wide_path, wide_new_path, 0)
     return moved != 0
 }
 
@@ -59,7 +59,7 @@ func _entry_names(want_folders: Boolean): List<String>? {
     var found = Buffer(_find_data_bytes)
     var pattern = "{path}/*"
     var wide_pattern = pattern._to_wide()
-    var search = kernel.FindFirstFileW_as_long(wide_pattern, found)
+    var search = _find_first_file(wide_pattern, found)
     fallback search != -1
     var readable = true
     var more = true
@@ -78,10 +78,38 @@ func _entry_names(want_folders: Boolean): List<String>? {
         } else {
             readable = false
         }
-        var next = kernel.FindNextFileW(search, found)
+        var next = _find_next_file(search, found)
         more = next != 0
     }
-    kernel.FindClose(search)
+    _find_close(search)
     fallback readable
     return names
+}
+
+func _file_attributes(path: Buffer): Integer {
+    return kernel.GetFileAttributesW(path)
+}
+
+func _create_directory(path: Buffer, security: Long): Integer {
+    return kernel.CreateDirectoryW(path, security)
+}
+
+func _remove_directory(path: Buffer): Integer {
+    return kernel.RemoveDirectoryW(path)
+}
+
+func _move_file(path: Buffer, new_path: Buffer, flags: Integer): Integer {
+    return kernel.MoveFileExW(path, new_path, flags)
+}
+
+func _find_first_file(pattern: Buffer, found: Buffer): Long {
+    return kernel.FindFirstFileW_as_long(pattern, found)
+}
+
+func _find_next_file(search: Long, found: Buffer): Integer {
+    return kernel.FindNextFileW(search, found)
+}
+
+func _find_close(search: Long){
+    kernel.FindClose(search)
 }

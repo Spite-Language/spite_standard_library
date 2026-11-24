@@ -23,8 +23,8 @@ func run_attached(): Integer? {
     }
     var command_text = _command_line()
     var wide_command = command_text._to_wide()
-    library._set_errno(0)
-    var code = library._wsystem(wide_command)
+    _set_error_number(0)
+    var code = _system(wide_command)
     fallback code != -1 or _system_error() == 0
     return code
 }
@@ -32,7 +32,7 @@ func run_attached(): Integer? {
 func _system_error(): Integer {
     var room = Buffer(4)
     room.append_integer_little_endian(0)
-    library._get_errno(room)
+    _error_number_into(room)
     var error = room.read_integer_little_endian_at(0)
     crash error
     return error
@@ -48,8 +48,8 @@ func _run_child(line: String): Integer? {
     if keeps_errors_apart {
         var errors_ends = _pipe_ends()
         if not errors_ends {
-            kernel.CloseHandle(output_reading)
-            kernel.CloseHandle(output_writing)
+            _close_handle(output_reading)
+            _close_handle(output_writing)
             return null
         }
         errors_reading = _first_handle(errors_ends)
@@ -72,7 +72,7 @@ func _run_child(line: String): Integer? {
     var shell_line = "cmd.exe /c {line}"
     var wide_line = shell_line._to_wide()
     var no_value: Long = 0
-    var made = kernel.CreateProcessW(
+    var made = _create_process(
         no_value,
         wide_line,
         no_value,
@@ -88,25 +88,25 @@ func _run_child(line: String): Integer? {
     _close_if_open(errors_writing)
     _close_if_open(input_reading)
     if made == 0 {
-        kernel.CloseHandle(output_reading)
+        _close_handle(output_reading)
         _close_if_open(errors_reading)
         return null
     }
     var child = _first_handle(information)
     var first_thread = _second_handle(information)
     var job = _job_for(child, first_thread)
-    kernel.CloseHandle(first_thread)
+    _close_handle(first_thread)
     if time_limit and job == 0 {
-        kernel.TerminateProcess(child, 1)
-        kernel.WaitForSingleObject(child, -1)
-        kernel.CloseHandle(child)
-        kernel.CloseHandle(output_reading)
+        _terminate_process(child, 1)
+        _wait_for_object(child, -1)
+        _close_handle(child)
+        _close_handle(output_reading)
         _close_if_open(errors_reading)
         return null
     }
     var code = _read_until_finished(child, job, output_reading, errors_reading)
-    kernel.CloseHandle(child)
-    kernel.CloseHandle(output_reading)
+    _close_handle(child)
+    _close_handle(output_reading)
     _close_if_open(errors_reading)
     _close_if_open(job)
     return code
@@ -115,7 +115,7 @@ func _run_child(line: String): Integer? {
 func _read_until_finished(child: Long, job: Long, output_reading: Long, errors_reading: Long): Integer? {
     var output_bytes = Buffer(0)
     var errors_bytes = Buffer(0)
-    var started = kernel.GetTickCount64_as_long()
+    var started = _tick_count()
     var output_open = true
     var errors_open = errors_reading != 0
     var finished = false
@@ -131,27 +131,27 @@ func _read_until_finished(child: Long, job: Long, output_reading: Long, errors_r
             errors_open = errors_got >= 0
             read_any = read_any or errors_got > 0
         }
-        var waited = kernel.WaitForSingleObject(child, 0)
+        var waited = _wait_for_single_object(child, 0)
         var child_ended = waited == _finished_waiting
         finished = child_ended and not output_open and not errors_open
         if not finished and not read_any {
             if _is_past_the_limit(started) {
-                kernel.TerminateJobObject(job, 1)
-                kernel.WaitForSingleObject(child, -1)
+                _terminate_job_object(job, 1)
+                _wait_for_object(child, -1)
                 _keep_what_was_read(output_bytes, errors_bytes, errors_reading)
                 _was_stopped = true
                 return null
             }
             if child_ended {
-                kernel.Sleep(_pause_milliseconds)
+                _sleep(_pause_milliseconds)
             } else {
-                kernel.WaitForSingleObject(child, _pause_milliseconds)
+                _wait_for_object(child, _pause_milliseconds)
             }
         }
     }
     _keep_what_was_read(output_bytes, errors_bytes, errors_reading)
     var answer = _zeroed(4)
-    var asked = kernel.GetExitCodeProcess(child, answer)
+    var asked = _exit_code_of_process(child, answer)
     crash asked != 0
     var code = answer.read_integer_little_endian_at(0)
     crash code
@@ -167,7 +167,7 @@ func _keep_what_was_read(output_bytes: Buffer, errors_bytes: Buffer, errors_read
 
 func _is_past_the_limit(started: Long): Boolean {
     fallback time_limit
-    var now = kernel.GetTickCount64_as_long()
+    var now = _tick_count()
     var limit = time_limit.total('milliseconds')
     return now - started >= limit
 }
@@ -175,7 +175,7 @@ func _is_past_the_limit(started: Long): Boolean {
 func _read_what_waits(handle: Long, into: Buffer): Integer {
     var waiting = _zeroed(4)
     var no_value: Long = 0
-    var peeked = kernel.PeekNamedPipe(handle, no_value, 0, no_value, waiting, no_value)
+    var peeked = _peek_named_pipe(handle, no_value, 0, no_value, waiting, no_value)
     if peeked == 0 {
         return -1
     }
@@ -188,7 +188,7 @@ func _read_what_waits(handle: Long, into: Buffer): Integer {
     }
     var chunk = Buffer(wanted)
     var got = _zeroed(4)
-    var read = kernel.ReadFile(handle, chunk, wanted, got, no_value)
+    var read = _read_file(handle, chunk, wanted, got, no_value)
     if read == 0 {
         return -1
     }
@@ -201,21 +201,21 @@ func _read_what_waits(handle: Long, into: Buffer): Integer {
 
 func _job_for(child: Long, first_thread: Long): Long {
     if not time_limit {
-        kernel.ResumeThread(first_thread)
+        _resume_thread(first_thread)
         return 0
     }
     var no_value: Long = 0
-    var job = kernel.CreateJobObjectA_as_long(no_value, no_value)
+    var job = _create_job_object(no_value, no_value)
     fallback job != 0
     var limits = _zeroed(_limit_size)
     limits.write_integer_little_endian_at(16, _kills_on_close)
-    kernel.SetInformationJobObject(job, _extended_limits, limits, _limit_size)
-    var assigned = kernel.AssignProcessToJobObject(job, child)
+    _set_information_job_object(job, _extended_limits, limits, _limit_size)
+    var assigned = _assign_process_to_job_object(job, child)
     if assigned == 0 {
-        kernel.CloseHandle(job)
+        _close_handle(job)
         return 0
     }
-    kernel.ResumeThread(first_thread)
+    _resume_thread(first_thread)
     return job
 }
 
@@ -225,11 +225,11 @@ func _pipe_ends(): Buffer? {
     security.write_integer_little_endian_at(16, 1)
     var reading = _zeroed(8)
     var writing = _zeroed(8)
-    var made = kernel.CreatePipe(reading, writing, security, _pipe_size)
+    var made = _create_pipe(reading, writing, security, _pipe_size)
     fallback made != 0
     var reading_handle = _first_handle(reading)
     var writing_handle = _first_handle(writing)
-    kernel.SetHandleInformation(reading_handle, _inherits_handle, 0)
+    _set_handle_information(reading_handle, _inherits_handle, 0)
     var ends = _zeroed(16)
     ends.write_long_little_endian_at(0, reading_handle)
     ends.write_long_little_endian_at(8, writing_handle)
@@ -249,18 +249,18 @@ func _second_handle(room: Buffer): Long {
 }
 
 func _inherited_standard_handle(which: Integer): Long {
-    var handle = kernel.GetStdHandle_as_long(which)
+    var handle = _standard_handle(which)
     fallback handle != 0 and handle != -1
     var this_process: Long = -1
     var copied = _zeroed(8)
-    var duplicated = kernel.DuplicateHandle(this_process, handle, this_process, copied, 0, 1, _same_access)
+    var duplicated = _duplicate_handle(this_process, handle, this_process, copied, 0, 1, _same_access)
     fallback duplicated != 0
     return _first_handle(copied)
 }
 
 func _close_if_open(handle: Long) {
     if handle != 0 {
-        kernel.CloseHandle(handle)
+        _close_handle(handle)
     }
 }
 
@@ -361,4 +361,111 @@ func _escaped_backslashes(count: Integer, before_quote: Boolean): String {
         index = index + 1
     }
     return escaped
+}
+
+func _set_error_number(value: Integer){
+    library._set_errno(value)
+}
+
+func _system(command: Buffer): Integer {
+    return library._wsystem(command)
+}
+
+func _error_number_into(room: Buffer){
+    library._get_errno(room)
+}
+
+func _close_handle(handle: Long){
+    kernel.CloseHandle(handle)
+}
+
+func _create_process(
+    application: Long,
+    command_line: Buffer,
+    process_security: Long,
+    thread_security: Long,
+    inherits_handles: Integer,
+    flags: Integer,
+    environment: Long,
+    directory: Long,
+    startup: Buffer,
+    information: Buffer,
+): Integer {
+    return kernel.CreateProcessW(application, command_line, process_security, thread_security, inherits_handles, flags, environment, directory, startup, information)
+}
+
+func _terminate_process(process: Long, exit_code: Integer){
+    kernel.TerminateProcess(process, exit_code)
+}
+
+func _wait_for_single_object(handle: Long, milliseconds: Integer): Integer {
+    return kernel.WaitForSingleObject(handle, milliseconds)
+}
+
+func _tick_count(): Long {
+    return kernel.GetTickCount64_as_long()
+}
+
+func _terminate_job_object(job: Long, exit_code: Integer){
+    kernel.TerminateJobObject(job, exit_code)
+}
+
+func _sleep(milliseconds: Integer) {
+    kernel.Sleep(milliseconds)
+}
+
+func _exit_code_of_process(process: Long, exit_code: Buffer): Integer {
+    return kernel.GetExitCodeProcess(process, exit_code)
+}
+
+func _peek_named_pipe(pipe: Long, buffer: Long, size: Integer, read: Long, available: Buffer, left: Long): Integer {
+    return kernel.PeekNamedPipe(pipe, buffer, size, read, available, left)
+}
+
+func _read_file(handle: Long, room: Buffer, size: Integer, read: Buffer, overlapped: Long): Integer {
+    return kernel.ReadFile(handle, room, size, read, overlapped)
+}
+
+func _resume_thread(thread: Long){
+    kernel.ResumeThread(thread)
+}
+
+func _create_job_object(security: Long, name: Long): Long {
+    return kernel.CreateJobObjectA_as_long(security, name)
+}
+
+func _set_information_job_object(job: Long, kind: Integer, information: Buffer, size: Integer){
+    kernel.SetInformationJobObject(job, kind, information, size)
+}
+
+func _assign_process_to_job_object(job: Long, process: Long): Integer {
+    return kernel.AssignProcessToJobObject(job, process)
+}
+
+func _create_pipe(reading: Buffer, writing: Buffer, security: Buffer, size: Integer): Integer {
+    return kernel.CreatePipe(reading, writing, security, size)
+}
+
+func _set_handle_information(handle: Long, mask: Integer, flags: Integer){
+    kernel.SetHandleInformation(handle, mask, flags)
+}
+
+func _standard_handle(kind: Integer): Long {
+    return kernel.GetStdHandle_as_long(kind)
+}
+
+func _duplicate_handle(
+    source_process: Long,
+    source: Long,
+    target_process: Long,
+    target: Buffer,
+    access: Integer,
+    inherits: Integer,
+    options: Integer,
+): Integer {
+    return kernel.DuplicateHandle(source_process, source, target_process, target, access, inherits, options)
+}
+
+func _wait_for_object(handle: Long, milliseconds: Integer) {
+    kernel.WaitForSingleObject(handle, milliseconds)
 }

@@ -2,11 +2,9 @@ var _winsock_version_2_2 = 514
 var _utf8_code_page = 65001
 
 func resolve_ip_addresses(): List<IpAddress> {
-    var sockets = DynamicLibrary("ws2_32.dll", 'identity', "")
-    var memory_library = DynamicLibrary("ucrtbase.dll", 'identity', "")
     var addresses = List<IpAddress>()
     var information = Buffer(512)
-    sockets.WSAStartup(_winsock_version_2_2, information)
+    _start_sockets(_winsock_version_2_2, information)
     var hints = Buffer(48)
     var index = 0
     while index < 48 {
@@ -17,7 +15,7 @@ func resolve_ip_addresses(): List<IpAddress> {
     var found = Buffer(8)
     found.append_long_little_endian(0)
     var no_service: Long = 0
-    var answer = sockets.getaddrinfo(this, no_service, hints, found)
+    var answer = _address_information(this, no_service, hints, found)
     var read_first = found.read_long_little_endian_at(0)
     crash read_first
     var first = read_first
@@ -29,7 +27,7 @@ func resolve_ip_addresses(): List<IpAddress> {
     while entry_place != 0 {
         var entry = Buffer(48)
         var entry_size: Long = 48
-        memory_library.memcpy(entry, entry_place, entry_size)
+        _copy_memory(entry, entry_place, entry_size)
         entry.take_written(48)
         var read_length = entry.read_integer_little_endian_at(16)
         crash read_length
@@ -41,7 +39,7 @@ func resolve_ip_addresses(): List<IpAddress> {
         crash read_place
         var system_address = Buffer(28)
         var copied: Long = resolved_length
-        memory_library.memcpy(system_address, read_place, copied)
+        _copy_memory(system_address, read_place, copied)
         system_address.take_written(resolved_length)
         while system_address.count() < 28 {
             system_address.append(0)
@@ -59,20 +57,63 @@ func resolve_ip_addresses(): List<IpAddress> {
         crash read_next
         entry_place = read_next
     }
-    sockets.freeaddrinfo(first)
+    _free_address_information(first)
     return addresses
 }
 
 func _to_wide(): Buffer {
-    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
     var byte_count = length()
     var no_room: Long = 0
-    var characters = kernel.MultiByteToWideChar(_utf8_code_page, 0, this, byte_count, no_room, 0)
+    var characters = _measured_multi_byte_to_wide_character(_utf8_code_page, 0, this, byte_count, no_room, 0)
     var room = Buffer(characters * 2 + 2)
-    var written = kernel.MultiByteToWideChar(_utf8_code_page, 0, this, byte_count, room, characters)
+    var written = _multi_byte_to_wide_character(_utf8_code_page, 0, this, byte_count, room, characters)
     crash written == characters
     room.take_written(written * 2)
     room.append(0)
     room.append(0)
     return room
+}
+
+func _start_sockets(version: Integer, information: Buffer){
+    var sockets = DynamicLibrary("ws2_32.dll", 'identity', "")
+    sockets.WSAStartup(version, information)
+}
+
+func _address_information(node: String, service: Long, hints: Buffer, found: Buffer): Integer {
+    var sockets = DynamicLibrary("ws2_32.dll", 'identity', "")
+    return sockets.getaddrinfo(node, service, hints, found)
+}
+
+func _copy_memory(destination: Buffer, source: Long, size: Long){
+    var memory_library = DynamicLibrary("ucrtbase.dll", 'identity', "")
+    memory_library.memcpy(destination, source, size)
+}
+
+func _free_address_information(first: Long) {
+    var sockets = DynamicLibrary("ws2_32.dll", 'identity', "")
+    sockets.freeaddrinfo(first)
+}
+
+func _measured_multi_byte_to_wide_character(
+    code_page: Integer,
+    flags: Integer,
+    text: String,
+    byte_count: Integer,
+    no_room: Long,
+    size: Integer,
+): Integer {
+    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+    return kernel.MultiByteToWideChar(code_page, flags, text, byte_count, no_room, size)
+}
+
+func _multi_byte_to_wide_character(
+    code_page: Integer,
+    flags: Integer,
+    text: String,
+    byte_count: Integer,
+    room: Buffer,
+    size: Integer,
+): Integer {
+    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+    return kernel.MultiByteToWideChar(code_page, flags, text, byte_count, room, size)
 }

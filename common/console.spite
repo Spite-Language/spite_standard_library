@@ -59,5 +59,9 @@ func _line_of(values: List<Printable>): String {
 
 func _write_to(text: String, stream: Integer) {
     var length = text.length()
+    _write(stream, text, length)
+}
+
+func _write(stream: Integer, text: String, length: Integer){
     library._write(stream, text, length)
 }

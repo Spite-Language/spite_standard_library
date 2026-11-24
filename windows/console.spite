@@ -2,19 +2,19 @@ var input: Long = 0
 
 func read_line(): String? {
     if input == 0 {
-        input = library._fdopen_as_long(0, "r")
+        input = _open_stream(0, "r")
     }
     var line = Buffer(0)
     var read_anything = false
     var ended = false
     while not ended {
         var room = Buffer(256)
-        var read = library.fgets(room, 256, input)
+        var read = _read_text_line(room, 256, input)
         if read == 0 {
             ended = true
         } else {
             read_anything = true
-            var room_count = library.strlen(room)
+            var room_count = _text_length(room)
             room.take_written(room_count)
             line.append_buffer(room, 0, room_count)
             ended = _ends_with_byte(line, 10)
@@ -39,4 +39,16 @@ func _ends_with_byte(bytes: Buffer, wanted: Integer): Boolean {
     crash last
     var code: Integer = last
     return code == wanted
+}
+
+func _open_stream(file: Integer, mode: String): Long {
+    return library._fdopen_as_long(file, mode)
+}
+
+func _read_text_line(room: Buffer, size: Integer, stream: Long): Long {
+    return library.fgets_as_long(room, size, stream)
+}
+
+func _text_length(text: Buffer): Integer {
+    return library.strlen(text)
 }

@@ -14,7 +14,7 @@ func reserve_the_room(): Boolean {
     }
     var wanted: Long = _room_start
     var size: Long = _room_size
-    var reserved = kernel.VirtualAlloc_as_long(wanted, size, 8192, 64)
+    var reserved = _virtual_allocate(wanted, size, 8192, 64)
     fallback reserved == wanted
     next_address = wanted
     room_end = wanted + size
@@ -23,7 +23,7 @@ func reserve_the_room(): Boolean {
 
 func run_the_compiler(line: String): Integer {
     compiler_output = ""
-    var handle = runtime._popen_as_long(line, "r")
+    var handle = _open_pipe(line, "r")
     if handle == 0 {
         compiler_output = "the compiler could not be started: {line}"
         return -1
@@ -32,7 +32,7 @@ func run_the_compiler(line: String): Integer {
     var chunk = Buffer(4096)
     var one: Long = 1
     var wanted: Long = 4096
-    var got = runtime.fread_as_long(chunk, one, wanted, handle)
+    var got = _read_items(chunk, one, wanted, handle)
     while got > 0 {
         var got_count: Integer? = got
         crash got_count
@@ -44,10 +44,10 @@ func run_the_compiler(line: String): Integer {
             output_text.append_code(held)
             byte_index = byte_index + 1
         }
-        got = runtime.fread_as_long(chunk, one, wanted, handle)
+        got = _read_items(chunk, one, wanted, handle)
     }
     compiler_output = output_text
-    return runtime._pclose(handle)
+    return _close_pipe(handle)
 }
 
 func swap_in(path: String, address: Long): String {
@@ -68,20 +68,20 @@ func swap_in(path: String, address: Long): String {
     if loaded_at != address or end > room_end {
         return "the new code '{path}' was compiled for another place than the room kept for it"
     }
-    var committed = kernel.VirtualAlloc_as_long(address, size, 4096, 64)
+    var committed = _virtual_allocate(address, size, 4096, 64)
     if committed != address {
         return "the room for the new code could not be committed (VirtualAlloc at {address} for {size} bytes)"
     }
     var image = bytes.read_buffer_at(16, size)
     crash image
-    kernel.RtlMoveMemory(address, image, size)
+    _move_memory(address, image, size)
     var imports_at = 16 + size + 16 * slot_count
     var resolved = _resolve_the_imports(bytes, imports_at)
     if not resolved.is_empty() {
         return resolved
     }
-    var process = kernel.GetCurrentProcess_as_long()
-    kernel.FlushInstructionCache(process, address, size)
+    var process = _current_process()
+    _flush_instruction_cache(process, address, size)
     var pair = 0
     while pair < slot_count {
         var at = 16 + size + 16 * pair
@@ -91,7 +91,7 @@ func swap_in(path: String, address: Long): String {
         crash value
         var room = Buffer(8)
         room.append_long_little_endian(value)
-        kernel.RtlMoveMemory(slot, room, 8)
+        _move_memory(slot, room, 8)
         pair = pair + 1
     }
     var rounded = (size + _granularity - 1) / _granularity * _granularity
@@ -119,18 +119,54 @@ func _resolve_the_imports(bytes: Buffer, start: Integer): String {
         var name = bytes.read_string_at(at + 4, name_length)
         crash name
         at = at + 4 + name_length
-        var handle = kernel.LoadLibraryA_as_long(library)
+        var handle = _load_library(library)
         var found: Long = 0
         if handle != 0 {
-            found = kernel.GetProcAddress_as_long(handle, name)
+            found = _procedure_address(handle, name)
         }
         if found == 0 {
             return "the new code calls '{name}' of the system, which '{library}' does not have"
         }
         var room = Buffer(8)
         room.append_long_little_endian(found)
-        kernel.RtlMoveMemory(cell, room, 8)
+        _move_memory(cell, room, 8)
         index = index + 1
     }
     return ""
+}
+
+func _virtual_allocate(address: Long, size: Long, allocation: Integer, protection: Integer): Long {
+    return kernel.VirtualAlloc_as_long(address, size, allocation, protection)
+}
+
+func _open_pipe(command: String, mode: String): Long {
+    return runtime._popen_as_long(command, mode)
+}
+
+func _read_items(room: Buffer, size: Long, count: Long, handle: Long): Long {
+    return runtime.fread_as_long(room, size, count, handle)
+}
+
+func _close_pipe(handle: Long): Integer {
+    return runtime._pclose(handle)
+}
+
+func _move_memory(destination: Long, source: Buffer, size: Integer) {
+    kernel.RtlMoveMemory(destination, source, size)
+}
+
+func _current_process(): Long {
+    return kernel.GetCurrentProcess_as_long()
+}
+
+func _flush_instruction_cache(process: Long, address: Long, size: Integer){
+    kernel.FlushInstructionCache(process, address, size)
+}
+
+func _load_library(name: String): Long {
+    return kernel.LoadLibraryA_as_long(name)
+}
+
+func _procedure_address(module: Long, name: String): Long {
+    return kernel.GetProcAddress_as_long(module, name)
 }

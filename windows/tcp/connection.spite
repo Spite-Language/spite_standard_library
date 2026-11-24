@@ -6,35 +6,35 @@ var _would_block_error = 10035
 
 func _start_sockets() {
     var information = Buffer(512)
-    sockets.WSAStartup(_winsock_version_2_2, information)
+    _socket_startup(_winsock_version_2_2, information)
 }
 
 func _open_handle(family: Integer, as_ipv6: Boolean): Long {
     nonblocking = false
-    var opened = sockets.socket_as_long(family, 1, 6)
+    var opened = _socket(family, 1, 6)
     if opened != -1 and as_ipv6 {
         var disabled = Buffer(4)
         disabled.append_integer_little_endian(0)
-        sockets.setsockopt(opened, 41, 27, disabled, 4)
+        _set_socket_option(opened, 41, 27, disabled, 4)
     }
     return opened
 }
 
 func _connect_address(address: Buffer, length: Integer): Boolean {
-    return sockets.connect(handle, address, length) == 0
+    return _connect(handle, address, length) == 0
 }
 
 func _receive_into(room: Buffer, bytes: Integer): Integer {
-    return sockets.recv(handle, room, bytes, 0)
+    return _receive(handle, room, bytes, 0)
 }
 
 func _send_string(text: String): Integer {
     var text_length = text.length()
-    return sockets.send(handle, text, text_length, 0)
+    return _send_text(handle, text, text_length, 0)
 }
 
 func _send_from(room: Buffer, bytes: Integer): Integer {
-    return sockets.send(handle, room, bytes, 0)
+    return _send(handle, room, bytes, 0)
 }
 
 func _use_blocking_calls() {
@@ -58,19 +58,59 @@ func _switch_blocking(enabled: Boolean) {
         value = 1
     }
     mode.append_integer_little_endian(value)
-    sockets.ioctlsocket(handle, _nonblocking_io_control, mode)
+    _control_socket(handle, _nonblocking_io_control, mode)
 }
 
 func _receive_now(room: Buffer, bytes: Integer): Integer {
     _use_nonblocking_calls()
-    var received = sockets.recv(handle, room, bytes, 0)
+    var received = _receive(handle, room, bytes, 0)
     if received > 0 {
         return received
     }
-    fallback received >= 0 or sockets.WSAGetLastError() != _would_block_error
+    fallback received >= 0 or _socket_last_error() != _would_block_error
     return -1
 }
 
 func _close_handle() {
-    sockets.closesocket(handle)
+    _close_socket(handle)
+}
+
+func _socket_startup(version: Integer, information: Buffer){
+    sockets.WSAStartup(version, information)
+}
+
+func _socket(family: Integer, kind: Integer, protocol: Integer): Long {
+    return sockets.socket_as_long(family, kind, protocol)
+}
+
+func _set_socket_option(socket: Long, level: Integer, option: Integer, value: Buffer, length: Integer){
+    sockets.setsockopt(socket, level, option, value, length)
+}
+
+func _connect(socket: Long, address: Buffer, length: Integer): Integer {
+    return sockets.connect(socket, address, length)
+}
+
+func _receive(socket: Long, room: Buffer, length: Integer, flags: Integer): Integer {
+    return sockets.recv(socket, room, length, flags)
+}
+
+func _send_text(socket: Long, text: String, length: Integer, flags: Integer): Integer {
+    return sockets.send(socket, text, length, flags)
+}
+
+func _send(socket: Long, room: Buffer, length: Integer, flags: Integer): Integer {
+    return sockets.send(socket, room, length, flags)
+}
+
+func _control_socket(socket: Long, command: Integer, argument: Buffer){
+    sockets.ioctlsocket(socket, command, argument)
+}
+
+func _socket_last_error(): Integer {
+    return sockets.WSAGetLastError()
+}
+
+func _close_socket(socket: Long){
+    sockets.closesocket(socket)
 }

@@ -56,8 +56,7 @@ func add_the_foreign_call(fields: List<String>, site: Long, library: DynamicLibr
 }
 
 func program_place(address: Long): String {
-    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
-    var own = kernel.GetModuleHandleA_as_long(0)
+    var own = _module_handle(0)
     var table = _place_table()
     var record = _read_long(table + 8)
     while record != 0 {
@@ -139,10 +138,9 @@ func violation_of(detail: Long): String {
 }
 
 func module_place(address: Long): String {
-    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
     var room = Buffer(8)
     room.append_long_little_endian(0)
-    var found = kernel.GetModuleHandleExA(6, address, room)
+    var found = _module_handle_ex(6, address, room)
     var record = reload_record_of(address)
     if found == 0 and record != 0 {
         var reload_start = _read_long(record + 16)
@@ -156,7 +154,7 @@ func module_place(address: Long): String {
     var module = room.read_long_little_endian_at(0)
     crash module
     var name_room = Buffer(_longest_path)
-    var length = kernel.GetModuleFileNameA(module, name_room, _longest_path)
+    var length = _module_file_name(module, name_room, _longest_path)
     name_room.take_written(length)
     var path = name_room.read_string_at(0, length)
     crash path
@@ -212,12 +210,11 @@ func crashed(head: String, shown: String) {
 }
 
 func written_to_the_errors(text: String) {
-    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
-    var errors = kernel.GetStdHandle_as_long(-12)
+    var errors = _standard_handle(-12)
     var room = Buffer(8)
     room.append_long_little_endian(0)
     var length = text.length()
-    kernel.WriteFile(errors, text, length, room, 0)
+    _write_file(errors, text, length, room, 0)
 }
 
 func cut(text: String): String {
@@ -239,8 +236,7 @@ func is_a_continuation(text: String, at: Integer): Boolean {
 }
 
 func frames() {
-    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
-    var own = kernel.GetModuleHandleA_as_long(0)
+    var own = _module_handle(0)
     var code_start = own + 4096
     var table = _call_table()
     var at = _callers()
@@ -331,6 +327,59 @@ func call_text(table: Long, index: Long): String {
     return text_at(at + 8, length)
 }
 
+func _module_handle(name: Long): Long {
+    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+    return kernel.GetModuleHandleA_as_long(name)
+}
+
+func _module_handle_ex(flags: Integer, address: Long, room: Buffer): Integer {
+    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+    return kernel.GetModuleHandleExA(flags, address, room)
+}
+
+func _module_file_name(module: Long, room: Buffer, size: Integer): Integer {
+    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+    return kernel.GetModuleFileNameA(module, room, size)
+}
+
+func _standard_handle(kind: Integer): Long {
+    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+    return kernel.GetStdHandle_as_long(kind)
+}
+
+func _write_file(handle: Long, text: String, length: Integer, written: Buffer, overlapped: Long){
+    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+    kernel.WriteFile(handle, text, length, written, overlapped)
+}
+
+func _create_file(
+    path: String,
+    access: Long,
+    sharing: Integer,
+    security: Long,
+    disposition: Integer,
+    flags: Integer,
+    template: Long,
+): Long {
+    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+    return kernel.CreateFileA_as_long(path, access, sharing, security, disposition, flags, template)
+}
+
+func _file_size(handle: Long, high: Long): Integer {
+    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+    return kernel.GetFileSize(handle, high)
+}
+
+func _close_handle(handle: Long){
+    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+    kernel.CloseHandle(handle)
+}
+
+func _read_file(handle: Long, room: Buffer, size: Integer, read: Buffer, overlapped: Long){
+    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+    kernel.ReadFile(handle, room, size, read, overlapped)
+}
+
 func _call_table(): Long
 
 func _callers(): Long
@@ -352,8 +401,7 @@ func _read_byte(at: Long): Long
 func named_frames(address: Long, frame: Long) {
     var map = function_map_text()
     fallback not map.is_empty()
-    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
-    var own = kernel.GetModuleHandleA_as_long(0)
+    var own = _module_handle(0)
     var code_start = own + 4096
     var faulted = function_at(map, address, code_start)
     written_to_the_errors("spite.function\t{faulted}\n")
@@ -392,26 +440,25 @@ func written_caller(caller: String, repeated: Integer) {
 }
 
 func function_map_text(): String {
-    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
     var name_room = Buffer(_longest_path)
-    var length = kernel.GetModuleFileNameA(0, name_room, _longest_path)
+    var length = _module_file_name(0, name_room, _longest_path)
     name_room.take_written(length)
     var path = name_room.read_string_at(0, length)
     fallback path and length >= 4
     var stem = text_between(path, 0, length - 4)
     var map_path = "{stem}.functions"
-    var handle = kernel.CreateFileA_as_long(map_path, 2147483648, 1, 0, 3, 128, 0)
+    var handle = _create_file(map_path, 2147483648, 1, 0, 3, 128, 0)
     fallback handle != -1
-    var size = kernel.GetFileSize(handle, 0)
+    var size = _file_size(handle, 0)
     if size <= 0 {
-        kernel.CloseHandle(handle)
+        _close_handle(handle)
         return ""
     }
     var room = Buffer(size)
     var read_room = Buffer(8)
     read_room.append_long_little_endian(0)
-    kernel.ReadFile(handle, room, size, read_room, 0)
-    kernel.CloseHandle(handle)
+    _read_file(handle, room, size, read_room, 0)
+    _close_handle(handle)
     room.take_written(size)
     var text = room.read_string_at(0, size)
     fallback text

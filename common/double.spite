@@ -16,8 +16,12 @@ func Double(from: String): Double? {
     var text = from.trim()
     var valid = text._is_decimal()
     fallback valid
+    var no_end: Long = 0
+    return _decimal_of(text, no_end)
+}
+
+func _decimal_of(text: String, end: Long): Double {
     var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    var end: Long = 0
     return library.strtod_as_double(text, end)
 }
 

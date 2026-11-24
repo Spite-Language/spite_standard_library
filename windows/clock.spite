@@ -5,7 +5,7 @@ var _seconds_from_1601_to_1970: Long = 11644473600
 
 func Clock() {
     _reading.append_long_little_endian(0)
-    kernel.QueryPerformanceFrequency(_reading)
+    _query_performance_frequency(_reading)
     var frequency = _reading.read_long_little_endian_at(0)
     crash frequency
     crash frequency > 0
@@ -13,7 +13,7 @@ func Clock() {
 }
 
 func elapsed(): Duration {
-    kernel.QueryPerformanceCounter(_reading)
+    _query_performance_counter(_reading)
     var ticks = _reading.read_long_little_endian_at(0)
     crash ticks
     var nanoseconds = ticks / _ticks_per_second * 1000000000 + ticks % _ticks_per_second * 1000000000 / _ticks_per_second
@@ -21,11 +21,23 @@ func elapsed(): Duration {
 }
 
 func now(): Instant {
-    kernel.GetSystemTimeAsFileTime(_reading)
+    _system_time_as_file_time(_reading)
     var hundreds_of_nanoseconds = _reading.read_long_little_endian_at(0)
     crash hundreds_of_nanoseconds
     var whole = Duration(hundreds_of_nanoseconds / 10000000 - _seconds_from_1601_to_1970, 'seconds')
     var part = Duration(hundreds_of_nanoseconds % 10000000 * 100, 'nanoseconds')
     var since_1970 = whole + part
     return Instant(since_1970)
+}
+
+func _query_performance_frequency(frequency: Buffer){
+    kernel.QueryPerformanceFrequency(frequency)
+}
+
+func _query_performance_counter(counter: Buffer){
+    kernel.QueryPerformanceCounter(counter)
+}
+
+func _system_time_as_file_time(time: Buffer) {
+    kernel.GetSystemTimeAsFileTime(time)
 }

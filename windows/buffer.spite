@@ -4,16 +4,24 @@ func _read_wide_string_at(at: Integer, characters: Integer): String? {
     if characters == 0 {
         return ""
     }
-    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
     var wide = read_buffer_at(at, characters * 2)
     fallback wide and wide.count() == characters * 2
     var only_valid = 128
     var no_room: Long = 0
     var no_value: Long = 0
-    var size = kernel.WideCharToMultiByte(_utf8_code_page, only_valid, wide, characters, no_room, 0, no_value, no_value)
+    var size = _measured_wide_character_to_multi_byte(
+        _utf8_code_page,
+        only_valid,
+        wide,
+        characters,
+        no_room,
+        0,
+        no_value,
+        no_value,
+    )
     fallback size > 0
     var text = Buffer(size)
-    var written = kernel.WideCharToMultiByte(
+    var written = _wide_character_to_multi_byte(
         _utf8_code_page,
         only_valid,
         wide,
@@ -41,4 +49,32 @@ func _wide_characters_before_zero(at: Integer, most: Integer): Integer {
         found = found + 1
     }
     return most
+}
+
+func _measured_wide_character_to_multi_byte(
+    code_page: Integer,
+    flags: Integer,
+    wide: Buffer,
+    characters: Integer,
+    no_room: Long,
+    size: Integer,
+    default_character: Long,
+    used_default: Long,
+): Integer {
+    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+    return kernel.WideCharToMultiByte(code_page, flags, wide, characters, no_room, size, default_character, used_default)
+}
+
+func _wide_character_to_multi_byte(
+    code_page: Integer,
+    flags: Integer,
+    wide: Buffer,
+    characters: Integer,
+    room: Buffer,
+    size: Integer,
+    default_character: Long,
+    used_default: Long,
+): Integer {
+    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+    return kernel.WideCharToMultiByte(code_page, flags, wide, characters, room, size, default_character, used_default)
 }

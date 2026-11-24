@@ -13,10 +13,10 @@ func LockedFile(handle: Long) {
     var exclusive = 2
     var reserved = 0
     var every_byte = -1
-    var locked = kernel.LockFileEx(_handle, exclusive, reserved, every_byte, every_byte, _overlapped)
+    var locked = _lock_file(_handle, exclusive, reserved, every_byte, every_byte, _overlapped)
     _held = locked != 0
     if not _held {
-        kernel.CloseHandle(_handle)
+        _close_handle(_handle)
         _handle = 0
     }
 }
@@ -29,8 +29,8 @@ func unlock() {
     if _held {
         var reserved = 0
         var every_byte = -1
-        kernel.UnlockFileEx(_handle, reserved, every_byte, every_byte, _overlapped)
-        kernel.CloseHandle(_handle)
+        _unlock_file(_handle, reserved, every_byte, every_byte, _overlapped)
+        _close_handle(_handle)
         _handle = 0
         _held = false
     }
@@ -38,4 +38,29 @@ func unlock() {
 
 func drop() {
     unlock()
+}
+
+func _lock_file(
+    handle: Long,
+    flags: Integer,
+    reserved: Integer,
+    low_count: Integer,
+    high_count: Integer,
+    overlapped: Buffer,
+): Integer {
+    return kernel.LockFileEx(handle, flags, reserved, low_count, high_count, overlapped)
+}
+
+func _unlock_file(
+    handle: Long,
+    reserved: Integer,
+    low_count: Integer,
+    high_count: Integer,
+    overlapped: Buffer,
+){
+    kernel.UnlockFileEx(handle, reserved, low_count, high_count, overlapped)
+}
+
+func _close_handle(handle: Long){
+    kernel.CloseHandle(handle)
 }

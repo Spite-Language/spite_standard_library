@@ -5,44 +5,44 @@ func sleep(duration: Duration) {
     var milliseconds = duration.total('milliseconds')
     if milliseconds <= 0 {
         var no_time: Long = 0
-        kernel.Sleep(no_time)
+        _sleep_for(no_time)
         return
     }
     var no_value: Long = 0
     var high_resolution = 2
     var every_right = _timer_all_access
-    var timer = kernel.CreateWaitableTimerExW_as_long(no_value, no_value, high_resolution, every_right)
+    var timer = _create_waitable_timer(no_value, no_value, high_resolution, every_right)
     if timer == 0 {
-        kernel.Sleep(milliseconds)
+        _sleep_for(milliseconds)
         return
     }
     _wait_on_the_timer(timer, milliseconds)
-    kernel.CloseHandle(timer)
+    _close_handle(timer)
 }
 
 func _wait_on_the_timer(timer: Long, milliseconds: Long) {
     var no_value: Long = 0
     var due = Buffer(8)
     due.append_long_little_endian(milliseconds * -10000)
-    var set = kernel.SetWaitableTimer(timer, due, 0, no_value, no_value, 0)
+    var set = _set_waitable_timer(timer, due, 0, no_value, no_value, 0)
     if set == 0 {
-        kernel.Sleep(milliseconds)
+        _sleep_for(milliseconds)
         return
     }
-    var waited = kernel.WaitForSingleObject(timer, -1)
+    var waited = _wait_for_single_object(timer, -1)
     if waited != 0 {
-        kernel.Sleep(milliseconds)
+        _sleep_for(milliseconds)
     }
 }
 
 func working_directory(): String? {
     var size = 1024
     var room = Buffer(size * 2)
-    var length = kernel.GetCurrentDirectoryW(size, room)
+    var length = _current_directory(size, room)
     while length >= size {
         size = length
         room = Buffer(size * 2)
-        length = kernel.GetCurrentDirectoryW(size, room)
+        length = _current_directory(size, room)
     }
     fallback length > 0
     room.take_written(length * 2)
@@ -52,11 +52,11 @@ func working_directory(): String? {
 func executable_path(): String? {
     var size = 1024
     var room = Buffer(size * 2)
-    var length = kernel.GetModuleFileNameW(0, room, size)
+    var length = _module_file_name(0, room, size)
     while length >= size and size < 32768 {
         size = size * 2
         room = Buffer(size * 2)
-        length = kernel.GetModuleFileNameW(0, room, size)
+        length = _module_file_name(0, room, size)
     }
     fallback length > 0 and length < size
     room.take_written(length * 2)
@@ -67,11 +67,11 @@ func environment(name: String): String? {
     var wide_name = name._to_wide()
     var size = 4096
     var room = Buffer(size * 2)
-    var length = kernel.GetEnvironmentVariableW(wide_name, room, size)
+    var length = _environment_variable(wide_name, room, size)
     while length >= size {
         size = length
         room = Buffer(size * 2)
-        length = kernel.GetEnvironmentVariableW(wide_name, room, size)
+        length = _environment_variable(wide_name, room, size)
     }
     fallback length != 0
     room.take_written(length * 2)
@@ -79,10 +79,10 @@ func environment(name: String): String? {
 }
 
 func command_line(): String {
-    var address = kernel.GetCommandLineW_as_long()
-    var length = kernel.lstrlenW(address)
+    var address = _command_line_address()
+    var length = _wide_text_length(address)
     var room = Buffer(length * 2 + 2)
-    kernel.lstrcpynW(room, address, length + 1)
+    _copy_wide_text(room, address, length + 1)
     room.take_written(length * 2)
     var text = room._read_wide_string_at(0, length)
     crash text
@@ -122,4 +122,55 @@ func _arguments(): List<String> {
 
 func _loads_the_common_library() {
     load "../common"
+}
+
+func _sleep_for(milliseconds: Long) {
+    kernel.Sleep(milliseconds)
+}
+
+func _create_waitable_timer(security: Long, name: Long, flags: Integer, access: Integer): Long {
+    return kernel.CreateWaitableTimerExW_as_long(security, name, flags, access)
+}
+
+func _close_handle(handle: Long){
+    kernel.CloseHandle(handle)
+}
+
+func _set_waitable_timer(
+    timer: Long,
+    due: Buffer,
+    period: Integer,
+    completion: Long,
+    argument: Long,
+    resume: Integer,
+): Integer {
+    return kernel.SetWaitableTimer(timer, due, period, completion, argument, resume)
+}
+
+func _wait_for_single_object(handle: Long, milliseconds: Integer): Integer {
+    return kernel.WaitForSingleObject(handle, milliseconds)
+}
+
+func _current_directory(size: Integer, room: Buffer): Integer {
+    return kernel.GetCurrentDirectoryW(size, room)
+}
+
+func _module_file_name(module: Long, room: Buffer, size: Integer): Integer {
+    return kernel.GetModuleFileNameW(module, room, size)
+}
+
+func _environment_variable(name: Buffer, room: Buffer, size: Integer): Integer {
+    return kernel.GetEnvironmentVariableW(name, room, size)
+}
+
+func _command_line_address(): Long {
+    return kernel.GetCommandLineW_as_long()
+}
+
+func _wide_text_length(address: Long): Integer {
+    return kernel.lstrlenW(address)
+}
+
+func _copy_wide_text(room: Buffer, address: Long, length: Integer){
+    kernel.lstrcpynW(room, address, length)
 }

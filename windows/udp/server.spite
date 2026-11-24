@@ -3,35 +3,35 @@ var _winsock_version_2_2 = 514
 
 func _start_sockets() {
     var information = Buffer(512)
-    _sockets.WSAStartup(_winsock_version_2_2, information)
+    _socket_startup(_winsock_version_2_2, information)
 }
 
 func _open_handle(family: Integer, as_ipv6: Boolean): Long {
-    var opened = _sockets.socket_as_long(family, 2, 17)
+    var opened = _socket(family, 2, 17)
     if opened != -1 and as_ipv6 {
         var disabled = Buffer(4)
         disabled.append_integer_little_endian(0)
-        _sockets.setsockopt(opened, 41, 27, disabled, 4)
+        _set_socket_option(opened, 41, 27, disabled, 4)
     }
     return opened
 }
 
 func _bind(address: Buffer, length: Integer): Boolean {
-    return _sockets.bind(handle, address, length) == 0
+    return _bind_socket(handle, address, length) == 0
 }
 
 func _send(address: Buffer, length: Integer, room: Buffer, count: Integer): Integer {
-    return _sockets.sendto(handle, room, count, 0, address, length)
+    return _send_to(handle, room, count, 0, address, length)
 }
 
 func _receive_from(room: Buffer, count: Integer, sender: Buffer): Integer {
     var length_slot = Buffer(4)
     length_slot.append_integer_little_endian(28)
-    return _sockets.recvfrom(handle, room, count, 0, sender, length_slot)
+    return _receive_from_socket(handle, room, count, 0, sender, length_slot)
 }
 
 func _close_handle() {
-    _sockets.closesocket(handle)
+    _close_socket(handle)
 }
 
 func _local_port(): Integer? {
@@ -43,8 +43,47 @@ func _local_port(): Integer? {
     }
     var length_slot = Buffer(4)
     length_slot.append_integer_little_endian(28)
-    var asked = _sockets.getsockname(handle, address, length_slot)
+    var asked = _socket_name(handle, address, length_slot)
     fallback asked == 0
     var bound = IpAddress()
     return bound._system_port(address)
+}
+
+func _socket_startup(version: Integer, information: Buffer){
+    _sockets.WSAStartup(version, information)
+}
+
+func _socket(family: Integer, kind: Integer, protocol: Integer): Long {
+    return _sockets.socket_as_long(family, kind, protocol)
+}
+
+func _set_socket_option(socket: Long, level: Integer, option: Integer, value: Buffer, length: Integer){
+    _sockets.setsockopt(socket, level, option, value, length)
+}
+
+func _bind_socket(socket: Long, address: Buffer, length: Integer): Integer {
+    return _sockets.bind(socket, address, length)
+}
+
+func _send_to(socket: Long, room: Buffer, count: Integer, flags: Integer, address: Buffer, length: Integer): Integer {
+    return _sockets.sendto(socket, room, count, flags, address, length)
+}
+
+func _receive_from_socket(
+    socket: Long,
+    room: Buffer,
+    count: Integer,
+    flags: Integer,
+    sender: Buffer,
+    length: Buffer,
+): Integer {
+    return _sockets.recvfrom(socket, room, count, flags, sender, length)
+}
+
+func _close_socket(socket: Long){
+    _sockets.closesocket(socket)
+}
+
+func _socket_name(socket: Long, address: Buffer, length: Buffer): Integer {
+    return _sockets.getsockname(socket, address, length)
 }

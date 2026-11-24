@@ -21,11 +21,11 @@ var _return_key = 13
 
 # https://github.com/Spite-Language/spite_documentation/blob/master/repl.md#typing-spite-into-a-running-program
 func _start_reading() {
-    var standard = kernel.GetStdHandle_as_long(_standard_input)
+    var standard = _standard_handle(_standard_input)
     input = standard
-    var process = kernel.GetCurrentProcess_as_long()
+    var process = _current_process()
     var copied = Buffer(8)
-    var duplicated = kernel.DuplicateHandle(process, standard, process, copied, 0, 0, _same_access)
+    var duplicated = _duplicate_handle(process, standard, process, copied, 0, 0, _same_access)
     if duplicated != 0 {
         copied.take_written(8)
         var held = copied.read_long_little_endian_at(0)
@@ -33,9 +33,9 @@ func _start_reading() {
         input = held
         leave_the_program_no_input()
     }
-    input_kind = kernel.GetFileType(input)
+    input_kind = _file_type(input)
     var stopping = ForeignCallback(stop_at_once, 'no_context')
-    var handled = kernel.SetConsoleCtrlHandler(stopping.address, 1)
+    var handled = _set_console_control_handler(stopping.address, 1)
     if handled != 0 {
         held_callbacks.append(stopping)
     }
@@ -43,18 +43,18 @@ func _start_reading() {
 
 # https://github.com/Spite-Language/spite_documentation/blob/master/repl.md#input-and-ending
 func leave_the_program_no_input() {
-    var nothing_to_read = runtime._open("NUL", _read_only)
+    var nothing_to_read = _open_file("NUL", _read_only)
     fallback nothing_to_read >= 0
-    var moved = runtime._dup2(nothing_to_read, 0)
+    var moved = _duplicate_file(nothing_to_read, 0)
     fallback moved == 0
-    var closed = runtime._close(nothing_to_read)
+    var closed = _close_file(nothing_to_read)
     crash closed == 0
 }
 
 func stop_at_once(kind: Integer): Integer {
     fallback kind == _control_c or kind == _control_break
-    var process = kernel.GetCurrentProcess_as_long()
-    return kernel.TerminateProcess(process, _interrupted)
+    var process = _current_process()
+    return _terminate_process(process, _interrupted)
 }
 
 func _ready_line(): String? {
@@ -83,7 +83,7 @@ func _next_line(): String? {
 func _input_waits(): Boolean {
     if input_kind == _pipe {
         var available = Buffer(4)
-        var peeked = kernel.PeekNamedPipe(input, 0, 0, 0, available, 0)
+        var peeked = _peek_named_pipe(input, 0, 0, 0, available, 0)
         if peeked == 0 {
             return true
         }
@@ -100,13 +100,13 @@ func _input_waits(): Boolean {
 
 func _console_holds_a_line(): Boolean {
     var waiting = Buffer(4)
-    var counted = kernel.GetNumberOfConsoleInputEvents(input, waiting)
+    var counted = _number_of_console_input_events(input, waiting)
     if counted == 0 {
         return true
     }
     var records = Buffer(_records * _record_size)
     var read = Buffer(4)
-    var peeked = kernel.PeekConsoleInputA(input, records, _records, read)
+    var peeked = _peek_console_input(input, records, _records, read)
     fallback peeked != 0
     read.take_written(4)
     var count = read.read_integer_little_endian_at(0)
@@ -132,7 +132,7 @@ func _console_holds_a_line(): Boolean {
 func _read_some() {
     var room = Buffer(_room)
     var read = Buffer(4)
-    var done = kernel.ReadFile(input, room, _room, read, 0)
+    var done = _read_file(input, room, _room, read, 0)
     if done == 0 {
         ended = true
         return
@@ -185,4 +185,64 @@ func _taken(end: Integer, after: Integer): String {
     rest.append_buffer(held, after, rest_count)
     held = rest
     return line
+}
+
+func _standard_handle(kind: Integer): Long {
+    return kernel.GetStdHandle_as_long(kind)
+}
+
+func _current_process(): Long {
+    return kernel.GetCurrentProcess_as_long()
+}
+
+func _duplicate_handle(
+    source_process: Long,
+    source: Long,
+    target_process: Long,
+    target: Buffer,
+    access: Integer,
+    inherits: Integer,
+    options: Integer,
+): Integer {
+    return kernel.DuplicateHandle(source_process, source, target_process, target, access, inherits, options)
+}
+
+func _file_type(handle: Long): Integer {
+    return kernel.GetFileType(handle)
+}
+
+func _set_console_control_handler(handler: Long, add: Integer): Integer {
+    return kernel.SetConsoleCtrlHandler(handler, add)
+}
+
+func _open_file(path: String, flags: Integer): Integer {
+    return runtime._open(path, flags)
+}
+
+func _duplicate_file(source: Integer, target: Integer): Integer {
+    return runtime._dup2(source, target)
+}
+
+func _close_file(file: Integer): Integer {
+    return runtime._close(file)
+}
+
+func _terminate_process(process: Long, exit_code: Integer): Integer {
+    return kernel.TerminateProcess(process, exit_code)
+}
+
+func _peek_named_pipe(pipe: Long, buffer: Long, size: Integer, read: Long, available: Buffer, left: Long): Integer {
+    return kernel.PeekNamedPipe(pipe, buffer, size, read, available, left)
+}
+
+func _number_of_console_input_events(input: Long, count: Buffer): Integer {
+    return kernel.GetNumberOfConsoleInputEvents(input, count)
+}
+
+func _peek_console_input(input: Long, records: Buffer, length: Integer, read: Buffer): Integer {
+    return kernel.PeekConsoleInputA(input, records, length, read)
+}
+
+func _read_file(handle: Long, room: Buffer, size: Integer, read: Buffer, overlapped: Long): Integer {
+    return kernel.ReadFile(handle, room, size, read, overlapped)
 }

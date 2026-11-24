@@ -54,7 +54,7 @@ func _zeroed(size: Integer): Buffer {
 func _open_watch(folder: String, root: String, file_name: String): Boolean {
     var no_value: Long = 0
     var wide_folder = folder._to_wide()
-    var handle = kernel.CreateFileW_as_long(
+    var handle = _create_file(
         wide_folder,
         1,
         7,
@@ -65,7 +65,7 @@ func _open_watch(folder: String, root: String, file_name: String): Boolean {
     )
     fallback handle != -1
     var overlap = _zeroed(32)
-    var event = kernel.CreateEventW_as_long(no_value, 1, 0, no_value)
+    var event = _create_event(no_value, 1, 0, no_value)
     overlap.write_long_little_endian_at(24, event)
     var buffer = Buffer(65536)
     handles.append(handle)
@@ -93,13 +93,13 @@ func _request(watching: Integer): Boolean {
     crash handle
     crash buffer
     crash overlap
-    kernel.ResetEvent(event)
+    _reset_event(event)
     var subtree = 0
     if file_name.is_empty() {
         subtree = 1
     }
     var no_value: Long = 0
-    var requested = kernel.ReadDirectoryChangesW(handle, buffer, 65536, subtree, 27, no_value, overlap, no_value)
+    var requested = _read_directory_changes(handle, buffer, 65536, subtree, 27, no_value, overlap, no_value)
     return requested != 0
 }
 
@@ -121,9 +121,9 @@ func _collect_from(watching: Integer, transferred: Buffer) {
     crash root
     fallback handle != -1
     transferred.write_long_little_endian_at(0, 0)
-    var result = kernel.GetOverlappedResult(handle, overlap, transferred, 0)
+    var result = _overlapped_result(handle, overlap, transferred, 0)
     if result == 0 {
-        var failure = kernel.GetLastError()
+        var failure = _last_error()
         if failure != _io_incomplete_error {
             _note(root)
             _close_watch(watching)
@@ -183,7 +183,7 @@ func _note_notice(watching: Integer, name: String, action: Integer) {
     }
     var path = _joined(root, name)
     var wide_path = path._to_wide()
-    var attributes = kernel.GetFileAttributesW(wide_path)
+    var attributes = _file_attributes(wide_path)
     var is_folder = attributes != -1 and attributes.bits_and(16) != 0
     if action != 3 or not is_folder {
         _note(path)
@@ -211,9 +211,9 @@ func _wait_for_event(waiting_at_most: Duration?) {
         index = index + 1
     }
     if count > 0 {
-        kernel.WaitForMultipleObjects(count, waiting, 0, milliseconds)
+        _wait_for_multiple_objects(count, waiting, 0, milliseconds)
     } else {
-        kernel.Sleep(milliseconds)
+        _sleep(milliseconds)
     }
 }
 
@@ -225,11 +225,11 @@ func _close_watch(watching: Integer) {
     crash overlap
     crash event
     fallback handle != -1
-    kernel.CancelIoEx(handle, overlap)
+    _cancel_input_output(handle, overlap)
     var transferred = _zeroed(8)
-    kernel.GetOverlappedResult(handle, overlap, transferred, 1)
-    kernel.CloseHandle(handle)
-    kernel.CloseHandle(event)
+    _finish_overlapped(handle, overlap, transferred, 1)
+    _close_handle(handle)
+    _close_handle(event)
     handles[watching] = -1
 }
 
@@ -243,4 +243,69 @@ func drop() {
         }
         index = index + 1
     }
+}
+
+func _create_file(
+    path: Buffer,
+    access: Integer,
+    sharing: Integer,
+    security: Long,
+    disposition: Integer,
+    flags: Integer,
+    template: Long,
+): Long {
+    return kernel.CreateFileW_as_long(path, access, sharing, security, disposition, flags, template)
+}
+
+func _create_event(security: Long, manual_reset: Integer, initial_state: Integer, name: Long): Long {
+    return kernel.CreateEventW_as_long(security, manual_reset, initial_state, name)
+}
+
+func _reset_event(event: Long){
+    kernel.ResetEvent(event)
+}
+
+func _read_directory_changes(
+    handle: Long,
+    buffer: Buffer,
+    length: Integer,
+    subtree: Integer,
+    filter: Integer,
+    returned: Long,
+    overlapped: Buffer,
+    completion: Long,
+): Integer {
+    return kernel.ReadDirectoryChangesW(handle, buffer, length, subtree, filter, returned, overlapped, completion)
+}
+
+func _overlapped_result(handle: Long, overlapped: Buffer, transferred: Buffer, wait: Integer): Integer {
+    return kernel.GetOverlappedResult(handle, overlapped, transferred, wait)
+}
+
+func _last_error(): Integer {
+    return kernel.GetLastError()
+}
+
+func _file_attributes(path: Buffer): Integer {
+    return kernel.GetFileAttributesW(path)
+}
+
+func _wait_for_multiple_objects(count: Integer, handles: Buffer, wait_all: Integer, milliseconds: Long){
+    kernel.WaitForMultipleObjects(count, handles, wait_all, milliseconds)
+}
+
+func _sleep(milliseconds: Long) {
+    kernel.Sleep(milliseconds)
+}
+
+func _cancel_input_output(handle: Long, overlapped: Buffer){
+    kernel.CancelIoEx(handle, overlapped)
+}
+
+func _close_handle(handle: Long){
+    kernel.CloseHandle(handle)
+}
+
+func _finish_overlapped(handle: Long, overlapped: Buffer, transferred: Buffer, wait: Integer) {
+    kernel.GetOverlappedResult(handle, overlapped, transferred, wait)
 }

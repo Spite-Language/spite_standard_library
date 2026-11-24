@@ -26,7 +26,7 @@ func _open_calendar(): Boolean {
 
 func drop() {
     if _calendar != 0 {
-        _icu.ucal_close(_calendar)
+        _close_calendar(_calendar)
     }
 }
 
@@ -35,9 +35,9 @@ func _calendar_offset_seconds_at(unix_seconds: Long): Integer {
     crash unix_seconds >= _earliest_icu_calendar_second and unix_seconds <= _latest_icu_calendar_second
     _clear_status()
     var milliseconds: Double = unix_seconds * 1000
-    _icu.ucal_setMillis(_calendar, milliseconds, _status)
-    var zone = _icu.ucal_get(_calendar, 15, _status)
-    var daylight = _icu.ucal_get(_calendar, 16, _status)
+    _set_milliseconds(_calendar, milliseconds, _status)
+    var zone = _calendar_field(_calendar, 15, _status)
+    var daylight = _calendar_field(_calendar, 16, _status)
     var status = _status_value()
     crash status <= 0
     return (zone + daylight) / 1000
@@ -78,13 +78,13 @@ func _opened_calendar(): Long {
     var is_system = _zeroed(4)
     var canonical = _zeroed(512)
     _clear_status()
-    _icu.ucal_getCanonicalTimeZoneID(characters, length, canonical, 256, is_system, _status)
+    _canonical_time_zone_identifier(characters, length, canonical, 256, is_system, _status)
     var canonical_status = _status_value()
     var system_flag = is_system[0]
     crash system_flag
     var handle: Long = 0
     if canonical_status <= 0 and system_flag != 0 {
-        handle = _icu.ucal_open_as_long(characters, length, "", 1, _status)
+        handle = _calendar_of(characters, length, "", 1, _status)
         var open_status = _status_value()
         if open_status > 0 {
             handle = 0
@@ -96,7 +96,7 @@ func _opened_calendar(): Long {
 func _default_identifier(): String? {
     var characters = _zeroed(512)
     _clear_status()
-    var length = _icu.ucal_getDefaultTimeZone(characters, 256, _status)
+    var length = _default_time_zone(characters, 256, _status)
     var status = _status_value()
     fallback status <= 0 and length >= 0 and length <= 256
     var identifier = String()
@@ -109,4 +109,35 @@ func _default_identifier(): String? {
         index = index + 1
     }
     return identifier
+}
+
+func _close_calendar(calendar: Long) {
+    _icu.ucal_close(calendar)
+}
+
+func _set_milliseconds(calendar: Long, milliseconds: Double, status: Buffer) {
+    _icu.ucal_setMillis(calendar, milliseconds, status)
+}
+
+func _calendar_field(calendar: Long, field: Integer, status: Buffer): Integer {
+    return _icu.ucal_get(calendar, field, status)
+}
+
+func _canonical_time_zone_identifier(
+    identifier: Buffer,
+    length: Integer,
+    canonical: Buffer,
+    capacity: Integer,
+    is_system: Buffer,
+    status: Buffer,
+){
+    _icu.ucal_getCanonicalTimeZoneID(identifier, length, canonical, capacity, is_system, status)
+}
+
+func _calendar_of(identifier: Buffer, length: Integer, locale: String, kind: Integer, status: Buffer): Long {
+    return _icu.ucal_open_as_long(identifier, length, locale, kind, status)
+}
+
+func _default_time_zone(room: Buffer, capacity: Integer, status: Buffer): Integer {
+    return _icu.ucal_getDefaultTimeZone(room, capacity, status)
 }

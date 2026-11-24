@@ -14,7 +14,7 @@ func exists(): Boolean {
         }
     }
     var wide_path = path._to_wide()
-    var attributes = kernel.GetFileAttributesW(wide_path)
+    var attributes = _file_attributes(wide_path)
     return attributes != -1 and attributes.bits_and(16) == 0
 }
 
@@ -24,7 +24,7 @@ func remove(): Boolean {
         fallback not place
     }
     var wide_path = path._to_wide()
-    var removed = library._wremove(wide_path)
+    var removed = _remove_file(wide_path)
     return removed == 0
 }
 
@@ -32,7 +32,7 @@ func _rename_to(new_path: String): Boolean {
     var copy_across_volumes = 2
     var wide_path = path._to_wide()
     var wide_new_path = new_path._to_wide()
-    var moved = kernel.MoveFileExW(wide_path, wide_new_path, copy_across_volumes)
+    var moved = _move_file(wide_path, wide_new_path, copy_across_volumes)
     return moved != 0
 }
 
@@ -47,7 +47,7 @@ func lock(): LockedFile? {
     var normal = 128
     var nothing: Long = 0
     var wide_path = path._to_wide()
-    var handle = kernel.CreateFileW_as_long(
+    var handle = _create_file(
         wide_path,
         read_and_write,
         share_everything,
@@ -66,7 +66,7 @@ func lock(): LockedFile? {
 func _open_handle(mode: String): Long {
     var wide_path = path._to_wide()
     var wide_mode = mode._to_wide()
-    return library._wfopen_as_long(wide_path, wide_mode)
+    return _open_file(wide_path, wide_mode)
 }
 
 func _close_handle(handle: Long): Integer {
@@ -83,18 +83,18 @@ func _tell(handle: Long): Long {
 
 func _read_into(room: Buffer, bytes: Long, handle: Long): Long {
     var one: Long = 1
-    return library.fread_as_long(room, one, bytes, handle)
+    return _read_items(room, one, bytes, handle)
 }
 
 func _write_from(room: Buffer, bytes: Long, handle: Long): Long {
     var one: Long = 1
-    return library.fwrite_as_long(room, one, bytes, handle)
+    return _write_items(room, one, bytes, handle)
 }
 
 func _write_text(text: String, handle: Long): Long {
     var one: Long = 1
     var length: Long = text.length()
-    return library.fwrite_as_long(text, one, length, handle)
+    return _write_text_items(text, one, length, handle)
 }
 
 func _modified_nanoseconds_since_1970(): Long? {
@@ -106,10 +106,54 @@ func _modified_nanoseconds_since_1970(): Long? {
     }
     var standard_information = 0
     var wide_path = path._to_wide()
-    var found = kernel.GetFileAttributesExW(wide_path, standard_information, data)
+    var found = _file_attributes_of(wide_path, standard_information, data)
     fallback found != 0
     var written = data.read_long_little_endian_at(20)
     fallback written
     var since_1970 = written - _hundred_nanoseconds_from_1601_to_1970
     return since_1970 * 100
+}
+
+func _file_attributes(path: Buffer): Integer {
+    return kernel.GetFileAttributesW(path)
+}
+
+func _remove_file(path: Buffer): Integer {
+    return library._wremove(path)
+}
+
+func _move_file(path: Buffer, new_path: Buffer, flags: Integer): Integer {
+    return kernel.MoveFileExW(path, new_path, flags)
+}
+
+func _create_file(
+    path: Buffer,
+    access: Integer,
+    sharing: Integer,
+    security: Long,
+    disposition: Integer,
+    flags: Integer,
+    template: Long,
+): Long {
+    return kernel.CreateFileW_as_long(path, access, sharing, security, disposition, flags, template)
+}
+
+func _open_file(path: Buffer, mode: Buffer): Long {
+    return library._wfopen_as_long(path, mode)
+}
+
+func _read_items(room: Buffer, size: Long, count: Long, handle: Long): Long {
+    return library.fread_as_long(room, size, count, handle)
+}
+
+func _write_items(room: Buffer, size: Long, count: Long, handle: Long): Long {
+    return library.fwrite_as_long(room, size, count, handle)
+}
+
+func _write_text_items(text: String, size: Long, count: Long, handle: Long): Long {
+    return library.fwrite_as_long(text, size, count, handle)
+}
+
+func _file_attributes_of(path: Buffer, level: Integer, data: Buffer): Integer {
+    return kernel.GetFileAttributesExW(path, level, data)
 }
