@@ -24,11 +24,6 @@ func Float(from: String): Float? {
     return _decimal_of(text, no_end)
 }
 
-func _decimal_of(text: String, end: Long): Float {
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.strtof(text, end)
-}
-
 func Pi(): Float {
     return 3.1415927
 }
@@ -406,4 +401,9 @@ func _as_unsigned_integer(): UnsignedInteger {
 
 func _as_unsigned_long(): UnsignedLong {
     return get_this()
+}
+
+func _decimal_of(text: String, end: Long): Float {
+    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
+    return library.strtof(text, end)
 }

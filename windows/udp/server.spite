@@ -49,7 +49,7 @@ func _local_port(): Integer? {
     return bound._system_port(address)
 }
 
-func _socket_startup(version: Integer, information: Buffer){
+func _socket_startup(version: Integer, information: Buffer) {
     _sockets.WSAStartup(version, information)
 }
 
@@ -57,7 +57,7 @@ func _socket(family: Integer, kind: Integer, protocol: Integer): Long {
     return _sockets.socket(family, kind, protocol)
 }
 
-func _set_socket_option(socket: Long, level: Integer, option: Integer, value: Buffer, length: Integer){
+func _set_socket_option(socket: Long, level: Integer, option: Integer, value: Buffer, length: Integer) {
     _sockets.setsockopt(socket, level, option, value, length)
 }
 
@@ -80,7 +80,7 @@ func _receive_from_socket(
     return _sockets.recvfrom(socket, room, count, flags, sender, length)
 }
 
-func _close_socket(socket: Long){
+func _close_socket(socket: Long) {
     _sockets.closesocket(socket)
 }
 

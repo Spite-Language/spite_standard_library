@@ -57,10 +57,10 @@ func _unlock_file(
     low_count: Integer,
     high_count: Integer,
     overlapped: Buffer,
-){
+) {
     kernel.UnlockFileEx(handle, reserved, low_count, high_count, overlapped)
 }
 
-func _close_handle(handle: Long){
+func _close_handle(handle: Long) {
     kernel.CloseHandle(handle)
 }

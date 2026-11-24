@@ -159,7 +159,7 @@ func _current_process(): Long {
     return kernel.GetCurrentProcess()
 }
 
-func _flush_instruction_cache(process: Long, address: Long, size: Integer){
+func _flush_instruction_cache(process: Long, address: Long, size: Integer) {
     kernel.FlushInstructionCache(process, address, size)
 }
 

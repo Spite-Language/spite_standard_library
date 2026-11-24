@@ -110,6 +110,6 @@ func _find_next_file(search: Long, found: Buffer): Integer {
     return kernel.FindNextFileW(search, found)
 }
 
-func _find_close(search: Long){
+func _find_close(search: Long) {
     kernel.FindClose(search)
 }

@@ -105,7 +105,7 @@ func _first_readable(handles: List<Long>, patience: Duration): Integer {
     return found
 }
 
-func _socket_startup(version: Integer, information: Buffer){
+func _socket_startup(version: Integer, information: Buffer) {
     sockets.WSAStartup(version, information)
 }
 
@@ -113,7 +113,7 @@ func _socket(family: Integer, kind: Integer, protocol: Integer): Long {
     return sockets.socket(family, kind, protocol)
 }
 
-func _set_socket_option(socket: Long, level: Integer, option: Integer, value: Buffer, length: Integer){
+func _set_socket_option(socket: Long, level: Integer, option: Integer, value: Buffer, length: Integer) {
     sockets.setsockopt(socket, level, option, value, length)
 }
 
@@ -129,11 +129,11 @@ func _accept(socket: Long, address: Long, length: Long): Long {
     return sockets.accept(socket, address, length)
 }
 
-func _control_socket(socket: Long, command: Integer, argument: Buffer){
+func _control_socket(socket: Long, command: Integer, argument: Buffer) {
     sockets.ioctlsocket(socket, command, argument)
 }
 
-func _close_socket(socket: Long){
+func _close_socket(socket: Long) {
     sockets.closesocket(socket)
 }
 

@@ -30,11 +30,11 @@ func now(): Instant {
     return Instant(since_1970)
 }
 
-func _query_performance_frequency(frequency: Buffer){
+func _query_performance_frequency(frequency: Buffer) {
     kernel.QueryPerformanceFrequency(frequency)
 }
 
-func _query_performance_counter(counter: Buffer){
+func _query_performance_counter(counter: Buffer) {
     kernel.QueryPerformanceCounter(counter)
 }
 

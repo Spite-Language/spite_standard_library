@@ -130,7 +130,7 @@ func _canonical_time_zone_identifier(
     capacity: Integer,
     is_system: Buffer,
     status: Buffer,
-){
+) {
     _icu.ucal_getCanonicalTimeZoneID(identifier, length, canonical, capacity, is_system, status)
 }
 

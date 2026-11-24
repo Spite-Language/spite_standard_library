@@ -20,11 +20,6 @@ func Double(from: String): Double? {
     return _decimal_of(text, no_end)
 }
 
-func _decimal_of(text: String, end: Long): Double {
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.strtod(text, end)
-}
-
 func Pi(): Double {
     return 3.141592653589793
 }
@@ -681,4 +676,9 @@ func _as_double(): Double {
 
 func _as_unsigned_long(): UnsignedLong {
     return get_this()
+}
+
+func _decimal_of(text: String, end: Long): Double {
+    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
+    return library.strtod(text, end)
 }

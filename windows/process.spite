@@ -363,7 +363,7 @@ func _escaped_backslashes(count: Integer, before_quote: Boolean): String {
     return escaped
 }
 
-func _set_error_number(value: Integer){
+func _set_error_number(value: Integer) {
     library._set_errno(value)
 }
 
@@ -371,11 +371,11 @@ func _system(command: Buffer): Integer {
     return library._wsystem(command)
 }
 
-func _error_number_into(room: Buffer){
+func _error_number_into(room: Buffer) {
     library._get_errno(room)
 }
 
-func _close_handle(handle: Long){
+func _close_handle(handle: Long) {
     kernel.CloseHandle(handle)
 }
 
@@ -394,7 +394,7 @@ func _create_process(
     return kernel.CreateProcessW(application, command_line, process_security, thread_security, inherits_handles, flags, environment, directory, startup, information)
 }
 
-func _terminate_process(process: Long, exit_code: Integer){
+func _terminate_process(process: Long, exit_code: Integer) {
     kernel.TerminateProcess(process, exit_code)
 }
 
@@ -406,7 +406,7 @@ func _tick_count(): Long {
     return kernel.GetTickCount64()
 }
 
-func _terminate_job_object(job: Long, exit_code: Integer){
+func _terminate_job_object(job: Long, exit_code: Integer) {
     kernel.TerminateJobObject(job, exit_code)
 }
 
@@ -426,7 +426,7 @@ func _read_file(handle: Long, room: Buffer, size: Integer, read: Buffer, overlap
     return kernel.ReadFile(handle, room, size, read, overlapped)
 }
 
-func _resume_thread(thread: Long){
+func _resume_thread(thread: Long) {
     kernel.ResumeThread(thread)
 }
 
@@ -434,7 +434,7 @@ func _create_job_object(security: Long, name: Long): Long {
     return kernel.CreateJobObjectA(security, name)
 }
 
-func _set_information_job_object(job: Long, kind: Integer, information: Buffer, size: Integer){
+func _set_information_job_object(job: Long, kind: Integer, information: Buffer, size: Integer) {
     kernel.SetInformationJobObject(job, kind, information, size)
 }
 
@@ -446,7 +446,7 @@ func _create_pipe(reading: Buffer, writing: Buffer, security: Buffer, size: Inte
     return kernel.CreatePipe(reading, writing, security, size)
 }
 
-func _set_handle_information(handle: Long, mask: Integer, flags: Integer){
+func _set_handle_information(handle: Long, mask: Integer, flags: Integer) {
     kernel.SetHandleInformation(handle, mask, flags)
 }
 

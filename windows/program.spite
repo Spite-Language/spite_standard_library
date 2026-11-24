@@ -132,7 +132,7 @@ func _create_waitable_timer(security: Long, name: Long, flags: Integer, access: 
     return kernel.CreateWaitableTimerExW(security, name, flags, access)
 }
 
-func _close_handle(handle: Long){
+func _close_handle(handle: Long) {
     kernel.CloseHandle(handle)
 }
 
@@ -171,6 +171,6 @@ func _wide_text_length(address: Long): Integer {
     return kernel.lstrlenW(address)
 }
 
-func _copy_wide_text(room: Buffer, address: Long, length: Integer){
+func _copy_wide_text(room: Buffer, address: Long, length: Integer) {
     kernel.lstrcpynW(room, address, length)
 }

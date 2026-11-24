@@ -74,7 +74,7 @@ func _to_wide(): Buffer {
     return room
 }
 
-func _start_sockets(version: Integer, information: Buffer){
+func _start_sockets(version: Integer, information: Buffer) {
     var sockets = DynamicLibrary("ws2_32.dll", 'identity', "")
     sockets.WSAStartup(version, information)
 }
@@ -84,7 +84,7 @@ func _address_information(node: String, service: Long, hints: Buffer, found: Buf
     return sockets.getaddrinfo(node, service, hints, found)
 }
 
-func _copy_memory(destination: Buffer, source: Long, size: Long){
+func _copy_memory(destination: Buffer, source: Long, size: Long) {
     var memory_library = DynamicLibrary("ucrtbase.dll", 'identity', "")
     memory_library.memcpy(destination, source, size)
 }

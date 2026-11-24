@@ -261,7 +261,7 @@ func _create_event(security: Long, manual_reset: Integer, initial_state: Integer
     return kernel.CreateEventW(security, manual_reset, initial_state, name)
 }
 
-func _reset_event(event: Long){
+func _reset_event(event: Long) {
     kernel.ResetEvent(event)
 }
 
@@ -290,7 +290,7 @@ func _file_attributes(path: Buffer): Integer {
     return kernel.GetFileAttributesW(path)
 }
 
-func _wait_for_multiple_objects(count: Integer, handles: Buffer, wait_all: Integer, milliseconds: Long){
+func _wait_for_multiple_objects(count: Integer, handles: Buffer, wait_all: Integer, milliseconds: Long) {
     kernel.WaitForMultipleObjects(count, handles, wait_all, milliseconds)
 }
 
@@ -298,11 +298,11 @@ func _sleep(milliseconds: Long) {
     kernel.Sleep(milliseconds)
 }
 
-func _cancel_input_output(handle: Long, overlapped: Buffer){
+func _cancel_input_output(handle: Long, overlapped: Buffer) {
     kernel.CancelIoEx(handle, overlapped)
 }
 
-func _close_handle(handle: Long){
+func _close_handle(handle: Long) {
     kernel.CloseHandle(handle)
 }
 

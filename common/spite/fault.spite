@@ -347,7 +347,7 @@ func _standard_handle(kind: Integer): Long {
     return kernel.GetStdHandle(kind)
 }
 
-func _write_file(handle: Long, text: String, length: Integer, written: Buffer, overlapped: Long){
+func _write_file(handle: Long, text: String, length: Integer, written: Buffer, overlapped: Long) {
     var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
     kernel.WriteFile(handle, text, length, written, overlapped)
 }
@@ -370,12 +370,12 @@ func _file_size(handle: Long, high: Long): Integer {
     return kernel.GetFileSize(handle, high)
 }
 
-func _close_handle(handle: Long){
+func _close_handle(handle: Long) {
     var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
     kernel.CloseHandle(handle)
 }
 
-func _read_file(handle: Long, room: Buffer, size: Integer, read: Buffer, overlapped: Long){
+func _read_file(handle: Long, room: Buffer, size: Integer, read: Buffer, overlapped: Long) {
     var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
     kernel.ReadFile(handle, room, size, read, overlapped)
 }
