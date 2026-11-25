@@ -1,4 +1,4 @@
-# ../docs/memory.md#the-dictionary
+# https://github.com/Spite-Language/spite_standard_library/blob/master/docs/memory.md#the-dictionary
 
 generic $key_type
 generic $value_type
@@ -42,12 +42,12 @@ func sum_by(measure: Spite.Function<$value_type, Integer>): Integer {
     return _values.sum_by(measure)
 }
 
-# ../../spite_documentation/collections.md#a-dictionary-tells-its-changes
+# https://github.com/Spite-Language/spite_documentation/blob/master/collections.md#a-dictionary-tells-its-changes
 func subscribe(function: Spite.Function<DictionaryChange<$key_type, $value_type>, Nothing>) {
     _observer.subscribe(function)
 }
 
-# ../../spite_documentation/collections.md#a-dictionary-tells-its-changes
+# https://github.com/Spite-Language/spite_documentation/blob/master/collections.md#a-dictionary-tells-its-changes
 func unsubscribe(function: Spite.Function<DictionaryChange<$key_type, $value_type>, Nothing>) {
     _observer.unsubscribe(function)
 }

@@ -1,4 +1,4 @@
-# ../docs/memory.md#the-numbers
+# https://github.com/Spite-Language/spite_standard_library/blob/master/docs/memory.md#the-numbers
 
 var _buffer = Buffer(4)
 var _lowest_subnormal_exponent: Long = -149
@@ -59,7 +59,7 @@ func Smallest(): Float {
     return zero - largest
 }
 
-# ../docs/memory.md#the-numbers
+# https://github.com/Spite-Language/spite_standard_library/blob/master/docs/memory.md#the-numbers
 func set_this(value: Double) {
     crash value >= _smallest_value and value <= _largest_value
     _buffer._write_float_at(0, value)

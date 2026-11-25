@@ -1,4 +1,4 @@
-# ../docs/foreign_libraries.md#calling-back-into-spite
+# https://github.com/Spite-Language/spite_standard_library/blob/master/docs/foreign_libraries.md#calling-back-into-spite
 
 enum ContextPlace {
     'no_context'

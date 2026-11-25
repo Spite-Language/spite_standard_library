@@ -30,7 +30,7 @@ func changes(): List<String> {
     return changed
 }
 
-# ../../spite_documentation/standard_library.md#watch-files-and-folders
+# https://github.com/Spite-Language/spite_documentation/blob/master/standard_library.md#watch-files-and-folders
 func settled_changes(): List<String> {
     _collect()
     while not pending.is_empty() and not _is_quiet() {
@@ -83,5 +83,5 @@ func _joined(folder: String, name: String): String {
     return "{folder}/{name}"
 }
 
-# ../../spite_documentation/programs.md#preloaded-files
+# https://github.com/Spite-Language/spite_documentation/blob/master/programs.md#preloaded-files
 func _has_volumes(): Boolean

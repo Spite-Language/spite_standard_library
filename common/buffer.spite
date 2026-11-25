@@ -1,4 +1,4 @@
-# ../docs/memory.md#the-buffer
+# https://github.com/Spite-Language/spite_standard_library/blob/master/docs/memory.md#the-buffer
 
 var item_count = 0
 var _capacity = 0

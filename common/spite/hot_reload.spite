@@ -18,7 +18,7 @@ var succeeded = true
 var quiet = false
 var session_facts = List<String>()
 
-# ../../../spite_documentation/repl.md#how-it-works
+# https://github.com/Spite-Language/spite_documentation/blob/master/repl.md#how-it-works
 func start(built_in: String, built_by: String, built_with: String, watched_folders: List<String>) {
     fallback not started
     started = true
@@ -167,7 +167,7 @@ func refused(why: String): String {
     return last_answer
 }
 
-# ../../../spite_documentation/repl.md#typing-spite-into-a-running-program
+# https://github.com/Spite-Language/spite_documentation/blob/master/repl.md#typing-spite-into-a-running-program
 func session_path(): String {
     var executable = program.executable_path()
     crash executable

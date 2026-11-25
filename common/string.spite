@@ -1,4 +1,4 @@
-# ../docs/memory.md#the-string
+# https://github.com/Spite-Language/spite_standard_library/blob/master/docs/memory.md#the-string
 
 var _buffer = Buffer(16)
 var _length = 0

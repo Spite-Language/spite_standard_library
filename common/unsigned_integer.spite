@@ -1,4 +1,4 @@
-# ../docs/memory.md#the-numbers
+# https://github.com/Spite-Language/spite_standard_library/blob/master/docs/memory.md#the-numbers
 
 var _buffer = Buffer(4)
 var _smallest_value: Long = 0
@@ -22,7 +22,7 @@ func Smallest(): UnsignedInteger {
     return 0
 }
 
-# ../docs/memory.md#the-numbers
+# https://github.com/Spite-Language/spite_standard_library/blob/master/docs/memory.md#the-numbers
 func set_this(value: Long) {
     crash value >= _smallest_value and value <= _largest_value
     _buffer._write_unsigned_integer_at(0, value)

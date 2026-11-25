@@ -99,7 +99,7 @@ func swap_in(path: String, address: Long): String {
     return ""
 }
 
-# ../../../spite_compiler/HOT_RELOAD.md#system-functions-a-reload-adds
+# https://github.com/Spite-Language/spite_compiler/blob/master/HOT_RELOAD.md#system-functions-a-reload-adds
 func _resolve_the_imports(bytes: Buffer, start: Integer): String {
     var import_count = bytes.read_integer_little_endian_at(start)
     crash import_count

@@ -205,7 +205,7 @@ func _put(text: String, mode: String): Boolean {
     return written == length and closed == 0
 }
 
-# ../../spite_documentation/programs.md#preloaded-files
+# https://github.com/Spite-Language/spite_documentation/blob/master/programs.md#preloaded-files
 func _has_volumes(): Boolean
 
 func _place_on_a_volume(): Path? {

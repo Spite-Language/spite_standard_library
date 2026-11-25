@@ -29,7 +29,7 @@ var _tab = 9
 var _space = 32
 var _pause_milliseconds = 10
 
-# ../../../spite_documentation/repl.md#typing-spite-into-a-running-program
+# https://github.com/Spite-Language/spite_documentation/blob/master/repl.md#typing-spite-into-a-running-program
 func start(running_a_line: Spite.Function<String?>, console_asked: Boolean, port: Integer) {
     line_runner = running_a_line
     reads_the_console = console_asked
@@ -41,7 +41,7 @@ func start(running_a_line: Spite.Function<String?>, console_asked: Boolean, port
     console.write("spite> ")
 }
 
-# ../../../spite_documentation/repl.md#remote---repl-port
+# https://github.com/Spite-Language/spite_documentation/blob/master/repl.md#remote---repl-port
 func listen(port: Integer) {
     var made = Tcp.Server()
     if not made.listen_locally(port) {
@@ -51,7 +51,7 @@ func listen(port: Integer) {
     server = made
 }
 
-# ../../../spite_documentation/repl.md#typing-spite-into-a-running-program
+# https://github.com/Spite-Language/spite_documentation/blob/master/repl.md#typing-spite-into-a-running-program
 func shown_value(value: Console.Debuggable): String {
     if value.class == String {
         return value
@@ -94,7 +94,7 @@ func serve_the_console() {
     console.print("")
 }
 
-# ../../../spite_documentation/repl.md#remote---repl-port
+# https://github.com/Spite-Language/spite_documentation/blob/master/repl.md#remote---repl-port
 func serve_the_port_now() {
     fallback server
     if not client {

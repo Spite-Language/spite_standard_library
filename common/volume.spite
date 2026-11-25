@@ -2,7 +2,7 @@ singleton
 
 var name: String
 
-# ../../spite_documentation/programs.md#preloaded-files
+# https://github.com/Spite-Language/spite_documentation/blob/master/programs.md#preloaded-files
 func Volume(volume_name: String) {
     name = volume_name
 }

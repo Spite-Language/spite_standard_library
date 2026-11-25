@@ -126,7 +126,7 @@ func _keep(kept: List<String>, part: String, is_rooted: Boolean) {
     }
 }
 
-# ../../spite_documentation/programs.md#preloaded-files
+# https://github.com/Spite-Language/spite_documentation/blob/master/programs.md#preloaded-files
 func get_is_on_a_volume(): Boolean {
     var opening = _volume_opening(_text)
     if opening {
@@ -135,7 +135,7 @@ func get_is_on_a_volume(): Boolean {
     return false
 }
 
-# ../../spite_documentation/programs.md#preloaded-files
+# https://github.com/Spite-Language/spite_documentation/blob/master/programs.md#preloaded-files
 func _preloaded_count(): Integer
 
 func _preloaded_path_at(index: Integer): String

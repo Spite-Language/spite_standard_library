@@ -1,4 +1,4 @@
-# ../../spite_documentation/collections.md#a-dictionary-tells-its-changes
+# https://github.com/Spite-Language/spite_documentation/blob/master/collections.md#a-dictionary-tells-its-changes
 
 generic $key_type
 generic $value_type

@@ -1,4 +1,4 @@
-# ../../../spite_documentation/reflection.md#spiteattribute
+# https://github.com/Spite-Language/spite_documentation/blob/master/reflection.md#spiteattribute
 generic $value
 
 var _name: String

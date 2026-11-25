@@ -1,4 +1,4 @@
-# ../../../spite_documentation/reflection.md#a-call-built-before-it-runs
+# https://github.com/Spite-Language/spite_documentation/blob/master/reflection.md#a-call-built-before-it-runs
 generic $instance
 
 var _declaration = Spite.FunctionDeclaration("", "", 0, [], Nothing, false, false, false, null, null, [], [], "", "", "")

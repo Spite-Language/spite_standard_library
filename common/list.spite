@@ -1,4 +1,4 @@
-# ../docs/memory.md#the-list
+# https://github.com/Spite-Language/spite_standard_library/blob/master/docs/memory.md#the-list
 
 generic $element_type
 
@@ -26,7 +26,7 @@ func count(): Integer {
     return _length
 }
 
-# ../docs/memory.md#the-list
+# https://github.com/Spite-Language/spite_standard_library/blob/master/docs/memory.md#the-list
 func _has_equal_items(other: List<$element_type>): Boolean {
     fallback _length == other._length
     var index = 0
@@ -71,12 +71,12 @@ func insert(index: Integer, value: $element_type) {
     _observer.notify(change)
 }
 
-# ../../spite_documentation/collections.md#a-list-tells-its-changes
+# https://github.com/Spite-Language/spite_documentation/blob/master/collections.md#a-list-tells-its-changes
 func subscribe(function: Spite.Function<ListChange<$element_type>, Nothing>) {
     _observer.subscribe(function)
 }
 
-# ../../spite_documentation/collections.md#a-list-tells-its-changes
+# https://github.com/Spite-Language/spite_documentation/blob/master/collections.md#a-list-tells-its-changes
 func unsubscribe(function: Spite.Function<ListChange<$element_type>, Nothing>) {
     _observer.unsubscribe(function)
 }
@@ -301,7 +301,7 @@ func find(test: Spite.Function<$element_type, Boolean>): $element_type? {
     return null
 }
 
-# ../../spite_documentation/collections.md#sum-adds-the-members-up
+# https://github.com/Spite-Language/spite_documentation/blob/master/collections.md#sum-adds-the-members-up
 func sum(): $element_type? {
     fallback _length != 0
     var total = _read_value(0)

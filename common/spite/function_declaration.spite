@@ -1,3 +1,4 @@
+# https://github.com/Spite-Language/spite_documentation/blob/master/reflection.md#a-call-built-before-it-runs
 union Returned {
     Spite.Class
     Spite.Union
@@ -13,7 +14,6 @@ var _is_resumable: Boolean
 var _has_facts: Boolean
 var _has_reach: Boolean
 var _returned_literal: String?
-# ../../../spite_documentation/reflection.md#a-call-built-before-it-runs
 var _called_on: Spite.Function<Console.Debuggable, Nothing>?
 var _reads: List<Spite.AttributeDeclaration>
 var _writes: List<Spite.AttributeDeclaration>

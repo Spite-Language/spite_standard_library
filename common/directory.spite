@@ -138,7 +138,7 @@ func _sorted_names(want_folders: Boolean): List<String>? {
     return names
 }
 
-# ../../spite_documentation/programs.md#preloaded-files
+# https://github.com/Spite-Language/spite_documentation/blob/master/programs.md#preloaded-files
 func _has_volumes(): Boolean
 
 func _place_on_a_volume(): Path? {

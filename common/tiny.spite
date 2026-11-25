@@ -1,4 +1,4 @@
-# ../docs/memory.md#the-numbers
+# https://github.com/Spite-Language/spite_standard_library/blob/master/docs/memory.md#the-numbers
 
 var _buffer = Buffer(1)
 var _smallest_value: Long = -128
@@ -22,7 +22,7 @@ func Smallest(): Tiny {
     return -128
 }
 
-# ../docs/memory.md#the-numbers
+# https://github.com/Spite-Language/spite_standard_library/blob/master/docs/memory.md#the-numbers
 func set_this(value: Long) {
     crash value >= _smallest_value and value <= _largest_value
     _buffer._write_tiny_at(0, value)

@@ -93,7 +93,7 @@ func _settings_prefix(): String {
     return prefix
 }
 
-# ../../spite_documentation/programs.md#preloaded-files
+# https://github.com/Spite-Language/spite_documentation/blob/master/programs.md#preloaded-files
 func _has_volumes(): Boolean
 
 func _runs_on_the_disk(): Boolean {
