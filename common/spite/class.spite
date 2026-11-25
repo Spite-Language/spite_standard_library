@@ -189,6 +189,18 @@ func satisfies_type(_wanted: Spite.Type): Boolean {
     crash
 }
 
+# ../../../spite_documentation/reflection.md#whether-two-classes-are-copies-of-one-generic-class
+func shares_same_generic_template(other: Class): Boolean {
+    fallback not _generics.is_empty() and not other._generics.is_empty()
+    var own_parts = _name_with_outer_classes.split("<")
+    var other_parts = other._name_with_outer_classes.split("<")
+    var own_template = own_parts.first()
+    var other_template = other_parts.first()
+    crash own_template
+    crash other_template
+    return own_template == other_template
+}
+
 func equals(other: Class): Boolean {
     return _name_with_outer_classes == other._name_with_outer_classes
 }
