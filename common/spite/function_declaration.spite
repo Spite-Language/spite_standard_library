@@ -18,6 +18,7 @@ var _called_on: Spite.Function<Console.Debuggable, Nothing>?
 var _reads: List<Spite.AttributeDeclaration>
 var _writes: List<Spite.AttributeDeclaration>
 var _signature: String
+var _source: String
 var _source_path: String
 
 func FunctionDeclaration(
@@ -34,6 +35,7 @@ func FunctionDeclaration(
     starting_reads: List<Spite.AttributeDeclaration>,
     starting_writes: List<Spite.AttributeDeclaration>,
     starting_signature: String,
+    starting_source: String,
     starting_source_path: String,
 ) {
     _name = starting_name
@@ -49,6 +51,7 @@ func FunctionDeclaration(
     _reads = starting_reads
     _writes = starting_writes
     _signature = starting_signature
+    _source = starting_source
     _source_path = starting_source_path
 }
 
@@ -90,6 +93,10 @@ func get_reads(): List<Spite.AttributeDeclaration> {
 func get_writes(): List<Spite.AttributeDeclaration> {
     crash _has_reach
     return _writes
+}
+
+func get_source(): String {
+    return _source
 }
 
 func get_source_file(): File {
