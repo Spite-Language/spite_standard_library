@@ -42,10 +42,6 @@ func set_value(value: $value) {
     _value = value
 }
 
-func get_owner_class(): Spite.Class {
-    return _declaration.owner_class
-}
-
 func get_index(): Integer {
     return _index
 }
