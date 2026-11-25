@@ -70,10 +70,10 @@ var runtime = DynamicLibrary(
             [
                 DynamicLibrary.Room("room", ChunkRoom, 'answer_is_what_arrived'),
                 DynamicLibrary.Argument("size", Long),
-                DynamicLibrary.RoomSize("count", Long),
+                DynamicLibrary.RoomSize("count", Integer),
                 DynamicLibrary.Argument("handle", Long),
             ],
-            Long,
+            Integer,
         ),
         "close_pipe": DynamicLibrary.FunctionDeclaration("_pclose", [DynamicLibrary.Argument("handle", Long)], Integer),
     },
@@ -81,7 +81,7 @@ var runtime = DynamicLibrary(
 var _room_start: Long = 6442450944
 var _room_size: Long = 268435456
 var _granularity = 65536
-var _chunk_size: Long = 4096
+var _chunk_size = 4096
 
 func compiler_line(executable: String, address: Long): String {
     return "cd /d \"{working_folder}\" && \"{compiler}\" {arguments} --executable-path=\"{executable}\" --reload-at={address} 2>&1"

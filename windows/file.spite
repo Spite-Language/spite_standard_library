@@ -44,10 +44,10 @@ var library = DynamicLibrary(
             [
                 DynamicLibrary.Room("room", ReadRoom, 'answer_is_what_arrived'),
                 DynamicLibrary.Argument("size", Long),
-                DynamicLibrary.RoomSize("count", Long),
+                DynamicLibrary.RoomSize("count", Integer),
                 DynamicLibrary.Argument("handle", Long),
             ],
-            Long,
+            Integer,
         ),
         "write_items": DynamicLibrary.FunctionDeclaration(
             "fwrite",
@@ -207,7 +207,9 @@ func _tell(handle: Long): Long {
 func _read_bytes(count: Long, handle: Long): Buffer? {
     var call = DynamicLibrary.Call(library.functions["read_bytes"])
     call.arguments["size"] = 1
-    call.arguments["count"] = count
+    var counted: Integer? = count
+    fallback counted
+    call.arguments["count"] = counted
     call.arguments["handle"] = handle
     var read = call.call()
     fallback read

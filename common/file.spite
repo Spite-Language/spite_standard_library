@@ -176,10 +176,7 @@ func _read_into_buffer(handle: Long, wanted: Long): Buffer? {
     if wanted <= 0 {
         return Buffer()
     }
-    var bytes = _read_bytes(wanted, handle)
-    fallback bytes
-    fallback bytes.count() <= wanted
-    return bytes
+    return _read_bytes(wanted, handle)
 }
 
 func _write_buffer(bytes: Buffer, handle: Long): Long {
