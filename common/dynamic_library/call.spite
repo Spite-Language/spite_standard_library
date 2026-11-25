@@ -1,0 +1,8 @@
+# ../../../spite_documentation/foreign_libraries.md#calling-a-declared-function
+var _declaration: DynamicLibrary.FunctionDeclaration
+
+func Call(starting_declaration: DynamicLibrary.FunctionDeclaration) {
+    _declaration = starting_declaration
+}
+
+func call()

@@ -1,0 +1,30 @@
+# ../../../spite_documentation/foreign_libraries.md#declaring-a-foreign-function
+var _symbol: String
+var _arguments: List<DynamicLibrary.Argument>
+var _returns: Spite.FunctionDeclaration.Returned
+
+func FunctionDeclaration(
+    starting_symbol: String,
+    starting_arguments: List<DynamicLibrary.Argument>,
+    starting_returns: Spite.FunctionDeclaration.Returned,
+) {
+    _symbol = starting_symbol
+    _arguments = starting_arguments
+    _returns = starting_returns
+}
+
+func get_symbol(): String {
+    return _symbol
+}
+
+func get_arguments(): List<DynamicLibrary.Argument> {
+    return _arguments
+}
+
+func get_returns(): Spite.FunctionDeclaration.Returned {
+    return _returns
+}
+
+func to_debug(): String {
+    return _symbol
+}

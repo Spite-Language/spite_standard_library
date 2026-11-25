@@ -1,0 +1,24 @@
+# ../../../spite_documentation/foreign_libraries.md#declaring-a-foreign-function
+var _name: String
+var _class: Spite.FunctionDeclaration.Returned
+
+func Argument(starting_name: String, starting_class: Spite.FunctionDeclaration.Returned) {
+    _name = starting_name
+    _class = starting_class
+}
+
+func get_name(): String {
+    return _name
+}
+
+func get_class(): Spite.FunctionDeclaration.Returned {
+    return _class
+}
+
+func to_string(): String {
+    return _name
+}
+
+func to_debug(): String {
+    return _name
+}
