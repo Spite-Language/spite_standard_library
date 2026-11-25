@@ -75,23 +75,91 @@ func _to_wide(): Buffer {
 }
 
 func _start_sockets(version: Integer, information: Buffer) {
-    var sockets = DynamicLibrary("ws2_32.dll", 'identity', "")
-    sockets.WSAStartup(version, information)
+    var sockets = DynamicLibrary(
+        "ws2_32.dll",
+        "",
+        {
+            "start_sockets": DynamicLibrary.FunctionDeclaration(
+                "WSAStartup",
+                [
+                    DynamicLibrary.Argument("version", Integer),
+                    DynamicLibrary.Argument("information", Buffer),
+                ],
+                Nothing,
+            ),
+        },
+    )
+    var call = DynamicLibrary.Call(sockets.functions["start_sockets"])
+    call.arguments["version"] = version
+    call.arguments["information"] = information
+    call.call()
 }
 
 func _address_information(node: String, service: Long, hints: Buffer, found: Buffer): Integer {
-    var sockets = DynamicLibrary("ws2_32.dll", 'identity', "")
-    return sockets.getaddrinfo(node, service, hints, found)
+    var sockets = DynamicLibrary(
+        "ws2_32.dll",
+        "",
+        {
+            "address_information": DynamicLibrary.FunctionDeclaration(
+                "getaddrinfo",
+                [
+                    DynamicLibrary.Argument("node", String),
+                    DynamicLibrary.Argument("service", Long),
+                    DynamicLibrary.Argument("hints", Buffer),
+                    DynamicLibrary.Argument("found", Buffer),
+                ],
+                Integer,
+            ),
+        },
+    )
+    var call = DynamicLibrary.Call(sockets.functions["address_information"])
+    call.arguments["node"] = node
+    call.arguments["service"] = service
+    call.arguments["hints"] = hints
+    call.arguments["found"] = found
+    return call.call()
 }
 
 func _copy_memory(destination: Buffer, source: Long, size: Long) {
-    var memory_library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    memory_library.memcpy(destination, source, size)
+    var memory_library = DynamicLibrary(
+        "ucrtbase.dll",
+        "",
+        {
+            "copy_memory": DynamicLibrary.FunctionDeclaration(
+                "memcpy",
+                [
+                    DynamicLibrary.Argument("destination", Buffer),
+                    DynamicLibrary.Argument("source", Long),
+                    DynamicLibrary.Argument("size", Long),
+                ],
+                Nothing,
+            ),
+        },
+    )
+    var call = DynamicLibrary.Call(memory_library.functions["copy_memory"])
+    call.arguments["destination"] = destination
+    call.arguments["source"] = source
+    call.arguments["size"] = size
+    call.call()
 }
 
 func _free_address_information(first: Long) {
-    var sockets = DynamicLibrary("ws2_32.dll", 'identity', "")
-    sockets.freeaddrinfo(first)
+    var sockets = DynamicLibrary(
+        "ws2_32.dll",
+        "",
+        {
+            "free_address_information": DynamicLibrary.FunctionDeclaration(
+                "freeaddrinfo",
+                [
+                    DynamicLibrary.Argument("first", Long),
+                ],
+                Nothing,
+            ),
+        },
+    )
+    var call = DynamicLibrary.Call(sockets.functions["free_address_information"])
+    call.arguments["first"] = first
+    call.call()
 }
 
 func _measured_multi_byte_to_wide_character(
@@ -102,8 +170,32 @@ func _measured_multi_byte_to_wide_character(
     no_room: Long,
     size: Integer,
 ): Integer {
-    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
-    return kernel.MultiByteToWideChar(code_page, flags, text, byte_count, no_room, size)
+    var kernel = DynamicLibrary(
+        "kernel32.dll",
+        "",
+        {
+            "measured_multi_byte_to_wide_character": DynamicLibrary.FunctionDeclaration(
+                "MultiByteToWideChar",
+                [
+                    DynamicLibrary.Argument("code_page", Integer),
+                    DynamicLibrary.Argument("flags", Integer),
+                    DynamicLibrary.Argument("text", String),
+                    DynamicLibrary.Argument("byte_count", Integer),
+                    DynamicLibrary.Argument("no_room", Long),
+                    DynamicLibrary.Argument("size", Integer),
+                ],
+                Integer,
+            ),
+        },
+    )
+    var call = DynamicLibrary.Call(kernel.functions["measured_multi_byte_to_wide_character"])
+    call.arguments["code_page"] = code_page
+    call.arguments["flags"] = flags
+    call.arguments["text"] = text
+    call.arguments["byte_count"] = byte_count
+    call.arguments["no_room"] = no_room
+    call.arguments["size"] = size
+    return call.call()
 }
 
 func _multi_byte_to_wide_character(
@@ -114,6 +206,30 @@ func _multi_byte_to_wide_character(
     room: Buffer,
     size: Integer,
 ): Integer {
-    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
-    return kernel.MultiByteToWideChar(code_page, flags, text, byte_count, room, size)
+    var kernel = DynamicLibrary(
+        "kernel32.dll",
+        "",
+        {
+            "multi_byte_to_wide_character": DynamicLibrary.FunctionDeclaration(
+                "MultiByteToWideChar",
+                [
+                    DynamicLibrary.Argument("code_page", Integer),
+                    DynamicLibrary.Argument("flags", Integer),
+                    DynamicLibrary.Argument("text", String),
+                    DynamicLibrary.Argument("byte_count", Integer),
+                    DynamicLibrary.Argument("room", Buffer),
+                    DynamicLibrary.Argument("size", Integer),
+                ],
+                Integer,
+            ),
+        },
+    )
+    var call = DynamicLibrary.Call(kernel.functions["multi_byte_to_wide_character"])
+    call.arguments["code_page"] = code_page
+    call.arguments["flags"] = flags
+    call.arguments["text"] = text
+    call.arguments["byte_count"] = byte_count
+    call.arguments["room"] = room
+    call.arguments["size"] = size
+    return call.call()
 }

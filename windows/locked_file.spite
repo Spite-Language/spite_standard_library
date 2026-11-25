@@ -1,4 +1,39 @@
-var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+var kernel = DynamicLibrary(
+    "kernel32.dll",
+    "",
+    {
+        "lock_file": DynamicLibrary.FunctionDeclaration(
+            "LockFileEx",
+            [
+                DynamicLibrary.Argument("handle", Long),
+                DynamicLibrary.Argument("flags", Integer),
+                DynamicLibrary.Argument("reserved", Integer),
+                DynamicLibrary.Argument("low_count", Integer),
+                DynamicLibrary.Argument("high_count", Integer),
+                DynamicLibrary.Argument("overlapped", Buffer),
+            ],
+            Integer,
+        ),
+        "unlock_file": DynamicLibrary.FunctionDeclaration(
+            "UnlockFileEx",
+            [
+                DynamicLibrary.Argument("handle", Long),
+                DynamicLibrary.Argument("reserved", Integer),
+                DynamicLibrary.Argument("low_count", Integer),
+                DynamicLibrary.Argument("high_count", Integer),
+                DynamicLibrary.Argument("overlapped", Buffer),
+            ],
+            Nothing,
+        ),
+        "close_handle": DynamicLibrary.FunctionDeclaration(
+            "CloseHandle",
+            [
+                DynamicLibrary.Argument("handle", Long),
+            ],
+            Nothing,
+        ),
+    },
+)
 var _overlapped = Buffer(32)
 var _held = false
 var _handle: Long
@@ -48,7 +83,14 @@ func _lock_file(
     high_count: Integer,
     overlapped: Buffer,
 ): Integer {
-    return kernel.LockFileEx(handle, flags, reserved, low_count, high_count, overlapped)
+    var call = DynamicLibrary.Call(kernel.functions["lock_file"])
+    call.arguments["handle"] = handle
+    call.arguments["flags"] = flags
+    call.arguments["reserved"] = reserved
+    call.arguments["low_count"] = low_count
+    call.arguments["high_count"] = high_count
+    call.arguments["overlapped"] = overlapped
+    return call.call()
 }
 
 func _unlock_file(
@@ -58,9 +100,17 @@ func _unlock_file(
     high_count: Integer,
     overlapped: Buffer,
 ) {
-    kernel.UnlockFileEx(handle, reserved, low_count, high_count, overlapped)
+    var call = DynamicLibrary.Call(kernel.functions["unlock_file"])
+    call.arguments["handle"] = handle
+    call.arguments["reserved"] = reserved
+    call.arguments["low_count"] = low_count
+    call.arguments["high_count"] = high_count
+    call.arguments["overlapped"] = overlapped
+    call.call()
 }
 
 func _close_handle(handle: Long) {
-    kernel.CloseHandle(handle)
+    var call = DynamicLibrary.Call(kernel.functions["close_handle"])
+    call.arguments["handle"] = handle
+    call.call()
 }

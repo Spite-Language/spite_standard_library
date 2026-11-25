@@ -1,4 +1,86 @@
-var _sockets = DynamicLibrary("ws2_32.dll", 'identity', "")
+var _sockets = DynamicLibrary(
+    "ws2_32.dll",
+    "",
+    {
+        "socket_startup": DynamicLibrary.FunctionDeclaration(
+            "WSAStartup",
+            [
+                DynamicLibrary.Argument("version", Integer),
+                DynamicLibrary.Argument("information", Buffer),
+            ],
+            Nothing,
+        ),
+        "socket": DynamicLibrary.FunctionDeclaration(
+            "socket",
+            [
+                DynamicLibrary.Argument("family", Integer),
+                DynamicLibrary.Argument("kind", Integer),
+                DynamicLibrary.Argument("protocol", Integer),
+            ],
+            Long,
+        ),
+        "set_socket_option": DynamicLibrary.FunctionDeclaration(
+            "setsockopt",
+            [
+                DynamicLibrary.Argument("socket", Long),
+                DynamicLibrary.Argument("level", Integer),
+                DynamicLibrary.Argument("option", Integer),
+                DynamicLibrary.Argument("value", Buffer),
+                DynamicLibrary.Argument("length", Integer),
+            ],
+            Nothing,
+        ),
+        "bind_socket": DynamicLibrary.FunctionDeclaration(
+            "bind",
+            [
+                DynamicLibrary.Argument("socket", Long),
+                DynamicLibrary.Argument("address", Buffer),
+                DynamicLibrary.Argument("length", Integer),
+            ],
+            Integer,
+        ),
+        "send_to": DynamicLibrary.FunctionDeclaration(
+            "sendto",
+            [
+                DynamicLibrary.Argument("socket", Long),
+                DynamicLibrary.Argument("room", Buffer),
+                DynamicLibrary.Argument("count", Integer),
+                DynamicLibrary.Argument("flags", Integer),
+                DynamicLibrary.Argument("address", Buffer),
+                DynamicLibrary.Argument("length", Integer),
+            ],
+            Integer,
+        ),
+        "receive_from_socket": DynamicLibrary.FunctionDeclaration(
+            "recvfrom",
+            [
+                DynamicLibrary.Argument("socket", Long),
+                DynamicLibrary.Argument("room", Buffer),
+                DynamicLibrary.Argument("count", Integer),
+                DynamicLibrary.Argument("flags", Integer),
+                DynamicLibrary.Argument("sender", Buffer),
+                DynamicLibrary.Argument("length", Buffer),
+            ],
+            Integer,
+        ),
+        "close_socket": DynamicLibrary.FunctionDeclaration(
+            "closesocket",
+            [
+                DynamicLibrary.Argument("socket", Long),
+            ],
+            Nothing,
+        ),
+        "socket_name": DynamicLibrary.FunctionDeclaration(
+            "getsockname",
+            [
+                DynamicLibrary.Argument("socket", Long),
+                DynamicLibrary.Argument("address", Buffer),
+                DynamicLibrary.Argument("length", Buffer),
+            ],
+            Integer,
+        ),
+    },
+)
 var _winsock_version_2_2 = 514
 
 func _start_sockets() {
@@ -50,23 +132,47 @@ func _local_port(): Integer? {
 }
 
 func _socket_startup(version: Integer, information: Buffer) {
-    _sockets.WSAStartup(version, information)
+    var call = DynamicLibrary.Call(_sockets.functions["socket_startup"])
+    call.arguments["version"] = version
+    call.arguments["information"] = information
+    call.call()
 }
 
 func _socket(family: Integer, kind: Integer, protocol: Integer): Long {
-    return _sockets.socket(family, kind, protocol)
+    var call = DynamicLibrary.Call(_sockets.functions["socket"])
+    call.arguments["family"] = family
+    call.arguments["kind"] = kind
+    call.arguments["protocol"] = protocol
+    return call.call()
 }
 
 func _set_socket_option(socket: Long, level: Integer, option: Integer, value: Buffer, length: Integer) {
-    _sockets.setsockopt(socket, level, option, value, length)
+    var call = DynamicLibrary.Call(_sockets.functions["set_socket_option"])
+    call.arguments["socket"] = socket
+    call.arguments["level"] = level
+    call.arguments["option"] = option
+    call.arguments["value"] = value
+    call.arguments["length"] = length
+    call.call()
 }
 
 func _bind_socket(socket: Long, address: Buffer, length: Integer): Integer {
-    return _sockets.bind(socket, address, length)
+    var call = DynamicLibrary.Call(_sockets.functions["bind_socket"])
+    call.arguments["socket"] = socket
+    call.arguments["address"] = address
+    call.arguments["length"] = length
+    return call.call()
 }
 
 func _send_to(socket: Long, room: Buffer, count: Integer, flags: Integer, address: Buffer, length: Integer): Integer {
-    return _sockets.sendto(socket, room, count, flags, address, length)
+    var call = DynamicLibrary.Call(_sockets.functions["send_to"])
+    call.arguments["socket"] = socket
+    call.arguments["room"] = room
+    call.arguments["count"] = count
+    call.arguments["flags"] = flags
+    call.arguments["address"] = address
+    call.arguments["length"] = length
+    return call.call()
 }
 
 func _receive_from_socket(
@@ -77,13 +183,26 @@ func _receive_from_socket(
     sender: Buffer,
     length: Buffer,
 ): Integer {
-    return _sockets.recvfrom(socket, room, count, flags, sender, length)
+    var call = DynamicLibrary.Call(_sockets.functions["receive_from_socket"])
+    call.arguments["socket"] = socket
+    call.arguments["room"] = room
+    call.arguments["count"] = count
+    call.arguments["flags"] = flags
+    call.arguments["sender"] = sender
+    call.arguments["length"] = length
+    return call.call()
 }
 
 func _close_socket(socket: Long) {
-    _sockets.closesocket(socket)
+    var call = DynamicLibrary.Call(_sockets.functions["close_socket"])
+    call.arguments["socket"] = socket
+    call.call()
 }
 
 func _socket_name(socket: Long, address: Buffer, length: Buffer): Integer {
-    return _sockets.getsockname(socket, address, length)
+    var call = DynamicLibrary.Call(_sockets.functions["socket_name"])
+    call.arguments["socket"] = socket
+    call.arguments["address"] = address
+    call.arguments["length"] = length
+    return call.call()
 }

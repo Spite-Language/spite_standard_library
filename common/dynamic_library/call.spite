@@ -6,3 +6,7 @@ func Call(starting_declaration: DynamicLibrary.FunctionDeclaration) {
 }
 
 func call()
+
+func get_declaration(): DynamicLibrary.FunctionDeclaration {
+    return _declaration
+}

@@ -1,4 +1,19 @@
-var _crypt = DynamicLibrary("bcrypt.dll", 'identity', "")
+var _crypt = DynamicLibrary(
+    "bcrypt.dll",
+    "",
+    {
+        "generate_random": DynamicLibrary.FunctionDeclaration(
+            "BCryptGenRandom",
+            [
+                DynamicLibrary.Argument("algorithm", Long),
+                DynamicLibrary.Argument("room", Buffer),
+                DynamicLibrary.Argument("count", Integer),
+                DynamicLibrary.Argument("flags", Integer),
+            ],
+            Integer,
+        ),
+    },
+)
 
 func _fill(room: Buffer, count: Integer): Boolean {
     var no_algorithm: Long = 0
@@ -7,5 +22,10 @@ func _fill(room: Buffer, count: Integer): Boolean {
 }
 
 func _generate_random(algorithm: Long, room: Buffer, count: Integer, flags: Integer): Integer {
-    return _crypt.BCryptGenRandom(algorithm, room, count, flags)
+    var call = DynamicLibrary.Call(_crypt.functions["generate_random"])
+    call.arguments["algorithm"] = algorithm
+    call.arguments["room"] = room
+    call.arguments["count"] = count
+    call.arguments["flags"] = flags
+    return call.call()
 }

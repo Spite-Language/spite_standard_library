@@ -1,4 +1,30 @@
-var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+var kernel = DynamicLibrary(
+    "kernel32.dll",
+    "",
+    {
+        "query_performance_frequency": DynamicLibrary.FunctionDeclaration(
+            "QueryPerformanceFrequency",
+            [
+                DynamicLibrary.Argument("frequency", Buffer),
+            ],
+            Nothing,
+        ),
+        "query_performance_counter": DynamicLibrary.FunctionDeclaration(
+            "QueryPerformanceCounter",
+            [
+                DynamicLibrary.Argument("counter", Buffer),
+            ],
+            Nothing,
+        ),
+        "system_time_as_file_time": DynamicLibrary.FunctionDeclaration(
+            "GetSystemTimeAsFileTime",
+            [
+                DynamicLibrary.Argument("time", Buffer),
+            ],
+            Nothing,
+        ),
+    },
+)
 var _ticks_per_second: Long = 1
 var _reading = Buffer(8)
 var _seconds_from_1601_to_1970: Long = 11644473600
@@ -31,13 +57,19 @@ func now(): Instant {
 }
 
 func _query_performance_frequency(frequency: Buffer) {
-    kernel.QueryPerformanceFrequency(frequency)
+    var call = DynamicLibrary.Call(kernel.functions["query_performance_frequency"])
+    call.arguments["frequency"] = frequency
+    call.call()
 }
 
 func _query_performance_counter(counter: Buffer) {
-    kernel.QueryPerformanceCounter(counter)
+    var call = DynamicLibrary.Call(kernel.functions["query_performance_counter"])
+    call.arguments["counter"] = counter
+    call.call()
 }
 
 func _system_time_as_file_time(time: Buffer) {
-    kernel.GetSystemTimeAsFileTime(time)
+    var call = DynamicLibrary.Call(kernel.functions["system_time_as_file_time"])
+    call.arguments["time"] = time
+    call.call()
 }

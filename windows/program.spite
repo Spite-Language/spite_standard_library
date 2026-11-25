@@ -1,4 +1,96 @@
-var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+var kernel = DynamicLibrary(
+    "kernel32.dll",
+    "",
+    {
+        "sleep_for": DynamicLibrary.FunctionDeclaration(
+            "Sleep",
+            [
+                DynamicLibrary.Argument("milliseconds", Long),
+            ],
+            Nothing,
+        ),
+        "create_waitable_timer": DynamicLibrary.FunctionDeclaration(
+            "CreateWaitableTimerExW",
+            [
+                DynamicLibrary.Argument("security", Long),
+                DynamicLibrary.Argument("name", Long),
+                DynamicLibrary.Argument("flags", Integer),
+                DynamicLibrary.Argument("access", Integer),
+            ],
+            Long,
+        ),
+        "close_handle": DynamicLibrary.FunctionDeclaration(
+            "CloseHandle",
+            [
+                DynamicLibrary.Argument("handle", Long),
+            ],
+            Nothing,
+        ),
+        "set_waitable_timer": DynamicLibrary.FunctionDeclaration(
+            "SetWaitableTimer",
+            [
+                DynamicLibrary.Argument("timer", Long),
+                DynamicLibrary.Argument("due", Buffer),
+                DynamicLibrary.Argument("period", Integer),
+                DynamicLibrary.Argument("completion", Long),
+                DynamicLibrary.Argument("argument", Long),
+                DynamicLibrary.Argument("resume", Integer),
+            ],
+            Integer,
+        ),
+        "wait_for_single_object": DynamicLibrary.FunctionDeclaration(
+            "WaitForSingleObject",
+            [
+                DynamicLibrary.Argument("handle", Long),
+                DynamicLibrary.Argument("milliseconds", Integer),
+            ],
+            Integer,
+        ),
+        "current_directory": DynamicLibrary.FunctionDeclaration(
+            "GetCurrentDirectoryW",
+            [
+                DynamicLibrary.Argument("size", Integer),
+                DynamicLibrary.Argument("room", Buffer),
+            ],
+            Integer,
+        ),
+        "module_file_name": DynamicLibrary.FunctionDeclaration(
+            "GetModuleFileNameW",
+            [
+                DynamicLibrary.Argument("module", Long),
+                DynamicLibrary.Argument("room", Buffer),
+                DynamicLibrary.Argument("size", Integer),
+            ],
+            Integer,
+        ),
+        "environment_variable": DynamicLibrary.FunctionDeclaration(
+            "GetEnvironmentVariableW",
+            [
+                DynamicLibrary.Argument("name", Buffer),
+                DynamicLibrary.Argument("room", Buffer),
+                DynamicLibrary.Argument("size", Integer),
+            ],
+            Integer,
+        ),
+        "command_line_address": DynamicLibrary.FunctionDeclaration("GetCommandLineW", [], Long),
+        "wide_text_length": DynamicLibrary.FunctionDeclaration(
+            "lstrlenW",
+            [
+                DynamicLibrary.Argument("address", Long),
+            ],
+            Integer,
+        ),
+        "copy_wide_text": DynamicLibrary.FunctionDeclaration(
+            "lstrcpynW",
+            [
+                DynamicLibrary.Argument("room", Buffer),
+                DynamicLibrary.Argument("address", Long),
+                DynamicLibrary.Argument("length", Integer),
+            ],
+            Nothing,
+        ),
+    },
+)
 var _timer_all_access = 2031619
 
 func sleep(duration: Duration) {
@@ -125,15 +217,24 @@ func _loads_the_common_library() {
 }
 
 func _sleep_for(milliseconds: Long) {
-    kernel.Sleep(milliseconds)
+    var call = DynamicLibrary.Call(kernel.functions["sleep_for"])
+    call.arguments["milliseconds"] = milliseconds
+    call.call()
 }
 
 func _create_waitable_timer(security: Long, name: Long, flags: Integer, access: Integer): Long {
-    return kernel.CreateWaitableTimerExW(security, name, flags, access)
+    var call = DynamicLibrary.Call(kernel.functions["create_waitable_timer"])
+    call.arguments["security"] = security
+    call.arguments["name"] = name
+    call.arguments["flags"] = flags
+    call.arguments["access"] = access
+    return call.call()
 }
 
 func _close_handle(handle: Long) {
-    kernel.CloseHandle(handle)
+    var call = DynamicLibrary.Call(kernel.functions["close_handle"])
+    call.arguments["handle"] = handle
+    call.call()
 }
 
 func _set_waitable_timer(
@@ -144,33 +245,61 @@ func _set_waitable_timer(
     argument: Long,
     resume: Integer,
 ): Integer {
-    return kernel.SetWaitableTimer(timer, due, period, completion, argument, resume)
+    var call = DynamicLibrary.Call(kernel.functions["set_waitable_timer"])
+    call.arguments["timer"] = timer
+    call.arguments["due"] = due
+    call.arguments["period"] = period
+    call.arguments["completion"] = completion
+    call.arguments["argument"] = argument
+    call.arguments["resume"] = resume
+    return call.call()
 }
 
 func _wait_for_single_object(handle: Long, milliseconds: Integer): Integer {
-    return kernel.WaitForSingleObject(handle, milliseconds)
+    var call = DynamicLibrary.Call(kernel.functions["wait_for_single_object"])
+    call.arguments["handle"] = handle
+    call.arguments["milliseconds"] = milliseconds
+    return call.call()
 }
 
 func _current_directory(size: Integer, room: Buffer): Integer {
-    return kernel.GetCurrentDirectoryW(size, room)
+    var call = DynamicLibrary.Call(kernel.functions["current_directory"])
+    call.arguments["size"] = size
+    call.arguments["room"] = room
+    return call.call()
 }
 
 func _module_file_name(module: Long, room: Buffer, size: Integer): Integer {
-    return kernel.GetModuleFileNameW(module, room, size)
+    var call = DynamicLibrary.Call(kernel.functions["module_file_name"])
+    call.arguments["module"] = module
+    call.arguments["room"] = room
+    call.arguments["size"] = size
+    return call.call()
 }
 
 func _environment_variable(name: Buffer, room: Buffer, size: Integer): Integer {
-    return kernel.GetEnvironmentVariableW(name, room, size)
+    var call = DynamicLibrary.Call(kernel.functions["environment_variable"])
+    call.arguments["name"] = name
+    call.arguments["room"] = room
+    call.arguments["size"] = size
+    return call.call()
 }
 
 func _command_line_address(): Long {
-    return kernel.GetCommandLineW()
+    var call = DynamicLibrary.Call(kernel.functions["command_line_address"])
+    return call.call()
 }
 
 func _wide_text_length(address: Long): Integer {
-    return kernel.lstrlenW(address)
+    var call = DynamicLibrary.Call(kernel.functions["wide_text_length"])
+    call.arguments["address"] = address
+    return call.call()
 }
 
 func _copy_wide_text(room: Buffer, address: Long, length: Integer) {
-    kernel.lstrcpynW(room, address, length)
+    var call = DynamicLibrary.Call(kernel.functions["copy_wide_text"])
+    call.arguments["room"] = room
+    call.arguments["address"] = address
+    call.arguments["length"] = length
+    call.call()
 }

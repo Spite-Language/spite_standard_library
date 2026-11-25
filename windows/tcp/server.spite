@@ -1,4 +1,88 @@
-var sockets = DynamicLibrary("ws2_32.dll", 'identity', "")
+var sockets = DynamicLibrary(
+    "ws2_32.dll",
+    "",
+    {
+        "socket_startup": DynamicLibrary.FunctionDeclaration(
+            "WSAStartup",
+            [
+                DynamicLibrary.Argument("version", Integer),
+                DynamicLibrary.Argument("information", Buffer),
+            ],
+            Nothing,
+        ),
+        "socket": DynamicLibrary.FunctionDeclaration(
+            "socket",
+            [
+                DynamicLibrary.Argument("family", Integer),
+                DynamicLibrary.Argument("kind", Integer),
+                DynamicLibrary.Argument("protocol", Integer),
+            ],
+            Long,
+        ),
+        "set_socket_option": DynamicLibrary.FunctionDeclaration(
+            "setsockopt",
+            [
+                DynamicLibrary.Argument("socket", Long),
+                DynamicLibrary.Argument("level", Integer),
+                DynamicLibrary.Argument("option", Integer),
+                DynamicLibrary.Argument("value", Buffer),
+                DynamicLibrary.Argument("length", Integer),
+            ],
+            Nothing,
+        ),
+        "bind_socket": DynamicLibrary.FunctionDeclaration(
+            "bind",
+            [
+                DynamicLibrary.Argument("socket", Long),
+                DynamicLibrary.Argument("address", Buffer),
+                DynamicLibrary.Argument("length", Integer),
+            ],
+            Integer,
+        ),
+        "listen": DynamicLibrary.FunctionDeclaration(
+            "listen",
+            [
+                DynamicLibrary.Argument("socket", Long),
+                DynamicLibrary.Argument("backlog", Integer),
+            ],
+            Integer,
+        ),
+        "accept": DynamicLibrary.FunctionDeclaration(
+            "accept",
+            [
+                DynamicLibrary.Argument("socket", Long),
+                DynamicLibrary.Argument("address", Long),
+                DynamicLibrary.Argument("length", Long),
+            ],
+            Long,
+        ),
+        "control_socket": DynamicLibrary.FunctionDeclaration(
+            "ioctlsocket",
+            [
+                DynamicLibrary.Argument("socket", Long),
+                DynamicLibrary.Argument("command", Integer),
+                DynamicLibrary.Argument("argument", Buffer),
+            ],
+            Nothing,
+        ),
+        "close_socket": DynamicLibrary.FunctionDeclaration(
+            "closesocket",
+            [
+                DynamicLibrary.Argument("socket", Long),
+            ],
+            Nothing,
+        ),
+        "poll": DynamicLibrary.FunctionDeclaration(
+            "WSAPoll",
+            [
+                DynamicLibrary.Argument("watched", Buffer),
+                DynamicLibrary.Argument("count", Integer),
+                DynamicLibrary.Argument("milliseconds", Long),
+            ],
+            Integer,
+        ),
+    },
+)
 var nonblocking = false
 var _winsock_version_2_2 = 514
 var _nonblocking_io_control = -2147195266
@@ -106,37 +190,71 @@ func _first_readable(handles: List<Long>, patience: Duration): Integer {
 }
 
 func _socket_startup(version: Integer, information: Buffer) {
-    sockets.WSAStartup(version, information)
+    var call = DynamicLibrary.Call(sockets.functions["socket_startup"])
+    call.arguments["version"] = version
+    call.arguments["information"] = information
+    call.call()
 }
 
 func _socket(family: Integer, kind: Integer, protocol: Integer): Long {
-    return sockets.socket(family, kind, protocol)
+    var call = DynamicLibrary.Call(sockets.functions["socket"])
+    call.arguments["family"] = family
+    call.arguments["kind"] = kind
+    call.arguments["protocol"] = protocol
+    return call.call()
 }
 
 func _set_socket_option(socket: Long, level: Integer, option: Integer, value: Buffer, length: Integer) {
-    sockets.setsockopt(socket, level, option, value, length)
+    var call = DynamicLibrary.Call(sockets.functions["set_socket_option"])
+    call.arguments["socket"] = socket
+    call.arguments["level"] = level
+    call.arguments["option"] = option
+    call.arguments["value"] = value
+    call.arguments["length"] = length
+    call.call()
 }
 
 func _bind_socket(socket: Long, address: Buffer, length: Integer): Integer {
-    return sockets.bind(socket, address, length)
+    var call = DynamicLibrary.Call(sockets.functions["bind_socket"])
+    call.arguments["socket"] = socket
+    call.arguments["address"] = address
+    call.arguments["length"] = length
+    return call.call()
 }
 
 func _listen(socket: Long, backlog: Integer): Integer {
-    return sockets.listen(socket, backlog)
+    var call = DynamicLibrary.Call(sockets.functions["listen"])
+    call.arguments["socket"] = socket
+    call.arguments["backlog"] = backlog
+    return call.call()
 }
 
 func _accept(socket: Long, address: Long, length: Long): Long {
-    return sockets.accept(socket, address, length)
+    var call = DynamicLibrary.Call(sockets.functions["accept"])
+    call.arguments["socket"] = socket
+    call.arguments["address"] = address
+    call.arguments["length"] = length
+    return call.call()
 }
 
 func _control_socket(socket: Long, command: Integer, argument: Buffer) {
-    sockets.ioctlsocket(socket, command, argument)
+    var call = DynamicLibrary.Call(sockets.functions["control_socket"])
+    call.arguments["socket"] = socket
+    call.arguments["command"] = command
+    call.arguments["argument"] = argument
+    call.call()
 }
 
 func _close_socket(socket: Long) {
-    sockets.closesocket(socket)
+    var call = DynamicLibrary.Call(sockets.functions["close_socket"])
+    call.arguments["socket"] = socket
+    call.call()
 }
 
 func _poll(watched: Buffer, count: Integer, milliseconds: Long): Integer {
-    return sockets.WSAPoll(watched, count, milliseconds)
+    var call = DynamicLibrary.Call(sockets.functions["poll"])
+    call.arguments["watched"] = watched
+    call.arguments["count"] = count
+    call.arguments["milliseconds"] = milliseconds
+    return call.call()
 }

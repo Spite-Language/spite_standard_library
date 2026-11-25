@@ -8,7 +8,45 @@ type Debuggable {
     to_debug: Spite.Function<String>
 }
 
-var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
+var library = DynamicLibrary(
+    "ucrtbase.dll",
+    "",
+    {
+        "write": DynamicLibrary.FunctionDeclaration(
+            "_write",
+            [
+                DynamicLibrary.Argument("stream", Integer),
+                DynamicLibrary.Argument("text", String),
+                DynamicLibrary.Argument("length", Integer),
+            ],
+            Nothing,
+        ),
+        "open_stream": DynamicLibrary.FunctionDeclaration(
+            "_fdopen",
+            [
+                DynamicLibrary.Argument("file", Integer),
+                DynamicLibrary.Argument("mode", String),
+            ],
+            Long,
+        ),
+        "read_text_line": DynamicLibrary.FunctionDeclaration(
+            "fgets",
+            [
+                DynamicLibrary.Argument("room", Buffer),
+                DynamicLibrary.Argument("size", Integer),
+                DynamicLibrary.Argument("stream", Long),
+            ],
+            Long,
+        ),
+        "text_length": DynamicLibrary.FunctionDeclaration(
+            "strlen",
+            [
+                DynamicLibrary.Argument("text", Buffer),
+            ],
+            Integer,
+        ),
+    },
+)
 
 func print(...values: List<Printable>) {
     var line = _line_of(values)
@@ -63,5 +101,9 @@ func _write_to(text: String, stream: Integer) {
 }
 
 func _write(stream: Integer, text: String, length: Integer) {
-    library._write(stream, text, length)
+    var call = DynamicLibrary.Call(library.functions["write"])
+    call.arguments["stream"] = stream
+    call.arguments["text"] = text
+    call.arguments["length"] = length
+    call.call()
 }

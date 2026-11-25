@@ -679,6 +679,22 @@ func _as_unsigned_long(): UnsignedLong {
 }
 
 func _decimal_of(text: String, end: Long): Double {
-    var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-    return library.strtod(text, end)
+    var library = DynamicLibrary(
+        "ucrtbase.dll",
+        "",
+        {
+            "decimal_of": DynamicLibrary.FunctionDeclaration(
+                "strtod",
+                [
+                    DynamicLibrary.Argument("text", String),
+                    DynamicLibrary.Argument("end", Long),
+                ],
+                Double,
+            ),
+        },
+    )
+    var call = DynamicLibrary.Call(library.functions["decimal_of"])
+    call.arguments["text"] = text
+    call.arguments["end"] = end
+    return call.call()
 }

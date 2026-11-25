@@ -61,8 +61,36 @@ func _measured_wide_character_to_multi_byte(
     default_character: Long,
     used_default: Long,
 ): Integer {
-    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
-    return kernel.WideCharToMultiByte(code_page, flags, wide, characters, no_room, size, default_character, used_default)
+    var kernel = DynamicLibrary(
+        "kernel32.dll",
+        "",
+        {
+            "measured_wide_character_to_multi_byte": DynamicLibrary.FunctionDeclaration(
+                "WideCharToMultiByte",
+                [
+                    DynamicLibrary.Argument("code_page", Integer),
+                    DynamicLibrary.Argument("flags", Integer),
+                    DynamicLibrary.Argument("wide", Buffer),
+                    DynamicLibrary.Argument("characters", Integer),
+                    DynamicLibrary.Argument("no_room", Long),
+                    DynamicLibrary.Argument("size", Integer),
+                    DynamicLibrary.Argument("default_character", Long),
+                    DynamicLibrary.Argument("used_default", Long),
+                ],
+                Integer,
+            ),
+        },
+    )
+    var call = DynamicLibrary.Call(kernel.functions["measured_wide_character_to_multi_byte"])
+    call.arguments["code_page"] = code_page
+    call.arguments["flags"] = flags
+    call.arguments["wide"] = wide
+    call.arguments["characters"] = characters
+    call.arguments["no_room"] = no_room
+    call.arguments["size"] = size
+    call.arguments["default_character"] = default_character
+    call.arguments["used_default"] = used_default
+    return call.call()
 }
 
 func _wide_character_to_multi_byte(
@@ -75,6 +103,34 @@ func _wide_character_to_multi_byte(
     default_character: Long,
     used_default: Long,
 ): Integer {
-    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
-    return kernel.WideCharToMultiByte(code_page, flags, wide, characters, room, size, default_character, used_default)
+    var kernel = DynamicLibrary(
+        "kernel32.dll",
+        "",
+        {
+            "wide_character_to_multi_byte": DynamicLibrary.FunctionDeclaration(
+                "WideCharToMultiByte",
+                [
+                    DynamicLibrary.Argument("code_page", Integer),
+                    DynamicLibrary.Argument("flags", Integer),
+                    DynamicLibrary.Argument("wide", Buffer),
+                    DynamicLibrary.Argument("characters", Integer),
+                    DynamicLibrary.Argument("room", Buffer),
+                    DynamicLibrary.Argument("size", Integer),
+                    DynamicLibrary.Argument("default_character", Long),
+                    DynamicLibrary.Argument("used_default", Long),
+                ],
+                Integer,
+            ),
+        },
+    )
+    var call = DynamicLibrary.Call(kernel.functions["wide_character_to_multi_byte"])
+    call.arguments["code_page"] = code_page
+    call.arguments["flags"] = flags
+    call.arguments["wide"] = wide
+    call.arguments["characters"] = characters
+    call.arguments["room"] = room
+    call.arguments["size"] = size
+    call.arguments["default_character"] = default_character
+    call.arguments["used_default"] = used_default
+    return call.call()
 }

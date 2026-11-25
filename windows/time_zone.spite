@@ -1,4 +1,66 @@
-var _icu = DynamicLibrary("icu.dll", 'identity', "")
+var _icu = DynamicLibrary(
+    "icu.dll",
+    "",
+    {
+        "close_calendar": DynamicLibrary.FunctionDeclaration(
+            "ucal_close",
+            [
+                DynamicLibrary.Argument("calendar", Long),
+            ],
+            Nothing,
+        ),
+        "set_milliseconds": DynamicLibrary.FunctionDeclaration(
+            "ucal_setMillis",
+            [
+                DynamicLibrary.Argument("calendar", Long),
+                DynamicLibrary.Argument("milliseconds", Double),
+                DynamicLibrary.Argument("status", Buffer),
+            ],
+            Nothing,
+        ),
+        "calendar_field": DynamicLibrary.FunctionDeclaration(
+            "ucal_get",
+            [
+                DynamicLibrary.Argument("calendar", Long),
+                DynamicLibrary.Argument("field", Integer),
+                DynamicLibrary.Argument("status", Buffer),
+            ],
+            Integer,
+        ),
+        "canonical_time_zone_identifier": DynamicLibrary.FunctionDeclaration(
+            "ucal_getCanonicalTimeZoneID",
+            [
+                DynamicLibrary.Argument("identifier", Buffer),
+                DynamicLibrary.Argument("length", Integer),
+                DynamicLibrary.Argument("canonical", Buffer),
+                DynamicLibrary.Argument("capacity", Integer),
+                DynamicLibrary.Argument("is_system", Buffer),
+                DynamicLibrary.Argument("status", Buffer),
+            ],
+            Nothing,
+        ),
+        "calendar_of": DynamicLibrary.FunctionDeclaration(
+            "ucal_open",
+            [
+                DynamicLibrary.Argument("identifier", Buffer),
+                DynamicLibrary.Argument("length", Integer),
+                DynamicLibrary.Argument("locale", String),
+                DynamicLibrary.Argument("kind", Integer),
+                DynamicLibrary.Argument("status", Buffer),
+            ],
+            Long,
+        ),
+        "default_time_zone": DynamicLibrary.FunctionDeclaration(
+            "ucal_getDefaultTimeZone",
+            [
+                DynamicLibrary.Argument("room", Buffer),
+                DynamicLibrary.Argument("capacity", Integer),
+                DynamicLibrary.Argument("status", Buffer),
+            ],
+            Integer,
+        ),
+    },
+)
 var _calendar: Long = 0
 var _status = Buffer(0)
 var _earliest_icu_calendar_second: Long = -184303902528000
@@ -112,15 +174,25 @@ func _default_identifier(): String? {
 }
 
 func _close_calendar(calendar: Long) {
-    _icu.ucal_close(calendar)
+    var call = DynamicLibrary.Call(_icu.functions["close_calendar"])
+    call.arguments["calendar"] = calendar
+    call.call()
 }
 
 func _set_milliseconds(calendar: Long, milliseconds: Double, status: Buffer) {
-    _icu.ucal_setMillis(calendar, milliseconds, status)
+    var call = DynamicLibrary.Call(_icu.functions["set_milliseconds"])
+    call.arguments["calendar"] = calendar
+    call.arguments["milliseconds"] = milliseconds
+    call.arguments["status"] = status
+    call.call()
 }
 
 func _calendar_field(calendar: Long, field: Integer, status: Buffer): Integer {
-    return _icu.ucal_get(calendar, field, status)
+    var call = DynamicLibrary.Call(_icu.functions["calendar_field"])
+    call.arguments["calendar"] = calendar
+    call.arguments["field"] = field
+    call.arguments["status"] = status
+    return call.call()
 }
 
 func _canonical_time_zone_identifier(
@@ -131,13 +203,30 @@ func _canonical_time_zone_identifier(
     is_system: Buffer,
     status: Buffer,
 ) {
-    _icu.ucal_getCanonicalTimeZoneID(identifier, length, canonical, capacity, is_system, status)
+    var call = DynamicLibrary.Call(_icu.functions["canonical_time_zone_identifier"])
+    call.arguments["identifier"] = identifier
+    call.arguments["length"] = length
+    call.arguments["canonical"] = canonical
+    call.arguments["capacity"] = capacity
+    call.arguments["is_system"] = is_system
+    call.arguments["status"] = status
+    call.call()
 }
 
 func _calendar_of(identifier: Buffer, length: Integer, locale: String, kind: Integer, status: Buffer): Long {
-    return _icu.ucal_open(identifier, length, locale, kind, status)
+    var call = DynamicLibrary.Call(_icu.functions["calendar_of"])
+    call.arguments["identifier"] = identifier
+    call.arguments["length"] = length
+    call.arguments["locale"] = locale
+    call.arguments["kind"] = kind
+    call.arguments["status"] = status
+    return call.call()
 }
 
 func _default_time_zone(room: Buffer, capacity: Integer, status: Buffer): Integer {
-    return _icu.ucal_getDefaultTimeZone(room, capacity, status)
+    var call = DynamicLibrary.Call(_icu.functions["default_time_zone"])
+    call.arguments["room"] = room
+    call.arguments["capacity"] = capacity
+    call.arguments["status"] = status
+    return call.call()
 }

@@ -1,4 +1,107 @@
-var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+var kernel = DynamicLibrary(
+    "kernel32.dll",
+    "",
+    {
+        "create_file": DynamicLibrary.FunctionDeclaration(
+            "CreateFileW",
+            [
+                DynamicLibrary.Argument("path", Buffer),
+                DynamicLibrary.Argument("access", Integer),
+                DynamicLibrary.Argument("sharing", Integer),
+                DynamicLibrary.Argument("security", Long),
+                DynamicLibrary.Argument("disposition", Integer),
+                DynamicLibrary.Argument("flags", Integer),
+                DynamicLibrary.Argument("template", Long),
+            ],
+            Long,
+        ),
+        "create_event": DynamicLibrary.FunctionDeclaration(
+            "CreateEventW",
+            [
+                DynamicLibrary.Argument("security", Long),
+                DynamicLibrary.Argument("manual_reset", Integer),
+                DynamicLibrary.Argument("initial_state", Integer),
+                DynamicLibrary.Argument("name", Long),
+            ],
+            Long,
+        ),
+        "reset_event": DynamicLibrary.FunctionDeclaration(
+            "ResetEvent",
+            [
+                DynamicLibrary.Argument("event", Long),
+            ],
+            Nothing,
+        ),
+        "read_directory_changes": DynamicLibrary.FunctionDeclaration(
+            "ReadDirectoryChangesW",
+            [
+                DynamicLibrary.Argument("handle", Long),
+                DynamicLibrary.Argument("buffer", Buffer),
+                DynamicLibrary.Argument("length", Integer),
+                DynamicLibrary.Argument("subtree", Integer),
+                DynamicLibrary.Argument("filter", Integer),
+                DynamicLibrary.Argument("returned", Long),
+                DynamicLibrary.Argument("overlapped", Buffer),
+                DynamicLibrary.Argument("completion", Long),
+            ],
+            Integer,
+        ),
+        "overlapped_result": DynamicLibrary.FunctionDeclaration(
+            "GetOverlappedResult",
+            [
+                DynamicLibrary.Argument("handle", Long),
+                DynamicLibrary.Argument("overlapped", Buffer),
+                DynamicLibrary.Argument("transferred", Buffer),
+                DynamicLibrary.Argument("wait", Integer),
+            ],
+            Integer,
+        ),
+        "last_error": DynamicLibrary.FunctionDeclaration("GetLastError", [], Integer),
+        "file_attributes": DynamicLibrary.FunctionDeclaration(
+            "GetFileAttributesW",
+            [
+                DynamicLibrary.Argument("path", Buffer),
+            ],
+            Integer,
+        ),
+        "wait_for_multiple_objects": DynamicLibrary.FunctionDeclaration(
+            "WaitForMultipleObjects",
+            [
+                DynamicLibrary.Argument("count", Integer),
+                DynamicLibrary.Argument("handles", Buffer),
+                DynamicLibrary.Argument("wait_all", Integer),
+                DynamicLibrary.Argument("milliseconds", Long),
+            ],
+            Nothing,
+        ),
+        "sleep": DynamicLibrary.FunctionDeclaration("Sleep", [DynamicLibrary.Argument("milliseconds", Long)], Nothing),
+        "cancel_input_output": DynamicLibrary.FunctionDeclaration(
+            "CancelIoEx",
+            [
+                DynamicLibrary.Argument("handle", Long),
+                DynamicLibrary.Argument("overlapped", Buffer),
+            ],
+            Nothing,
+        ),
+        "close_handle": DynamicLibrary.FunctionDeclaration(
+            "CloseHandle",
+            [
+                DynamicLibrary.Argument("handle", Long),
+            ],
+            Nothing,
+        ),
+        "finish_overlapped": DynamicLibrary.FunctionDeclaration(
+            "GetOverlappedResult",
+            [
+                DynamicLibrary.Argument("handle", Long),
+                DynamicLibrary.Argument("overlapped", Buffer),
+                DynamicLibrary.Argument("transferred", Buffer),
+                DynamicLibrary.Argument("wait", Integer),
+            ],
+            Nothing,
+        ),
+    },
+)
 var handles = List<Long>()
 var events = List<Long>()
 var overlaps = List<Buffer>()
@@ -254,15 +357,30 @@ func _create_file(
     flags: Integer,
     template: Long,
 ): Long {
-    return kernel.CreateFileW(path, access, sharing, security, disposition, flags, template)
+    var call = DynamicLibrary.Call(kernel.functions["create_file"])
+    call.arguments["path"] = path
+    call.arguments["access"] = access
+    call.arguments["sharing"] = sharing
+    call.arguments["security"] = security
+    call.arguments["disposition"] = disposition
+    call.arguments["flags"] = flags
+    call.arguments["template"] = template
+    return call.call()
 }
 
 func _create_event(security: Long, manual_reset: Integer, initial_state: Integer, name: Long): Long {
-    return kernel.CreateEventW(security, manual_reset, initial_state, name)
+    var call = DynamicLibrary.Call(kernel.functions["create_event"])
+    call.arguments["security"] = security
+    call.arguments["manual_reset"] = manual_reset
+    call.arguments["initial_state"] = initial_state
+    call.arguments["name"] = name
+    return call.call()
 }
 
 func _reset_event(event: Long) {
-    kernel.ResetEvent(event)
+    var call = DynamicLibrary.Call(kernel.functions["reset_event"])
+    call.arguments["event"] = event
+    call.call()
 }
 
 func _read_directory_changes(
@@ -275,37 +393,71 @@ func _read_directory_changes(
     overlapped: Buffer,
     completion: Long,
 ): Integer {
-    return kernel.ReadDirectoryChangesW(handle, buffer, length, subtree, filter, returned, overlapped, completion)
+    var call = DynamicLibrary.Call(kernel.functions["read_directory_changes"])
+    call.arguments["handle"] = handle
+    call.arguments["buffer"] = buffer
+    call.arguments["length"] = length
+    call.arguments["subtree"] = subtree
+    call.arguments["filter"] = filter
+    call.arguments["returned"] = returned
+    call.arguments["overlapped"] = overlapped
+    call.arguments["completion"] = completion
+    return call.call()
 }
 
 func _overlapped_result(handle: Long, overlapped: Buffer, transferred: Buffer, wait: Integer): Integer {
-    return kernel.GetOverlappedResult(handle, overlapped, transferred, wait)
+    var call = DynamicLibrary.Call(kernel.functions["overlapped_result"])
+    call.arguments["handle"] = handle
+    call.arguments["overlapped"] = overlapped
+    call.arguments["transferred"] = transferred
+    call.arguments["wait"] = wait
+    return call.call()
 }
 
 func _last_error(): Integer {
-    return kernel.GetLastError()
+    var call = DynamicLibrary.Call(kernel.functions["last_error"])
+    return call.call()
 }
 
 func _file_attributes(path: Buffer): Integer {
-    return kernel.GetFileAttributesW(path)
+    var call = DynamicLibrary.Call(kernel.functions["file_attributes"])
+    call.arguments["path"] = path
+    return call.call()
 }
 
 func _wait_for_multiple_objects(count: Integer, handles: Buffer, wait_all: Integer, milliseconds: Long) {
-    kernel.WaitForMultipleObjects(count, handles, wait_all, milliseconds)
+    var call = DynamicLibrary.Call(kernel.functions["wait_for_multiple_objects"])
+    call.arguments["count"] = count
+    call.arguments["handles"] = handles
+    call.arguments["wait_all"] = wait_all
+    call.arguments["milliseconds"] = milliseconds
+    call.call()
 }
 
 func _sleep(milliseconds: Long) {
-    kernel.Sleep(milliseconds)
+    var call = DynamicLibrary.Call(kernel.functions["sleep"])
+    call.arguments["milliseconds"] = milliseconds
+    call.call()
 }
 
 func _cancel_input_output(handle: Long, overlapped: Buffer) {
-    kernel.CancelIoEx(handle, overlapped)
+    var call = DynamicLibrary.Call(kernel.functions["cancel_input_output"])
+    call.arguments["handle"] = handle
+    call.arguments["overlapped"] = overlapped
+    call.call()
 }
 
 func _close_handle(handle: Long) {
-    kernel.CloseHandle(handle)
+    var call = DynamicLibrary.Call(kernel.functions["close_handle"])
+    call.arguments["handle"] = handle
+    call.call()
 }
 
 func _finish_overlapped(handle: Long, overlapped: Buffer, transferred: Buffer, wait: Integer) {
-    kernel.GetOverlappedResult(handle, overlapped, transferred, wait)
+    var call = DynamicLibrary.Call(kernel.functions["finish_overlapped"])
+    call.arguments["handle"] = handle
+    call.arguments["overlapped"] = overlapped
+    call.arguments["transferred"] = transferred
+    call.arguments["wait"] = wait
+    call.call()
 }

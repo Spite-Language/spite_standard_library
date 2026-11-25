@@ -1,5 +1,117 @@
-var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
-var runtime = DynamicLibrary("ucrtbase.dll", 'identity', "")
+var kernel = DynamicLibrary(
+    "kernel32.dll",
+    "",
+    {
+        "standard_handle": DynamicLibrary.FunctionDeclaration(
+            "GetStdHandle",
+            [
+                DynamicLibrary.Argument("kind", Integer),
+            ],
+            Long,
+        ),
+        "current_process": DynamicLibrary.FunctionDeclaration("GetCurrentProcess", [], Long),
+        "duplicate_handle": DynamicLibrary.FunctionDeclaration(
+            "DuplicateHandle",
+            [
+                DynamicLibrary.Argument("source_process", Long),
+                DynamicLibrary.Argument("source", Long),
+                DynamicLibrary.Argument("target_process", Long),
+                DynamicLibrary.Argument("target", Buffer),
+                DynamicLibrary.Argument("access", Integer),
+                DynamicLibrary.Argument("inherits", Integer),
+                DynamicLibrary.Argument("options", Integer),
+            ],
+            Integer,
+        ),
+        "file_type": DynamicLibrary.FunctionDeclaration(
+            "GetFileType",
+            [
+                DynamicLibrary.Argument("handle", Long),
+            ],
+            Integer,
+        ),
+        "set_console_control_handler": DynamicLibrary.FunctionDeclaration(
+            "SetConsoleCtrlHandler",
+            [
+                DynamicLibrary.Argument("handler", Long),
+                DynamicLibrary.Argument("add", Integer),
+            ],
+            Integer,
+        ),
+        "terminate_process": DynamicLibrary.FunctionDeclaration(
+            "TerminateProcess",
+            [
+                DynamicLibrary.Argument("process", Long),
+                DynamicLibrary.Argument("exit_code", Integer),
+            ],
+            Integer,
+        ),
+        "peek_named_pipe": DynamicLibrary.FunctionDeclaration(
+            "PeekNamedPipe",
+            [
+                DynamicLibrary.Argument("pipe", Long),
+                DynamicLibrary.Argument("buffer", Long),
+                DynamicLibrary.Argument("size", Integer),
+                DynamicLibrary.Argument("read", Long),
+                DynamicLibrary.Argument("available", Buffer),
+                DynamicLibrary.Argument("left", Long),
+            ],
+            Integer,
+        ),
+        "number_of_console_input_events": DynamicLibrary.FunctionDeclaration(
+            "GetNumberOfConsoleInputEvents",
+            [
+                DynamicLibrary.Argument("input", Long),
+                DynamicLibrary.Argument("count", Buffer),
+            ],
+            Integer,
+        ),
+        "peek_console_input": DynamicLibrary.FunctionDeclaration(
+            "PeekConsoleInputA",
+            [
+                DynamicLibrary.Argument("input", Long),
+                DynamicLibrary.Argument("records", Buffer),
+                DynamicLibrary.Argument("length", Integer),
+                DynamicLibrary.Argument("read", Buffer),
+            ],
+            Integer,
+        ),
+        "read_file": DynamicLibrary.FunctionDeclaration(
+            "ReadFile",
+            [
+                DynamicLibrary.Argument("handle", Long),
+                DynamicLibrary.Argument("room", Buffer),
+                DynamicLibrary.Argument("size", Integer),
+                DynamicLibrary.Argument("read", Buffer),
+                DynamicLibrary.Argument("overlapped", Long),
+            ],
+            Integer,
+        ),
+    },
+)
+var runtime = DynamicLibrary(
+    "ucrtbase.dll",
+    "",
+    {
+        "open_file": DynamicLibrary.FunctionDeclaration(
+            "_open",
+            [
+                DynamicLibrary.Argument("path", String),
+                DynamicLibrary.Argument("flags", Integer),
+            ],
+            Integer,
+        ),
+        "duplicate_file": DynamicLibrary.FunctionDeclaration(
+            "_dup2",
+            [
+                DynamicLibrary.Argument("source", Integer),
+                DynamicLibrary.Argument("target", Integer),
+            ],
+            Integer,
+        ),
+        "close_file": DynamicLibrary.FunctionDeclaration("_close", [DynamicLibrary.Argument("file", Integer)], Integer),
+    },
+)
 var input: Long = 0
 var input_kind = 0
 var held = Buffer(0)
@@ -188,11 +300,14 @@ func _taken(end: Integer, after: Integer): String {
 }
 
 func _standard_handle(kind: Integer): Long {
-    return kernel.GetStdHandle(kind)
+    var call = DynamicLibrary.Call(kernel.functions["standard_handle"])
+    call.arguments["kind"] = kind
+    return call.call()
 }
 
 func _current_process(): Long {
-    return kernel.GetCurrentProcess()
+    var call = DynamicLibrary.Call(kernel.functions["current_process"])
+    return call.call()
 }
 
 func _duplicate_handle(
@@ -204,45 +319,90 @@ func _duplicate_handle(
     inherits: Integer,
     options: Integer,
 ): Integer {
-    return kernel.DuplicateHandle(source_process, source, target_process, target, access, inherits, options)
+    var call = DynamicLibrary.Call(kernel.functions["duplicate_handle"])
+    call.arguments["source_process"] = source_process
+    call.arguments["source"] = source
+    call.arguments["target_process"] = target_process
+    call.arguments["target"] = target
+    call.arguments["access"] = access
+    call.arguments["inherits"] = inherits
+    call.arguments["options"] = options
+    return call.call()
 }
 
 func _file_type(handle: Long): Integer {
-    return kernel.GetFileType(handle)
+    var call = DynamicLibrary.Call(kernel.functions["file_type"])
+    call.arguments["handle"] = handle
+    return call.call()
 }
 
 func _set_console_control_handler(handler: Long, add: Integer): Integer {
-    return kernel.SetConsoleCtrlHandler(handler, add)
+    var call = DynamicLibrary.Call(kernel.functions["set_console_control_handler"])
+    call.arguments["handler"] = handler
+    call.arguments["add"] = add
+    return call.call()
 }
 
 func _open_file(path: String, flags: Integer): Integer {
-    return runtime._open(path, flags)
+    var call = DynamicLibrary.Call(runtime.functions["open_file"])
+    call.arguments["path"] = path
+    call.arguments["flags"] = flags
+    return call.call()
 }
 
 func _duplicate_file(source: Integer, target: Integer): Integer {
-    return runtime._dup2(source, target)
+    var call = DynamicLibrary.Call(runtime.functions["duplicate_file"])
+    call.arguments["source"] = source
+    call.arguments["target"] = target
+    return call.call()
 }
 
 func _close_file(file: Integer): Integer {
-    return runtime._close(file)
+    var call = DynamicLibrary.Call(runtime.functions["close_file"])
+    call.arguments["file"] = file
+    return call.call()
 }
 
 func _terminate_process(process: Long, exit_code: Integer): Integer {
-    return kernel.TerminateProcess(process, exit_code)
+    var call = DynamicLibrary.Call(kernel.functions["terminate_process"])
+    call.arguments["process"] = process
+    call.arguments["exit_code"] = exit_code
+    return call.call()
 }
 
 func _peek_named_pipe(pipe: Long, buffer: Long, size: Integer, read: Long, available: Buffer, left: Long): Integer {
-    return kernel.PeekNamedPipe(pipe, buffer, size, read, available, left)
+    var call = DynamicLibrary.Call(kernel.functions["peek_named_pipe"])
+    call.arguments["pipe"] = pipe
+    call.arguments["buffer"] = buffer
+    call.arguments["size"] = size
+    call.arguments["read"] = read
+    call.arguments["available"] = available
+    call.arguments["left"] = left
+    return call.call()
 }
 
 func _number_of_console_input_events(input: Long, count: Buffer): Integer {
-    return kernel.GetNumberOfConsoleInputEvents(input, count)
+    var call = DynamicLibrary.Call(kernel.functions["number_of_console_input_events"])
+    call.arguments["input"] = input
+    call.arguments["count"] = count
+    return call.call()
 }
 
 func _peek_console_input(input: Long, records: Buffer, length: Integer, read: Buffer): Integer {
-    return kernel.PeekConsoleInputA(input, records, length, read)
+    var call = DynamicLibrary.Call(kernel.functions["peek_console_input"])
+    call.arguments["input"] = input
+    call.arguments["records"] = records
+    call.arguments["length"] = length
+    call.arguments["read"] = read
+    return call.call()
 }
 
 func _read_file(handle: Long, room: Buffer, size: Integer, read: Buffer, overlapped: Long): Integer {
-    return kernel.ReadFile(handle, room, size, read, overlapped)
+    var call = DynamicLibrary.Call(kernel.functions["read_file"])
+    call.arguments["handle"] = handle
+    call.arguments["room"] = room
+    call.arguments["size"] = size
+    call.arguments["read"] = read
+    call.arguments["overlapped"] = overlapped
+    return call.call()
 }

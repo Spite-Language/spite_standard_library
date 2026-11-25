@@ -1,4 +1,63 @@
-var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+var kernel = DynamicLibrary(
+    "kernel32.dll",
+    "",
+    {
+        "file_attributes": DynamicLibrary.FunctionDeclaration(
+            "GetFileAttributesW",
+            [
+                DynamicLibrary.Argument("path", Buffer),
+            ],
+            Integer,
+        ),
+        "create_directory": DynamicLibrary.FunctionDeclaration(
+            "CreateDirectoryW",
+            [
+                DynamicLibrary.Argument("path", Buffer),
+                DynamicLibrary.Argument("security", Long),
+            ],
+            Integer,
+        ),
+        "remove_directory": DynamicLibrary.FunctionDeclaration(
+            "RemoveDirectoryW",
+            [
+                DynamicLibrary.Argument("path", Buffer),
+            ],
+            Integer,
+        ),
+        "move_file": DynamicLibrary.FunctionDeclaration(
+            "MoveFileExW",
+            [
+                DynamicLibrary.Argument("path", Buffer),
+                DynamicLibrary.Argument("new_path", Buffer),
+                DynamicLibrary.Argument("flags", Integer),
+            ],
+            Integer,
+        ),
+        "find_first_file": DynamicLibrary.FunctionDeclaration(
+            "FindFirstFileW",
+            [
+                DynamicLibrary.Argument("pattern", Buffer),
+                DynamicLibrary.Argument("found", Buffer),
+            ],
+            Long,
+        ),
+        "find_next_file": DynamicLibrary.FunctionDeclaration(
+            "FindNextFileW",
+            [
+                DynamicLibrary.Argument("search", Long),
+                DynamicLibrary.Argument("found", Buffer),
+            ],
+            Integer,
+        ),
+        "find_close": DynamicLibrary.FunctionDeclaration(
+            "FindClose",
+            [
+                DynamicLibrary.Argument("search", Long),
+            ],
+            Nothing,
+        ),
+    },
+)
 var _find_data_bytes = 592
 var _longest_path_characters = 260
 var _reparse_point = 1024
@@ -87,29 +146,48 @@ func _entry_names(want_folders: Boolean): List<String>? {
 }
 
 func _file_attributes(path: Buffer): Integer {
-    return kernel.GetFileAttributesW(path)
+    var call = DynamicLibrary.Call(kernel.functions["file_attributes"])
+    call.arguments["path"] = path
+    return call.call()
 }
 
 func _create_directory(path: Buffer, security: Long): Integer {
-    return kernel.CreateDirectoryW(path, security)
+    var call = DynamicLibrary.Call(kernel.functions["create_directory"])
+    call.arguments["path"] = path
+    call.arguments["security"] = security
+    return call.call()
 }
 
 func _remove_directory(path: Buffer): Integer {
-    return kernel.RemoveDirectoryW(path)
+    var call = DynamicLibrary.Call(kernel.functions["remove_directory"])
+    call.arguments["path"] = path
+    return call.call()
 }
 
 func _move_file(path: Buffer, new_path: Buffer, flags: Integer): Integer {
-    return kernel.MoveFileExW(path, new_path, flags)
+    var call = DynamicLibrary.Call(kernel.functions["move_file"])
+    call.arguments["path"] = path
+    call.arguments["new_path"] = new_path
+    call.arguments["flags"] = flags
+    return call.call()
 }
 
 func _find_first_file(pattern: Buffer, found: Buffer): Long {
-    return kernel.FindFirstFileW(pattern, found)
+    var call = DynamicLibrary.Call(kernel.functions["find_first_file"])
+    call.arguments["pattern"] = pattern
+    call.arguments["found"] = found
+    return call.call()
 }
 
 func _find_next_file(search: Long, found: Buffer): Integer {
-    return kernel.FindNextFileW(search, found)
+    var call = DynamicLibrary.Call(kernel.functions["find_next_file"])
+    call.arguments["search"] = search
+    call.arguments["found"] = found
+    return call.call()
 }
 
 func _find_close(search: Long) {
-    kernel.FindClose(search)
+    var call = DynamicLibrary.Call(kernel.functions["find_close"])
+    call.arguments["search"] = search
+    call.call()
 }

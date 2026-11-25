@@ -11,7 +11,7 @@ func get_name(): String {
     return _name
 }
 
-func get_class(): Spite.FunctionDeclaration.Returned {
+func get_kind(): Spite.FunctionDeclaration.Returned {
     return _class
 }
 

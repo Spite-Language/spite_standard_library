@@ -42,13 +42,22 @@ func _ends_with_byte(bytes: Buffer, wanted: Integer): Boolean {
 }
 
 func _open_stream(file: Integer, mode: String): Long {
-    return library._fdopen(file, mode)
+    var call = DynamicLibrary.Call(library.functions["open_stream"])
+    call.arguments["file"] = file
+    call.arguments["mode"] = mode
+    return call.call()
 }
 
 func _read_text_line(room: Buffer, size: Integer, stream: Long): Long {
-    return library.fgets(room, size, stream)
+    var call = DynamicLibrary.Call(library.functions["read_text_line"])
+    call.arguments["room"] = room
+    call.arguments["size"] = size
+    call.arguments["stream"] = stream
+    return call.call()
 }
 
 func _text_length(text: Buffer): Integer {
-    return library.strlen(text)
+    var call = DynamicLibrary.Call(library.functions["text_length"])
+    call.arguments["text"] = text
+    return call.call()
 }

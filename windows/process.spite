@@ -1,5 +1,196 @@
-var library = DynamicLibrary("ucrtbase.dll", 'identity', "")
-var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
+var library = DynamicLibrary(
+    "ucrtbase.dll",
+    "",
+    {
+        "set_error_number": DynamicLibrary.FunctionDeclaration(
+            "_set_errno",
+            [
+                DynamicLibrary.Argument("value", Integer),
+            ],
+            Nothing,
+        ),
+        "system": DynamicLibrary.FunctionDeclaration("_wsystem", [DynamicLibrary.Argument("command", Buffer)], Integer),
+        "error_number_into": DynamicLibrary.FunctionDeclaration(
+            "_get_errno",
+            [
+                DynamicLibrary.Argument("room", Buffer),
+            ],
+            Nothing,
+        ),
+    },
+)
+var kernel = DynamicLibrary(
+    "kernel32.dll",
+    "",
+    {
+        "close_handle": DynamicLibrary.FunctionDeclaration(
+            "CloseHandle",
+            [
+                DynamicLibrary.Argument("handle", Long),
+            ],
+            Nothing,
+        ),
+        "create_process": DynamicLibrary.FunctionDeclaration(
+            "CreateProcessW",
+            [
+                DynamicLibrary.Argument("application", Long),
+                DynamicLibrary.Argument("command_line", Buffer),
+                DynamicLibrary.Argument("process_security", Long),
+                DynamicLibrary.Argument("thread_security", Long),
+                DynamicLibrary.Argument("inherits_handles", Integer),
+                DynamicLibrary.Argument("flags", Integer),
+                DynamicLibrary.Argument("environment", Long),
+                DynamicLibrary.Argument("directory", Long),
+                DynamicLibrary.Argument("startup", Buffer),
+                DynamicLibrary.Argument("information", Buffer),
+            ],
+            Integer,
+        ),
+        "terminate_process": DynamicLibrary.FunctionDeclaration(
+            "TerminateProcess",
+            [
+                DynamicLibrary.Argument("process", Long),
+                DynamicLibrary.Argument("exit_code", Integer),
+            ],
+            Nothing,
+        ),
+        "wait_for_single_object": DynamicLibrary.FunctionDeclaration(
+            "WaitForSingleObject",
+            [
+                DynamicLibrary.Argument("handle", Long),
+                DynamicLibrary.Argument("milliseconds", Integer),
+            ],
+            Integer,
+        ),
+        "tick_count": DynamicLibrary.FunctionDeclaration("GetTickCount64", [], Long),
+        "terminate_job_object": DynamicLibrary.FunctionDeclaration(
+            "TerminateJobObject",
+            [
+                DynamicLibrary.Argument("job", Long),
+                DynamicLibrary.Argument("exit_code", Integer),
+            ],
+            Nothing,
+        ),
+        "sleep": DynamicLibrary.FunctionDeclaration(
+            "Sleep",
+            [
+                DynamicLibrary.Argument("milliseconds", Integer),
+            ],
+            Nothing,
+        ),
+        "exit_code_of_process": DynamicLibrary.FunctionDeclaration(
+            "GetExitCodeProcess",
+            [
+                DynamicLibrary.Argument("process", Long),
+                DynamicLibrary.Argument("exit_code", Buffer),
+            ],
+            Integer,
+        ),
+        "peek_named_pipe": DynamicLibrary.FunctionDeclaration(
+            "PeekNamedPipe",
+            [
+                DynamicLibrary.Argument("pipe", Long),
+                DynamicLibrary.Argument("buffer", Long),
+                DynamicLibrary.Argument("size", Integer),
+                DynamicLibrary.Argument("read", Long),
+                DynamicLibrary.Argument("available", Buffer),
+                DynamicLibrary.Argument("left", Long),
+            ],
+            Integer,
+        ),
+        "read_file": DynamicLibrary.FunctionDeclaration(
+            "ReadFile",
+            [
+                DynamicLibrary.Argument("handle", Long),
+                DynamicLibrary.Argument("room", Buffer),
+                DynamicLibrary.Argument("size", Integer),
+                DynamicLibrary.Argument("read", Buffer),
+                DynamicLibrary.Argument("overlapped", Long),
+            ],
+            Integer,
+        ),
+        "resume_thread": DynamicLibrary.FunctionDeclaration(
+            "ResumeThread",
+            [
+                DynamicLibrary.Argument("thread", Long),
+            ],
+            Nothing,
+        ),
+        "create_job_object": DynamicLibrary.FunctionDeclaration(
+            "CreateJobObjectA",
+            [
+                DynamicLibrary.Argument("security", Long),
+                DynamicLibrary.Argument("name", Long),
+            ],
+            Long,
+        ),
+        "set_information_job_object": DynamicLibrary.FunctionDeclaration(
+            "SetInformationJobObject",
+            [
+                DynamicLibrary.Argument("job", Long),
+                DynamicLibrary.Argument("kind", Integer),
+                DynamicLibrary.Argument("information", Buffer),
+                DynamicLibrary.Argument("size", Integer),
+            ],
+            Nothing,
+        ),
+        "assign_process_to_job_object": DynamicLibrary.FunctionDeclaration(
+            "AssignProcessToJobObject",
+            [
+                DynamicLibrary.Argument("job", Long),
+                DynamicLibrary.Argument("process", Long),
+            ],
+            Integer,
+        ),
+        "create_pipe": DynamicLibrary.FunctionDeclaration(
+            "CreatePipe",
+            [
+                DynamicLibrary.Argument("reading", Buffer),
+                DynamicLibrary.Argument("writing", Buffer),
+                DynamicLibrary.Argument("security", Buffer),
+                DynamicLibrary.Argument("size", Integer),
+            ],
+            Integer,
+        ),
+        "set_handle_information": DynamicLibrary.FunctionDeclaration(
+            "SetHandleInformation",
+            [
+                DynamicLibrary.Argument("handle", Long),
+                DynamicLibrary.Argument("mask", Integer),
+                DynamicLibrary.Argument("flags", Integer),
+            ],
+            Nothing,
+        ),
+        "standard_handle": DynamicLibrary.FunctionDeclaration(
+            "GetStdHandle",
+            [
+                DynamicLibrary.Argument("kind", Integer),
+            ],
+            Long,
+        ),
+        "duplicate_handle": DynamicLibrary.FunctionDeclaration(
+            "DuplicateHandle",
+            [
+                DynamicLibrary.Argument("source_process", Long),
+                DynamicLibrary.Argument("source", Long),
+                DynamicLibrary.Argument("target_process", Long),
+                DynamicLibrary.Argument("target", Buffer),
+                DynamicLibrary.Argument("access", Integer),
+                DynamicLibrary.Argument("inherits", Integer),
+                DynamicLibrary.Argument("options", Integer),
+            ],
+            Integer,
+        ),
+        "wait_for_object": DynamicLibrary.FunctionDeclaration(
+            "WaitForSingleObject",
+            [
+                DynamicLibrary.Argument("handle", Long),
+                DynamicLibrary.Argument("milliseconds", Integer),
+            ],
+            Nothing,
+        ),
+    },
+)
 var _pipe_size = 1048576
 var _chunk_size = 65536
 var _pause_milliseconds = 10
@@ -364,19 +555,27 @@ func _escaped_backslashes(count: Integer, before_quote: Boolean): String {
 }
 
 func _set_error_number(value: Integer) {
-    library._set_errno(value)
+    var call = DynamicLibrary.Call(library.functions["set_error_number"])
+    call.arguments["value"] = value
+    call.call()
 }
 
 func _system(command: Buffer): Integer {
-    return library._wsystem(command)
+    var call = DynamicLibrary.Call(library.functions["system"])
+    call.arguments["command"] = command
+    return call.call()
 }
 
 func _error_number_into(room: Buffer) {
-    library._get_errno(room)
+    var call = DynamicLibrary.Call(library.functions["error_number_into"])
+    call.arguments["room"] = room
+    call.call()
 }
 
 func _close_handle(handle: Long) {
-    kernel.CloseHandle(handle)
+    var call = DynamicLibrary.Call(kernel.functions["close_handle"])
+    call.arguments["handle"] = handle
+    call.call()
 }
 
 func _create_process(
@@ -391,67 +590,130 @@ func _create_process(
     startup: Buffer,
     information: Buffer,
 ): Integer {
-    return kernel.CreateProcessW(application, command_line, process_security, thread_security, inherits_handles, flags, environment, directory, startup, information)
+    var call = DynamicLibrary.Call(kernel.functions["create_process"])
+    call.arguments["application"] = application
+    call.arguments["command_line"] = command_line
+    call.arguments["process_security"] = process_security
+    call.arguments["thread_security"] = thread_security
+    call.arguments["inherits_handles"] = inherits_handles
+    call.arguments["flags"] = flags
+    call.arguments["environment"] = environment
+    call.arguments["directory"] = directory
+    call.arguments["startup"] = startup
+    call.arguments["information"] = information
+    return call.call()
 }
 
 func _terminate_process(process: Long, exit_code: Integer) {
-    kernel.TerminateProcess(process, exit_code)
+    var call = DynamicLibrary.Call(kernel.functions["terminate_process"])
+    call.arguments["process"] = process
+    call.arguments["exit_code"] = exit_code
+    call.call()
 }
 
 func _wait_for_single_object(handle: Long, milliseconds: Integer): Integer {
-    return kernel.WaitForSingleObject(handle, milliseconds)
+    var call = DynamicLibrary.Call(kernel.functions["wait_for_single_object"])
+    call.arguments["handle"] = handle
+    call.arguments["milliseconds"] = milliseconds
+    return call.call()
 }
 
 func _tick_count(): Long {
-    return kernel.GetTickCount64()
+    var call = DynamicLibrary.Call(kernel.functions["tick_count"])
+    return call.call()
 }
 
 func _terminate_job_object(job: Long, exit_code: Integer) {
-    kernel.TerminateJobObject(job, exit_code)
+    var call = DynamicLibrary.Call(kernel.functions["terminate_job_object"])
+    call.arguments["job"] = job
+    call.arguments["exit_code"] = exit_code
+    call.call()
 }
 
 func _sleep(milliseconds: Integer) {
-    kernel.Sleep(milliseconds)
+    var call = DynamicLibrary.Call(kernel.functions["sleep"])
+    call.arguments["milliseconds"] = milliseconds
+    call.call()
 }
 
 func _exit_code_of_process(process: Long, exit_code: Buffer): Integer {
-    return kernel.GetExitCodeProcess(process, exit_code)
+    var call = DynamicLibrary.Call(kernel.functions["exit_code_of_process"])
+    call.arguments["process"] = process
+    call.arguments["exit_code"] = exit_code
+    return call.call()
 }
 
 func _peek_named_pipe(pipe: Long, buffer: Long, size: Integer, read: Long, available: Buffer, left: Long): Integer {
-    return kernel.PeekNamedPipe(pipe, buffer, size, read, available, left)
+    var call = DynamicLibrary.Call(kernel.functions["peek_named_pipe"])
+    call.arguments["pipe"] = pipe
+    call.arguments["buffer"] = buffer
+    call.arguments["size"] = size
+    call.arguments["read"] = read
+    call.arguments["available"] = available
+    call.arguments["left"] = left
+    return call.call()
 }
 
 func _read_file(handle: Long, room: Buffer, size: Integer, read: Buffer, overlapped: Long): Integer {
-    return kernel.ReadFile(handle, room, size, read, overlapped)
+    var call = DynamicLibrary.Call(kernel.functions["read_file"])
+    call.arguments["handle"] = handle
+    call.arguments["room"] = room
+    call.arguments["size"] = size
+    call.arguments["read"] = read
+    call.arguments["overlapped"] = overlapped
+    return call.call()
 }
 
 func _resume_thread(thread: Long) {
-    kernel.ResumeThread(thread)
+    var call = DynamicLibrary.Call(kernel.functions["resume_thread"])
+    call.arguments["thread"] = thread
+    call.call()
 }
 
 func _create_job_object(security: Long, name: Long): Long {
-    return kernel.CreateJobObjectA(security, name)
+    var call = DynamicLibrary.Call(kernel.functions["create_job_object"])
+    call.arguments["security"] = security
+    call.arguments["name"] = name
+    return call.call()
 }
 
 func _set_information_job_object(job: Long, kind: Integer, information: Buffer, size: Integer) {
-    kernel.SetInformationJobObject(job, kind, information, size)
+    var call = DynamicLibrary.Call(kernel.functions["set_information_job_object"])
+    call.arguments["job"] = job
+    call.arguments["kind"] = kind
+    call.arguments["information"] = information
+    call.arguments["size"] = size
+    call.call()
 }
 
 func _assign_process_to_job_object(job: Long, process: Long): Integer {
-    return kernel.AssignProcessToJobObject(job, process)
+    var call = DynamicLibrary.Call(kernel.functions["assign_process_to_job_object"])
+    call.arguments["job"] = job
+    call.arguments["process"] = process
+    return call.call()
 }
 
 func _create_pipe(reading: Buffer, writing: Buffer, security: Buffer, size: Integer): Integer {
-    return kernel.CreatePipe(reading, writing, security, size)
+    var call = DynamicLibrary.Call(kernel.functions["create_pipe"])
+    call.arguments["reading"] = reading
+    call.arguments["writing"] = writing
+    call.arguments["security"] = security
+    call.arguments["size"] = size
+    return call.call()
 }
 
 func _set_handle_information(handle: Long, mask: Integer, flags: Integer) {
-    kernel.SetHandleInformation(handle, mask, flags)
+    var call = DynamicLibrary.Call(kernel.functions["set_handle_information"])
+    call.arguments["handle"] = handle
+    call.arguments["mask"] = mask
+    call.arguments["flags"] = flags
+    call.call()
 }
 
 func _standard_handle(kind: Integer): Long {
-    return kernel.GetStdHandle(kind)
+    var call = DynamicLibrary.Call(kernel.functions["standard_handle"])
+    call.arguments["kind"] = kind
+    return call.call()
 }
 
 func _duplicate_handle(
@@ -463,9 +725,20 @@ func _duplicate_handle(
     inherits: Integer,
     options: Integer,
 ): Integer {
-    return kernel.DuplicateHandle(source_process, source, target_process, target, access, inherits, options)
+    var call = DynamicLibrary.Call(kernel.functions["duplicate_handle"])
+    call.arguments["source_process"] = source_process
+    call.arguments["source"] = source
+    call.arguments["target_process"] = target_process
+    call.arguments["target"] = target
+    call.arguments["access"] = access
+    call.arguments["inherits"] = inherits
+    call.arguments["options"] = options
+    return call.call()
 }
 
 func _wait_for_object(handle: Long, milliseconds: Integer) {
-    kernel.WaitForSingleObject(handle, milliseconds)
+    var call = DynamicLibrary.Call(kernel.functions["wait_for_object"])
+    call.arguments["handle"] = handle
+    call.arguments["milliseconds"] = milliseconds
+    call.call()
 }

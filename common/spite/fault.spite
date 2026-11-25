@@ -328,28 +328,114 @@ func call_text(table: Long, index: Long): String {
 }
 
 func _module_handle(name: Long): Long {
-    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
-    return kernel.GetModuleHandleA(name)
+    var kernel = DynamicLibrary(
+        "kernel32.dll",
+        "",
+        {
+            "module_handle": DynamicLibrary.FunctionDeclaration(
+                "GetModuleHandleA",
+                [
+                    DynamicLibrary.Argument("name", Long),
+                ],
+                Long,
+            ),
+        },
+    )
+    var call = DynamicLibrary.Call(kernel.functions["module_handle"])
+    call.arguments["name"] = name
+    return call.call()
 }
 
 func _module_handle_ex(flags: Integer, address: Long, room: Buffer): Integer {
-    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
-    return kernel.GetModuleHandleExA(flags, address, room)
+    var kernel = DynamicLibrary(
+        "kernel32.dll",
+        "",
+        {
+            "module_handle_ex": DynamicLibrary.FunctionDeclaration(
+                "GetModuleHandleExA",
+                [
+                    DynamicLibrary.Argument("flags", Integer),
+                    DynamicLibrary.Argument("address", Long),
+                    DynamicLibrary.Argument("room", Buffer),
+                ],
+                Integer,
+            ),
+        },
+    )
+    var call = DynamicLibrary.Call(kernel.functions["module_handle_ex"])
+    call.arguments["flags"] = flags
+    call.arguments["address"] = address
+    call.arguments["room"] = room
+    return call.call()
 }
 
 func _module_file_name(module: Long, room: Buffer, size: Integer): Integer {
-    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
-    return kernel.GetModuleFileNameA(module, room, size)
+    var kernel = DynamicLibrary(
+        "kernel32.dll",
+        "",
+        {
+            "module_file_name": DynamicLibrary.FunctionDeclaration(
+                "GetModuleFileNameA",
+                [
+                    DynamicLibrary.Argument("module", Long),
+                    DynamicLibrary.Argument("room", Buffer),
+                    DynamicLibrary.Argument("size", Integer),
+                ],
+                Integer,
+            ),
+        },
+    )
+    var call = DynamicLibrary.Call(kernel.functions["module_file_name"])
+    call.arguments["module"] = module
+    call.arguments["room"] = room
+    call.arguments["size"] = size
+    return call.call()
 }
 
 func _standard_handle(kind: Integer): Long {
-    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
-    return kernel.GetStdHandle(kind)
+    var kernel = DynamicLibrary(
+        "kernel32.dll",
+        "",
+        {
+            "standard_handle": DynamicLibrary.FunctionDeclaration(
+                "GetStdHandle",
+                [
+                    DynamicLibrary.Argument("kind", Integer),
+                ],
+                Long,
+            ),
+        },
+    )
+    var call = DynamicLibrary.Call(kernel.functions["standard_handle"])
+    call.arguments["kind"] = kind
+    return call.call()
 }
 
 func _write_file(handle: Long, text: String, length: Integer, written: Buffer, overlapped: Long) {
-    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
-    kernel.WriteFile(handle, text, length, written, overlapped)
+    var kernel = DynamicLibrary(
+        "kernel32.dll",
+        "",
+        {
+            "write_file": DynamicLibrary.FunctionDeclaration(
+                "WriteFile",
+                [
+                    DynamicLibrary.Argument("handle", Long),
+                    DynamicLibrary.Argument("text", String),
+                    DynamicLibrary.Argument("length", Integer),
+                    DynamicLibrary.Argument("written", Buffer),
+                    DynamicLibrary.Argument("overlapped", Long),
+                ],
+                Nothing,
+            ),
+        },
+    )
+    var call = DynamicLibrary.Call(kernel.functions["write_file"])
+    call.arguments["handle"] = handle
+    call.arguments["text"] = text
+    call.arguments["length"] = length
+    call.arguments["written"] = written
+    call.arguments["overlapped"] = overlapped
+    call.call()
 }
 
 func _create_file(
@@ -361,23 +447,101 @@ func _create_file(
     flags: Integer,
     template: Long,
 ): Long {
-    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
-    return kernel.CreateFileA(path, access, sharing, security, disposition, flags, template)
+    var kernel = DynamicLibrary(
+        "kernel32.dll",
+        "",
+        {
+            "create_file": DynamicLibrary.FunctionDeclaration(
+                "CreateFileA",
+                [
+                    DynamicLibrary.Argument("path", String),
+                    DynamicLibrary.Argument("access", Long),
+                    DynamicLibrary.Argument("sharing", Integer),
+                    DynamicLibrary.Argument("security", Long),
+                    DynamicLibrary.Argument("disposition", Integer),
+                    DynamicLibrary.Argument("flags", Integer),
+                    DynamicLibrary.Argument("template", Long),
+                ],
+                Long,
+            ),
+        },
+    )
+    var call = DynamicLibrary.Call(kernel.functions["create_file"])
+    call.arguments["path"] = path
+    call.arguments["access"] = access
+    call.arguments["sharing"] = sharing
+    call.arguments["security"] = security
+    call.arguments["disposition"] = disposition
+    call.arguments["flags"] = flags
+    call.arguments["template"] = template
+    return call.call()
 }
 
 func _file_size(handle: Long, high: Long): Integer {
-    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
-    return kernel.GetFileSize(handle, high)
+    var kernel = DynamicLibrary(
+        "kernel32.dll",
+        "",
+        {
+            "file_size": DynamicLibrary.FunctionDeclaration(
+                "GetFileSize",
+                [
+                    DynamicLibrary.Argument("handle", Long),
+                    DynamicLibrary.Argument("high", Long),
+                ],
+                Integer,
+            ),
+        },
+    )
+    var call = DynamicLibrary.Call(kernel.functions["file_size"])
+    call.arguments["handle"] = handle
+    call.arguments["high"] = high
+    return call.call()
 }
 
 func _close_handle(handle: Long) {
-    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
-    kernel.CloseHandle(handle)
+    var kernel = DynamicLibrary(
+        "kernel32.dll",
+        "",
+        {
+            "close_handle": DynamicLibrary.FunctionDeclaration(
+                "CloseHandle",
+                [
+                    DynamicLibrary.Argument("handle", Long),
+                ],
+                Nothing,
+            ),
+        },
+    )
+    var call = DynamicLibrary.Call(kernel.functions["close_handle"])
+    call.arguments["handle"] = handle
+    call.call()
 }
 
 func _read_file(handle: Long, room: Buffer, size: Integer, read: Buffer, overlapped: Long) {
-    var kernel = DynamicLibrary("kernel32.dll", 'identity', "")
-    kernel.ReadFile(handle, room, size, read, overlapped)
+    var kernel = DynamicLibrary(
+        "kernel32.dll",
+        "",
+        {
+            "read_file": DynamicLibrary.FunctionDeclaration(
+                "ReadFile",
+                [
+                    DynamicLibrary.Argument("handle", Long),
+                    DynamicLibrary.Argument("room", Buffer),
+                    DynamicLibrary.Argument("size", Integer),
+                    DynamicLibrary.Argument("read", Buffer),
+                    DynamicLibrary.Argument("overlapped", Long),
+                ],
+                Nothing,
+            ),
+        },
+    )
+    var call = DynamicLibrary.Call(kernel.functions["read_file"])
+    call.arguments["handle"] = handle
+    call.arguments["room"] = room
+    call.arguments["size"] = size
+    call.arguments["read"] = read
+    call.arguments["overlapped"] = overlapped
+    call.call()
 }
 
 func _call_table(): Long
