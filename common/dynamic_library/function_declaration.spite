@@ -1,11 +1,17 @@
+# ../../../spite_documentation/foreign_libraries.md#rooms
+union Passed {
+    DynamicLibrary.Argument
+    DynamicLibrary.Room
+}
+
 # ../../../spite_documentation/foreign_libraries.md#declaring-a-foreign-function
 var _symbol: String
-var _arguments: List<DynamicLibrary.Argument>
+var _arguments: List<DynamicLibrary.FunctionDeclaration.Passed>
 var _returns: Spite.FunctionDeclaration.Returned
 
 func FunctionDeclaration(
     starting_symbol: String,
-    starting_arguments: List<DynamicLibrary.Argument>,
+    starting_arguments: List<DynamicLibrary.FunctionDeclaration.Passed>,
     starting_returns: Spite.FunctionDeclaration.Returned,
 ) {
     _symbol = starting_symbol
@@ -17,7 +23,7 @@ func get_symbol(): String {
     return _symbol
 }
 
-func get_arguments(): List<DynamicLibrary.Argument> {
+func get_arguments(): List<DynamicLibrary.FunctionDeclaration.Passed> {
     return _arguments
 }
 

@@ -1,0 +1,30 @@
+# ../../../spite_documentation/foreign_libraries.md#rooms
+var _name: String
+var _class: Spite.FunctionDeclaration.Returned
+var _sizing: DynamicLibrary.Sizing
+
+func Room(starting_name: String, starting_class: Spite.FunctionDeclaration.Returned, starting_sizing: DynamicLibrary.Sizing) {
+    _name = starting_name
+    _class = starting_class
+    _sizing = starting_sizing
+}
+
+func get_name(): String {
+    return _name
+}
+
+func get_kind(): Spite.FunctionDeclaration.Returned {
+    return _class
+}
+
+func get_sizing(): DynamicLibrary.Sizing {
+    return _sizing
+}
+
+func to_string(): String {
+    return _name
+}
+
+func to_debug(): String {
+    return _name
+}
