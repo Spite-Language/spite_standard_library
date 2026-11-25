@@ -109,7 +109,7 @@ func run_the_compiler(line: String): Integer {
     }
     var output_text = String()
     var chunk = _read_chunk(handle)
-    while chunk.count() > 0 {
+    while chunk {
         var byte_index = 0
         while byte_index < chunk.count() {
             var held = chunk[byte_index]
@@ -224,16 +224,16 @@ func _open_pipe(command: String, mode: String): Long {
     return call.call()
 }
 
-func _read_chunk(handle: Long): Buffer {
+func _read_chunk(handle: Long): Buffer? {
     var call = DynamicLibrary.Call(runtime.functions["read_chunk"])
     call.arguments["size"] = 1
     call.arguments["count"] = _chunk_size
     call.arguments["handle"] = handle
     var read = call.call()
-    if not read {
-        return Buffer()
-    }
-    return read.bytes.to_buffer()
+    fallback read
+    var bytes = read.bytes.to_buffer()
+    fallback not bytes.is_empty()
+    return bytes
 }
 
 func _close_pipe(handle: Long): Integer {
