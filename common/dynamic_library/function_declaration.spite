@@ -2,6 +2,7 @@
 union Passed {
     DynamicLibrary.Argument
     DynamicLibrary.Room
+    DynamicLibrary.RoomSize
 }
 
 # ../../../spite_documentation/foreign_libraries.md#declaring-a-foreign-function
