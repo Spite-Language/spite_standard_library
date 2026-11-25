@@ -1,4 +1,4 @@
-# ../../spite_documentation/foreign_libraries.md#rooms
+# https://github.com/Spite-Language/spite_documentation/blob/master/foreign_libraries.md#rooms
 type Utf8Room {
     text: DynamicLibrary.Text
 }
@@ -32,7 +32,7 @@ func _wide_characters_before_zero(at: Integer, most: Integer): Integer {
     return most
 }
 
-# ../../spite_documentation/foreign_libraries.md#rooms
+# https://github.com/Spite-Language/spite_documentation/blob/master/foreign_libraries.md#rooms
 func _utf8_of_wide(code_page: Integer, flags: Integer, wide: Buffer, characters: Integer): Utf8Room? {
     var kernel = DynamicLibrary(
         "kernel32.dll",

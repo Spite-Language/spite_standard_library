@@ -1,6 +1,6 @@
 singleton
 
-# ../../../spite_documentation/foreign_libraries.md#rooms
+# https://github.com/Spite-Language/spite_documentation/blob/master/foreign_libraries.md#rooms
 enum Sizing {
     'answer_is_the_size_needed'
     'doubled_until_it_fits'
@@ -9,7 +9,7 @@ enum Sizing {
     'fixed_size'
 }
 
-# ../../../spite_documentation/foreign_libraries.md#declaring-a-foreign-function
+# https://github.com/Spite-Language/spite_documentation/blob/master/foreign_libraries.md#declaring-a-foreign-function
 var handle: Long = 0
 var file_name: String
 var header_file_name: String

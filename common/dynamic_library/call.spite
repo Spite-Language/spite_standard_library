@@ -1,4 +1,4 @@
-# ../../../spite_documentation/foreign_libraries.md#calling-a-declared-function
+# https://github.com/Spite-Language/spite_documentation/blob/master/foreign_libraries.md#calling-a-declared-function
 var _declaration: DynamicLibrary.FunctionDeclaration
 
 func Call(starting_declaration: DynamicLibrary.FunctionDeclaration) {

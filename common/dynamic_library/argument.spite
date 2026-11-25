@@ -1,4 +1,4 @@
-# ../../../spite_documentation/foreign_libraries.md#declaring-a-foreign-function
+# https://github.com/Spite-Language/spite_documentation/blob/master/foreign_libraries.md#declaring-a-foreign-function
 var _name: String
 var _class: Spite.FunctionDeclaration.Returned
 
