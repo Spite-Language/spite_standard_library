@@ -173,16 +173,12 @@ func append_buffer(bytes: Buffer): Long? {
 }
 
 func _read_into_buffer(handle: Long, wanted: Long): Buffer? {
-    var counted: Integer? = wanted
-    crash counted
-    var bytes = Buffer(counted)
-    if wanted > 0 {
-        var got = _read_into(bytes, wanted, handle)
-        fallback got >= 0 and got <= wanted
-        var got_count: Integer? = got
-        crash got_count
-        bytes._take_written(got_count)
+    if wanted <= 0 {
+        return Buffer()
     }
+    var bytes = _read_bytes(wanted, handle)
+    fallback bytes
+    fallback bytes.count() <= wanted
     return bytes
 }
 

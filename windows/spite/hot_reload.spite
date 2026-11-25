@@ -1,3 +1,8 @@
+# ../../../spite_documentation/foreign_libraries.md#rooms
+type ChunkRoom {
+    bytes: DynamicLibrary.Bytes
+}
+
 var kernel = DynamicLibrary(
     "kernel32.dll",
     "",
@@ -60,12 +65,12 @@ var runtime = DynamicLibrary(
             ],
             Long,
         ),
-        "read_items": DynamicLibrary.FunctionDeclaration(
+        "read_chunk": DynamicLibrary.FunctionDeclaration(
             "fread",
             [
-                DynamicLibrary.Argument("room", Buffer),
+                DynamicLibrary.Room("room", ChunkRoom, 'answer_is_what_arrived'),
                 DynamicLibrary.Argument("size", Long),
-                DynamicLibrary.Argument("count", Long),
+                DynamicLibrary.RoomSize("count", Long),
                 DynamicLibrary.Argument("handle", Long),
             ],
             Long,
@@ -76,6 +81,7 @@ var runtime = DynamicLibrary(
 var _room_start: Long = 6442450944
 var _room_size: Long = 268435456
 var _granularity = 65536
+var _chunk_size: Long = 4096
 
 func compiler_line(executable: String, address: Long): String {
     return "cd /d \"{working_folder}\" && \"{compiler}\" {arguments} --executable-path=\"{executable}\" --reload-at={address} 2>&1"
@@ -102,22 +108,16 @@ func run_the_compiler(line: String): Integer {
         return -1
     }
     var output_text = String()
-    var chunk = Buffer(4096)
-    var one: Long = 1
-    var wanted: Long = 4096
-    var got = _read_items(chunk, one, wanted, handle)
-    while got > 0 {
-        var got_count: Integer? = got
-        crash got_count
-        chunk._take_written(got_count)
+    var chunk = _read_chunk(handle)
+    while chunk.count() > 0 {
         var byte_index = 0
-        while byte_index < got_count {
+        while byte_index < chunk.count() {
             var held = chunk[byte_index]
             crash held
             output_text.append_code(held)
             byte_index = byte_index + 1
         }
-        got = _read_items(chunk, one, wanted, handle)
+        chunk = _read_chunk(handle)
     }
     compiler_output = output_text
     return _close_pipe(handle)
@@ -224,13 +224,16 @@ func _open_pipe(command: String, mode: String): Long {
     return call.call()
 }
 
-func _read_items(room: Buffer, size: Long, count: Long, handle: Long): Long {
-    var call = DynamicLibrary.Call(runtime.functions["read_items"])
-    call.arguments["room"] = room
-    call.arguments["size"] = size
-    call.arguments["count"] = count
+func _read_chunk(handle: Long): Buffer {
+    var call = DynamicLibrary.Call(runtime.functions["read_chunk"])
+    call.arguments["size"] = 1
+    call.arguments["count"] = _chunk_size
     call.arguments["handle"] = handle
-    return call.call()
+    var read = call.call()
+    if not read {
+        return Buffer()
+    }
+    return read.bytes.to_buffer()
 }
 
 func _close_pipe(handle: Long): Integer {

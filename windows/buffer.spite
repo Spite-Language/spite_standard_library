@@ -1,3 +1,8 @@
+# ../../spite_documentation/foreign_libraries.md#rooms
+type Utf8Room {
+    text: DynamicLibrary.Text
+}
+
 var _utf8_code_page = 65001
 
 func _read_wide_string_at(at: Integer, characters: Integer): String? {
@@ -7,33 +12,9 @@ func _read_wide_string_at(at: Integer, characters: Integer): String? {
     var wide = read_buffer_at(at, characters * 2)
     fallback wide and wide.count() == characters * 2
     var only_valid = 128
-    var no_room: Long = 0
-    var no_value: Long = 0
-    var size = _measured_wide_character_to_multi_byte(
-        _utf8_code_page,
-        only_valid,
-        wide,
-        characters,
-        no_room,
-        0,
-        no_value,
-        no_value,
-    )
-    fallback size > 0
-    var text = Buffer(size)
-    var written = _wide_character_to_multi_byte(
-        _utf8_code_page,
-        only_valid,
-        wide,
-        characters,
-        text,
-        size,
-        no_value,
-        no_value,
-    )
-    fallback written == size
-    text._take_written(written)
-    return text.read_string_at(0, written)
+    var converted = _utf8_of_wide(_utf8_code_page, only_valid, wide, characters)
+    fallback converted
+    return converted.text.to_string()
 }
 
 func _wide_characters_before_zero(at: Integer, most: Integer): Integer {
@@ -51,29 +32,21 @@ func _wide_characters_before_zero(at: Integer, most: Integer): Integer {
     return most
 }
 
-func _measured_wide_character_to_multi_byte(
-    code_page: Integer,
-    flags: Integer,
-    wide: Buffer,
-    characters: Integer,
-    no_room: Long,
-    size: Integer,
-    default_character: Long,
-    used_default: Long,
-): Integer {
+# ../../spite_documentation/foreign_libraries.md#rooms
+func _utf8_of_wide(code_page: Integer, flags: Integer, wide: Buffer, characters: Integer): Utf8Room? {
     var kernel = DynamicLibrary(
         "kernel32.dll",
         "",
         {
-            "measured_wide_character_to_multi_byte": DynamicLibrary.FunctionDeclaration(
+            "utf8_of_wide": DynamicLibrary.FunctionDeclaration(
                 "WideCharToMultiByte",
                 [
                     DynamicLibrary.Argument("code_page", Integer),
                     DynamicLibrary.Argument("flags", Integer),
                     DynamicLibrary.Argument("wide", Buffer),
                     DynamicLibrary.Argument("characters", Integer),
-                    DynamicLibrary.Argument("no_room", Long),
-                    DynamicLibrary.Argument("size", Integer),
+                    DynamicLibrary.Room("room", Utf8Room, 'asked_with_no_room_first'),
+                    DynamicLibrary.RoomSize("size", Integer),
                     DynamicLibrary.Argument("default_character", Long),
                     DynamicLibrary.Argument("used_default", Long),
                 ],
@@ -81,56 +54,12 @@ func _measured_wide_character_to_multi_byte(
             ),
         },
     )
-    var call = DynamicLibrary.Call(kernel.functions["measured_wide_character_to_multi_byte"])
+    var call = DynamicLibrary.Call(kernel.functions["utf8_of_wide"])
     call.arguments["code_page"] = code_page
     call.arguments["flags"] = flags
     call.arguments["wide"] = wide
     call.arguments["characters"] = characters
-    call.arguments["no_room"] = no_room
-    call.arguments["size"] = size
-    call.arguments["default_character"] = default_character
-    call.arguments["used_default"] = used_default
-    return call.call()
-}
-
-func _wide_character_to_multi_byte(
-    code_page: Integer,
-    flags: Integer,
-    wide: Buffer,
-    characters: Integer,
-    room: Buffer,
-    size: Integer,
-    default_character: Long,
-    used_default: Long,
-): Integer {
-    var kernel = DynamicLibrary(
-        "kernel32.dll",
-        "",
-        {
-            "wide_character_to_multi_byte": DynamicLibrary.FunctionDeclaration(
-                "WideCharToMultiByte",
-                [
-                    DynamicLibrary.Argument("code_page", Integer),
-                    DynamicLibrary.Argument("flags", Integer),
-                    DynamicLibrary.Argument("wide", Buffer),
-                    DynamicLibrary.Argument("characters", Integer),
-                    DynamicLibrary.Argument("room", Buffer),
-                    DynamicLibrary.Argument("size", Integer),
-                    DynamicLibrary.Argument("default_character", Long),
-                    DynamicLibrary.Argument("used_default", Long),
-                ],
-                Integer,
-            ),
-        },
-    )
-    var call = DynamicLibrary.Call(kernel.functions["wide_character_to_multi_byte"])
-    call.arguments["code_page"] = code_page
-    call.arguments["flags"] = flags
-    call.arguments["wide"] = wide
-    call.arguments["characters"] = characters
-    call.arguments["room"] = room
-    call.arguments["size"] = size
-    call.arguments["default_character"] = default_character
-    call.arguments["used_default"] = used_default
+    call.arguments["default_character"] = 0
+    call.arguments["used_default"] = 0
     return call.call()
 }

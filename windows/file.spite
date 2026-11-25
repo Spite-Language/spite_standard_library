@@ -1,3 +1,8 @@
+# ../../spite_documentation/foreign_libraries.md#rooms
+type ReadRoom {
+    bytes: DynamicLibrary.Bytes
+}
+
 var library = DynamicLibrary(
     "ucrtbase.dll",
     "",
@@ -34,12 +39,12 @@ var library = DynamicLibrary(
             ],
             Long,
         ),
-        "read_items": DynamicLibrary.FunctionDeclaration(
+        "read_bytes": DynamicLibrary.FunctionDeclaration(
             "fread",
             [
-                DynamicLibrary.Argument("room", Buffer),
+                DynamicLibrary.Room("room", ReadRoom, 'answer_is_what_arrived'),
                 DynamicLibrary.Argument("size", Long),
-                DynamicLibrary.Argument("count", Long),
+                DynamicLibrary.RoomSize("count", Long),
                 DynamicLibrary.Argument("handle", Long),
             ],
             Long,
@@ -199,9 +204,14 @@ func _tell(handle: Long): Long {
     return call.call()
 }
 
-func _read_into(room: Buffer, bytes: Long, handle: Long): Long {
-    var one: Long = 1
-    return _read_items(room, one, bytes, handle)
+func _read_bytes(count: Long, handle: Long): Buffer? {
+    var call = DynamicLibrary.Call(library.functions["read_bytes"])
+    call.arguments["size"] = 1
+    call.arguments["count"] = count
+    call.arguments["handle"] = handle
+    var read = call.call()
+    fallback read
+    return read.bytes.to_buffer()
 }
 
 func _write_from(room: Buffer, bytes: Long, handle: Long): Long {
@@ -276,15 +286,6 @@ func _open_file(path: Buffer, mode: Buffer): Long {
     var call = DynamicLibrary.Call(library.functions["open_file"])
     call.arguments["path"] = path
     call.arguments["mode"] = mode
-    return call.call()
-}
-
-func _read_items(room: Buffer, size: Long, count: Long, handle: Long): Long {
-    var call = DynamicLibrary.Call(library.functions["read_items"])
-    call.arguments["room"] = room
-    call.arguments["size"] = size
-    call.arguments["count"] = count
-    call.arguments["handle"] = handle
     return call.call()
 }
 
