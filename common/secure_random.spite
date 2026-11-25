@@ -6,7 +6,7 @@ func random_buffer(count: Integer): Buffer? {
     if count > 0 {
         var given = _fill(filled, count)
         fallback given
-        filled.take_written(count)
+        filled._take_written(count)
     }
     return filled
 }

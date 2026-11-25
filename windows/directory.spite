@@ -123,7 +123,7 @@ func _entry_names(want_folders: Boolean): List<String>? {
     var readable = true
     var more = true
     while more and readable {
-        found.take_written(_find_data_bytes)
+        found._take_written(_find_data_bytes)
         var attributes = found.read_integer_little_endian_at(0)
         crash attributes
         var is_folder = attributes.bits_and(16) != 0

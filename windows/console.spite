@@ -15,7 +15,7 @@ func read_line(): String? {
         } else {
             read_anything = true
             var room_count = _text_length(room)
-            room.take_written(room_count)
+            room._take_written(room_count)
             line.append_buffer(room, 0, room_count)
             ended = _ends_with_byte(line, 10)
         }
@@ -24,7 +24,7 @@ func read_line(): String? {
     var length = line.count()
     if _ends_with_byte(line, 10) {
         length = length - 1
-        line.take_written(length)
+        line._take_written(length)
     }
     if _ends_with_byte(line, 13) {
         length = length - 1

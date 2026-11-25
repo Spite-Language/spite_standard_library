@@ -1,0 +1,11 @@
+# ../../../spite_documentation/foreign_libraries.md#rooms
+var bytes: Buffer
+
+func Bytes(room: Buffer, count: Integer) {
+    room._take_written(count)
+    bytes = room
+}
+
+func to_buffer(): Buffer {
+    return bytes
+}

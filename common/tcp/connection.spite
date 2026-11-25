@@ -14,7 +14,7 @@ func read_line(): String? {
         while not newline and not closed {
             var received = _receive_into(room, 4096)
             if received > 0 {
-                room.take_written(received)
+                room._take_written(received)
                 var more = _text_of(room, received)
                 pending = "{pending}{more}"
                 newline = pending.index_of("\n")
@@ -160,7 +160,7 @@ func _read_line_now(): String? {
         var room = Buffer(4096)
         var received = _receive_now(room, 4096)
         while not newline and received > 0 {
-            room.take_written(received)
+            room._take_written(received)
             var more = _text_of(room, received)
             pending = "{pending}{more}"
             newline = pending.index_of("\n")
@@ -244,7 +244,7 @@ func _chunk(blocking: Boolean, limit: Integer): Buffer {
             return room
         }
     }
-    room.take_written(received)
+    room._take_written(received)
     return room.copy()
 }
 

@@ -385,7 +385,7 @@ func _read_what_waits(handle: Long, into: Buffer): Integer {
     }
     var got_count = got.read_integer_little_endian_at(0)
     crash got_count
-    chunk.take_written(got_count)
+    chunk._take_written(got_count)
     into.append_buffer(chunk, 0, got_count)
     return got_count
 }

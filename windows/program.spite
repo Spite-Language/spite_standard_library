@@ -137,7 +137,7 @@ func working_directory(): String? {
         length = _current_directory(size, room)
     }
     fallback length > 0
-    room.take_written(length * 2)
+    room._take_written(length * 2)
     return room._read_wide_string_at(0, length)
 }
 
@@ -151,7 +151,7 @@ func executable_path(): String? {
         length = _module_file_name(0, room, size)
     }
     fallback length > 0 and length < size
-    room.take_written(length * 2)
+    room._take_written(length * 2)
     return room._read_wide_string_at(0, length)
 }
 
@@ -166,7 +166,7 @@ func environment(name: String): String? {
         length = _environment_variable(wide_name, room, size)
     }
     fallback length != 0
-    room.take_written(length * 2)
+    room._take_written(length * 2)
     return room._read_wide_string_at(0, length)
 }
 
@@ -175,7 +175,7 @@ func command_line(): String {
     var length = _wide_text_length(address)
     var room = Buffer(length * 2 + 2)
     _copy_wide_text(room, address, length + 1)
-    room.take_written(length * 2)
+    room._take_written(length * 2)
     var text = room._read_wide_string_at(0, length)
     crash text
     return text

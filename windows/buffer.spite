@@ -32,7 +32,7 @@ func _read_wide_string_at(at: Integer, characters: Integer): String? {
         no_value,
     )
     fallback written == size
-    text.take_written(written)
+    text._take_written(written)
     return text.read_string_at(0, written)
 }
 

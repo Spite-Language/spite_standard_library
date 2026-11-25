@@ -1,0 +1,13 @@
+# ../../../spite_documentation/foreign_libraries.md#rooms
+var text: String
+
+func Text(room: Buffer, count: Integer) {
+    room._take_written(count)
+    var read = room.read_string_at(0, count)
+    crash read
+    text = read
+}
+
+func to_string(): String {
+    return text
+}

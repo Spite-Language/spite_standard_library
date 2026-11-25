@@ -321,7 +321,7 @@ func _grow() {
     crash shift > 0
     var room = grown * 8
     var fresh = Buffer(room)
-    fresh.take_written(room)
+    fresh._take_written(room)
     var at = 0
     while at < room {
         fresh._write_long_at(at, 0)

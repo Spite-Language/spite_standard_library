@@ -181,7 +181,7 @@ func _read_into_buffer(handle: Long, wanted: Long): Buffer? {
         fallback got >= 0 and got <= wanted
         var got_count: Integer? = got
         crash got_count
-        bytes.take_written(got_count)
+        bytes._take_written(got_count)
     }
     return bytes
 }

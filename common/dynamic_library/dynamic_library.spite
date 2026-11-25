@@ -1,5 +1,14 @@
 singleton
 
+# ../../../spite_documentation/foreign_libraries.md#rooms
+enum Sizing {
+    'answer_is_the_size_needed'
+    'doubled_until_it_fits'
+    'asked_with_no_room_first'
+    'answer_is_what_arrived'
+    'fixed_size'
+}
+
 # ../../../spite_documentation/foreign_libraries.md#declaring-a-foreign-function
 var handle: Long = 0
 var file_name: String

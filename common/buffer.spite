@@ -96,7 +96,7 @@ func count(): Integer {
     return item_count
 }
 
-func take_written(written_count: Integer) {
+func _take_written(written_count: Integer) {
     crash written_count >= 0 and written_count <= _capacity
     item_count = written_count
 }

@@ -155,7 +155,7 @@ func module_place(address: Long): String {
     crash module
     var name_room = Buffer(_longest_path)
     var length = _module_file_name(module, name_room, _longest_path)
-    name_room.take_written(length)
+    name_room._take_written(length)
     var path = name_room.read_string_at(0, length)
     crash path
     var forward = path.replace("\\", "/")
@@ -606,7 +606,7 @@ func written_caller(caller: String, repeated: Integer) {
 func function_map_text(): String {
     var name_room = Buffer(_longest_path)
     var length = _module_file_name(0, name_room, _longest_path)
-    name_room.take_written(length)
+    name_room._take_written(length)
     var path = name_room.read_string_at(0, length)
     fallback path and length >= 4
     var stem = text_between(path, 0, length - 4)
@@ -623,7 +623,7 @@ func function_map_text(): String {
     read_room.append_long_little_endian(0)
     _read_file(handle, room, size, read_room, 0)
     _close_handle(handle)
-    room.take_written(size)
+    room._take_written(size)
     var text = room.read_string_at(0, size)
     fallback text
     return text

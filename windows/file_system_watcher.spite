@@ -248,7 +248,7 @@ func _collect_from(watching: Integer, transferred: Buffer) {
 func _read_notices(watching: Integer, length: Integer) {
     var buffer = buffers[watching]
     crash buffer
-    buffer.take_written(length)
+    buffer._take_written(length)
     var offset = 0
     var more = true
     while more {

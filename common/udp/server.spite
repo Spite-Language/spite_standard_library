@@ -62,7 +62,7 @@ func receive(): Udp.Datagram? {
     }
     var received = _receive_from(room, 65536, sender)
     fallback received >= 0
-    room.take_written(received)
+    room._take_written(received)
     var sender_address = IpAddress()
     var read = sender_address._read_system_address(sender)
     fallback read

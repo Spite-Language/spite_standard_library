@@ -139,7 +139,7 @@ func _start_reading() {
     var copied = Buffer(8)
     var duplicated = _duplicate_handle(process, standard, process, copied, 0, 0, _same_access)
     if duplicated != 0 {
-        copied.take_written(8)
+        copied._take_written(8)
         var held = copied.read_long_little_endian_at(0)
         crash held
         input = held
@@ -199,7 +199,7 @@ func _input_waits(): Boolean {
         if peeked == 0 {
             return true
         }
-        available.take_written(4)
+        available._take_written(4)
         var count = available.read_integer_little_endian_at(0)
         crash count
         return count > 0
@@ -220,10 +220,10 @@ func _console_holds_a_line(): Boolean {
     var read = Buffer(4)
     var peeked = _peek_console_input(input, records, _records, read)
     fallback peeked != 0
-    read.take_written(4)
+    read._take_written(4)
     var count = read.read_integer_little_endian_at(0)
     crash count
-    records.take_written(count * _record_size)
+    records._take_written(count * _record_size)
     var index = 0
     while index < count {
         var at = index * _record_size
@@ -249,14 +249,14 @@ func _read_some() {
         ended = true
         return
     }
-    read.take_written(4)
+    read._take_written(4)
     var count = read.read_integer_little_endian_at(0)
     crash count
     if count == 0 {
         ended = true
         return
     }
-    room.take_written(count)
+    room._take_written(count)
     held.append_buffer(room, 0, count)
 }
 

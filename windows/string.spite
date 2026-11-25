@@ -28,7 +28,7 @@ func resolve_ip_addresses(): List<IpAddress> {
         var entry = Buffer(48)
         var entry_size: Long = 48
         _copy_memory(entry, entry_place, entry_size)
-        entry.take_written(48)
+        entry._take_written(48)
         var read_length = entry.read_integer_little_endian_at(16)
         crash read_length
         var resolved_length = read_length
@@ -40,7 +40,7 @@ func resolve_ip_addresses(): List<IpAddress> {
         var system_address = Buffer(28)
         var copied: Long = resolved_length
         _copy_memory(system_address, read_place, copied)
-        system_address.take_written(resolved_length)
+        system_address._take_written(resolved_length)
         while system_address.count() < 28 {
             system_address.append(0)
         }
@@ -68,7 +68,7 @@ func _to_wide(): Buffer {
     var room = Buffer(characters * 2 + 2)
     var written = _multi_byte_to_wide_character(_utf8_code_page, 0, this, byte_count, room, characters)
     crash written == characters
-    room.take_written(written * 2)
+    room._take_written(written * 2)
     room.append(0)
     room.append(0)
     return room
