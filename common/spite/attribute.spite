@@ -5,7 +5,7 @@ var _name: String
 var _class: Spite.Class = Nothing
 var _value: $value
 var _index: Integer
-var _declaration = Spite.AttributeDeclaration("", 0, Nothing, "")
+var _declaration = Spite.AttributeDeclaration("", 0, Nothing, Nothing, "")
 var _writer: Spite.Function<$value, Nothing>?
 
 func Attribute(
@@ -40,6 +40,10 @@ func set_value(value: $value) {
     crash _writer
     _writer(value)
     _value = value
+}
+
+func get_owner_class(): Spite.Class {
+    return _declaration.owner_class
 }
 
 func get_index(): Integer {

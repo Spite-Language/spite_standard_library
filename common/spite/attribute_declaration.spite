@@ -1,5 +1,6 @@
 var _name: String
 var _class: Spite.Class = Nothing
+var _owner_class: Spite.Class = Nothing
 var _index: Integer
 var _source_path: String
 
@@ -7,11 +8,13 @@ func AttributeDeclaration(
     starting_name: String,
     starting_index: Integer,
     starting_class: Spite.Class,
+    starting_owner_class: Spite.Class,
     starting_source_path: String,
 ) {
     _name = starting_name
     _index = starting_index
     _class = starting_class
+    _owner_class = starting_owner_class
     _source_path = starting_source_path
 }
 
@@ -21,6 +24,10 @@ func get_name(): String {
 
 func get_class(): Spite.Class {
     return _class
+}
+
+func get_owner_class(): Spite.Class {
+    return _owner_class
 }
 
 func get_index(): Integer {
