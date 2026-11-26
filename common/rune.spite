@@ -17,6 +17,15 @@ func Rune(unicode: Integer) {
     _unicode = unicode
 }
 
+# https://github.com/Spite-Language/spite_documentation/blob/master/standard_library.md#rune
+func Rune(from: String): Rune? {
+    var found = from[0]
+    crash found
+    var character = found.to_string()
+    crash character.length() == from.length()
+    return found
+}
+
 func get_unicode(): Integer {
     return _unicode
 }
