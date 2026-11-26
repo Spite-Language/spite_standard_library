@@ -1,0 +1,233 @@
+singleton
+
+enum Stream {
+    'output'
+    'error'
+}
+
+type Printable {
+    to_string: Spite.Function<String>
+}
+
+type Debuggable {
+    to_debug: Spite.Function<String>
+}
+
+var library = DynamicLibrary(
+    "ucrtbase.dll",
+    "",
+    {
+        "write": DynamicLibrary.FunctionDeclaration(
+            "_write",
+            [
+                DynamicLibrary.Argument("stream", Integer),
+                DynamicLibrary.Argument("text", String),
+                DynamicLibrary.Argument("length", Integer),
+            ],
+            Nothing,
+        ),
+        "open_stream": DynamicLibrary.FunctionDeclaration(
+            "_fdopen",
+            [
+                DynamicLibrary.Argument("file", Integer),
+                DynamicLibrary.Argument("mode", String),
+            ],
+            Long,
+        ),
+        "read_text_line": DynamicLibrary.FunctionDeclaration(
+            "fgets",
+            [
+                DynamicLibrary.Argument("room", Buffer),
+                DynamicLibrary.Argument("size", Integer),
+                DynamicLibrary.Argument("stream", Long),
+            ],
+            Long,
+        ),
+        "text_length": DynamicLibrary.FunctionDeclaration(
+            "strlen",
+            [
+                DynamicLibrary.Argument("text", Buffer),
+            ],
+            Integer,
+        ),
+        "is_a_terminal": DynamicLibrary.FunctionDeclaration(
+            "_isatty",
+            [
+                DynamicLibrary.Argument("file", Integer),
+            ],
+            Integer,
+        ),
+    },
+)
+var _escape = 27
+var _output_file = 1
+var _error_file = 2
+
+func print(...values: List<Printable>) {
+    _write_values('output', "\n", values)
+}
+
+# https://github.com/Spite-Language/spite_documentation/blob/master/standard_library.md#console
+func write(stream: Stream, end: String, ...values: List<Printable>) {
+    _write_values(stream, end, values)
+}
+
+func error(...values: List<Printable>) {
+    _write_values('error', "\n", values)
+}
+
+func debug(...values: List<Debuggable>) {
+    var line = ""
+    var index = 0
+    while index < values.count() {
+        var value = values[index]
+        var text = value.to_debug()
+        if index > 0 {
+            line = "{line} {text}"
+        } else {
+            line = text
+        }
+        index = index + 1
+    }
+    _write_to("{line}\n", 1)
+}
+
+# https://github.com/Spite-Language/spite_documentation/blob/master/standard_library.md#how-text-looks
+func is_a_terminal(stream: Stream): Boolean {
+    var file = _file_of(stream)
+    var call = DynamicLibrary.Call(library.functions["is_a_terminal"])
+    call.arguments["file"] = file
+    var answered: Integer = call.call()
+    return answered != 0
+}
+
+func _write_values(stream: Stream, end: String, values: List<Printable>) {
+    var line = _line_of(stream, values)
+    var file = _file_of(stream)
+    _write_to("{line}{end}", file)
+}
+
+func _file_of(stream: Stream): Integer {
+    if stream == 'error' {
+        return _error_file
+    }
+    return _output_file
+}
+
+func _line_of(stream: Stream, values: List<Printable>): String {
+    var line = ""
+    var looks_checked = false
+    var shows_looks = false
+    var plain = Look()
+    var index = 0
+    while index < values.count() {
+        var value = values[index]
+        var text = value.to_string()
+        if value.class == Styled {
+            if not looks_checked {
+                looks_checked = true
+                shows_looks = _shows_looks_on(stream)
+            }
+            if shows_looks {
+                text = _styled_text(value, plain)
+            }
+        }
+        if index > 0 {
+            line = "{line} {text}"
+        } else {
+            line = text
+        }
+        index = index + 1
+    }
+    return line
+}
+
+func _shows_looks_on(stream: Stream): Boolean {
+    fallback is_a_terminal(stream)
+    return _turn_on_escape_codes(stream)
+}
+
+# https://github.com/Spite-Language/spite_documentation/blob/master/standard_library.md#how-text-looks
+func _styled_text(styled: Styled, outer: Look): String {
+    var merged = _merged(styled.look, outer)
+    var inner = styled.value
+    var text = inner.to_string()
+    if inner.class == Styled {
+        text = _styled_text(inner, merged)
+    }
+    var opening = _codes_of(merged)
+    var reset = _code("0")
+    var restored = _codes_of(outer)
+    return "{opening}{text}{reset}{restored}"
+}
+
+func _merged(inner: Look, outer: Look): Look {
+    var merged = Look()
+    merged.color = outer.color
+    if inner.color {
+        merged.color = inner.color
+    }
+    merged.background = outer.background
+    if inner.background {
+        merged.background = inner.background
+    }
+    merged.bold = outer.bold or inner.bold
+    merged.underline = outer.underline or inner.underline
+    return merged
+}
+
+func _codes_of(look: Look): String {
+    var parts = List<String>()
+    if look.bold {
+        parts.append("1")
+    }
+    if look.underline {
+        parts.append("4")
+    }
+    if look.color {
+        var shown = _color_code("38", look.color)
+        parts.append(shown)
+    }
+    if look.background {
+        var shown_background = _color_code("48", look.background)
+        parts.append(shown_background)
+    }
+    fallback not parts.is_empty()
+    var joined = parts.join(";")
+    return _code(joined)
+}
+
+func _color_code(kind: String, color: Color): String {
+    var red = _byte_of(color.red)
+    var green = _byte_of(color.green)
+    var blue = _byte_of(color.blue)
+    return "{kind};2;{red};{green};{blue}"
+}
+
+func _byte_of(channel: Float): Integer {
+    crash channel == channel
+    var held = channel.clamp(0.0, 1.0)
+    var scaled = held * 255.0
+    var fitted: Integer? = scaled.round()
+    crash fitted
+    return fitted
+}
+
+func _code(parameters: String): String {
+    var text = String()
+    text.append_code(_escape)
+    return "{text}[{parameters}m"
+}
+
+func _write_to(text: String, stream: Integer) {
+    var length = text.length()
+    _write(stream, text, length)
+}
+
+func _write(stream: Integer, text: String, length: Integer) {
+    var call = DynamicLibrary.Call(library.functions["write"])
+    call.arguments["stream"] = stream
+    call.arguments["text"] = text
+    call.arguments["length"] = length
+    call.call()
+}

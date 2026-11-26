@@ -1,0 +1,14 @@
+# https://github.com/Spite-Language/spite_documentation/blob/master/standard_library.md#how-text-looks
+var value: Console.Printable
+var look: Console.Look
+var _text: String
+
+func Styled(styled_value: Console.Printable, styled_look: Console.Look) {
+    value = styled_value
+    look = styled_look
+    _text = styled_value.to_string()
+}
+
+func to_string(): String {
+    return _text
+}

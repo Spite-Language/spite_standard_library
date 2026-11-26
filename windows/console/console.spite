@@ -1,0 +1,156 @@
+var kernel = DynamicLibrary(
+    "kernel32.dll",
+    "",
+    {
+        "standard_handle": DynamicLibrary.FunctionDeclaration(
+            "GetStdHandle",
+            [
+                DynamicLibrary.Argument("kind", Integer),
+            ],
+            Long,
+        ),
+        "console_mode": DynamicLibrary.FunctionDeclaration(
+            "GetConsoleMode",
+            [
+                DynamicLibrary.Argument("handle", Long),
+                DynamicLibrary.Argument("mode", Buffer),
+            ],
+            Integer,
+        ),
+        "set_console_mode": DynamicLibrary.FunctionDeclaration(
+            "SetConsoleMode",
+            [
+                DynamicLibrary.Argument("handle", Long),
+                DynamicLibrary.Argument("mode", Integer),
+            ],
+            Integer,
+        ),
+    },
+)
+var input: Long = 0
+var _output_codes = 0
+var _error_codes = 0
+var _codes_unknown = 0
+var _codes_on = 1
+var _codes_off = 2
+var _standard_output = -11
+var _standard_error = -12
+var _virtual_terminal_processing = 4
+
+func read_line(): String? {
+    if input == 0 {
+        input = _open_stream(0, "r")
+    }
+    var line = Buffer(0)
+    var read_anything = false
+    var ended = false
+    while not ended {
+        var room = Buffer(256)
+        var read = _read_text_line(room, 256, input)
+        if read == 0 {
+            ended = true
+        } else {
+            read_anything = true
+            var room_count = _text_length(room)
+            room._take_written(room_count)
+            line.append_buffer(room, 0, room_count)
+            ended = _ends_with_byte(line, 10)
+        }
+    }
+    fallback read_anything
+    var length = line.count()
+    if _ends_with_byte(line, 10) {
+        length = length - 1
+        line._take_written(length)
+    }
+    if _ends_with_byte(line, 13) {
+        length = length - 1
+    }
+    return line.read_string_at(0, length)
+}
+
+func _ends_with_byte(bytes: Buffer, wanted: Integer): Boolean {
+    var count = bytes.count()
+    fallback count != 0
+    var last = bytes[count - 1]
+    crash last
+    var code: Integer = last
+    return code == wanted
+}
+
+func _open_stream(file: Integer, mode: String): Long {
+    var call = DynamicLibrary.Call(library.functions["open_stream"])
+    call.arguments["file"] = file
+    call.arguments["mode"] = mode
+    return call.call()
+}
+
+func _read_text_line(room: Buffer, size: Integer, stream: Long): Long {
+    var call = DynamicLibrary.Call(library.functions["read_text_line"])
+    call.arguments["room"] = room
+    call.arguments["size"] = size
+    call.arguments["stream"] = stream
+    return call.call()
+}
+
+func _text_length(text: Buffer): Integer {
+    var call = DynamicLibrary.Call(library.functions["text_length"])
+    call.arguments["text"] = text
+    return call.call()
+}
+
+# https://github.com/Spite-Language/spite_documentation/blob/master/standard_library.md#how-text-looks
+func _turn_on_escape_codes(stream: Console.Stream): Boolean {
+    var kind = _standard_output
+    var known = _output_codes
+    if stream == 'error' {
+        kind = _standard_error
+        known = _error_codes
+    }
+    if known != _codes_unknown {
+        return known == _codes_on
+    }
+    var found = _codes_off
+    if _escape_codes_turned_on(kind) {
+        found = _codes_on
+    }
+    if stream == 'error' {
+        _error_codes = found
+    } else {
+        _output_codes = found
+    }
+    return found == _codes_on
+}
+
+func _escape_codes_turned_on(kind: Integer): Boolean {
+    var handle = _standard_handle(kind)
+    var held = Buffer(4)
+    var asked = _console_mode(handle, held)
+    fallback asked != 0
+    held._take_written(4)
+    var mode = held.read_integer_little_endian_at(0)
+    fallback mode
+    var wanted = mode.bits_or(_virtual_terminal_processing)
+    var set = _set_console_mode(handle, wanted)
+    return set != 0
+}
+
+func _standard_handle(kind: Integer): Long {
+    var call = DynamicLibrary.Call(kernel.functions["standard_handle"])
+    call.arguments["kind"] = kind
+    return call.call()
+}
+
+func _console_mode(handle: Long, mode: Buffer): Integer {
+    var call = DynamicLibrary.Call(kernel.functions["console_mode"])
+    call.arguments["handle"] = handle
+    call.arguments["mode"] = mode
+    return call.call()
+}
+
+func _set_console_mode(handle: Long, mode: Integer): Integer {
+    var call = DynamicLibrary.Call(kernel.functions["set_console_mode"])
+    call.arguments["handle"] = handle
+    call.arguments["mode"] = mode
+    return call.call()
+}

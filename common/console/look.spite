@@ -1,0 +1,5 @@
+# https://github.com/Spite-Language/spite_documentation/blob/master/standard_library.md#how-text-looks
+var color: Color? = null
+var background: Color? = null
+var bold = false
+var underline = false

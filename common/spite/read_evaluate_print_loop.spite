@@ -38,7 +38,7 @@ func start(running_a_line: Spite.Function<String?>, console_asked: Boolean, port
     }
     fallback reads_the_console
     _start_reading()
-    console.write("spite> ")
+    console.write('output', "", "spite> ")
 }
 
 # https://github.com/Spite-Language/spite_documentation/blob/master/repl.md#remote---repl-port
@@ -136,7 +136,7 @@ func write_remotely(text: String) {
 func hear_at_the_console(line: String) {
     var whole = whole_line_of(typed_at_the_console, line)
     if not whole {
-        console.write("...> ")
+        console.write('output', "", "...> ")
         return
     }
     typed_at_the_console = List<String>()
@@ -144,7 +144,7 @@ func hear_at_the_console(line: String) {
     if not answer.is_empty() {
         console.print(answer)
     }
-    console.write("spite> ")
+    console.write('output', "", "spite> ")
 }
 
 func whole_line_of(typed: List<String>, line: String): String? {
