@@ -128,8 +128,8 @@ func _line_of(stream: Stream, values: List<Printable>): String {
                 shows_looks = _shows_looks_on(stream)
             }
             if shows_looks {
-                var plain = Look()
-                text = _styled_text(value, plain)
+                var outside = List<Look>()
+                text = _styled_text(value, outside)
             }
         }
         if index > 0 {
@@ -148,49 +148,50 @@ func _shows_looks_on(stream: Stream): Boolean {
 }
 
 # https://github.com/Spite-Language/spite_documentation/blob/master/standard_library.md#how-text-looks
-func _styled_text(styled: Styled, outer: Look): String {
-    var merged = _merged(styled.look, outer)
+func _styled_text(styled: Styled, outers: List<Look>): String {
+    var looks = outers.copy()
+    looks.append(styled.look)
     var inner = styled.value
     var text = inner.to_string()
     if inner.class == Styled {
-        text = _styled_text(inner, merged)
+        text = _styled_text(inner, looks)
     }
-    var opening = _codes_of(merged)
+    var opening = _codes_of(looks)
     var reset = _code("0")
-    var restored = _codes_of(outer)
+    var restored = _codes_of(outers)
     return "{opening}{text}{reset}{restored}"
 }
 
-func _merged(inner: Look, outer: Look): Look {
-    var merged = Look()
-    merged.color = outer.color
-    if inner.color {
-        merged.color = inner.color
+func _codes_of(looks: List<Look>): String {
+    var bold = false
+    var underline = false
+    var color_code = ""
+    var background_code = ""
+    var index = 0
+    while index < looks.count() {
+        var look = looks[index]
+        bold = bold or look.bold
+        underline = underline or look.underline
+        if look.color {
+            color_code = _color_code("38", look.color)
+        }
+        if look.background {
+            background_code = _color_code("48", look.background)
+        }
+        index = index + 1
     }
-    merged.background = outer.background
-    if inner.background {
-        merged.background = inner.background
-    }
-    merged.bold = outer.bold or inner.bold
-    merged.underline = outer.underline or inner.underline
-    return merged
-}
-
-func _codes_of(look: Look): String {
     var parts = List<String>()
-    if look.bold {
+    if bold {
         parts.append("1")
     }
-    if look.underline {
+    if underline {
         parts.append("4")
     }
-    if look.color {
-        var shown = _color_code("38", look.color)
-        parts.append(shown)
+    if not color_code.is_empty() {
+        parts.append(color_code)
     }
-    if look.background {
-        var shown_background = _color_code("48", look.background)
-        parts.append(shown_background)
+    if not background_code.is_empty() {
+        parts.append(background_code)
     }
     fallback not parts.is_empty()
     var joined = parts.join(";")
