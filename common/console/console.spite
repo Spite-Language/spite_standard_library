@@ -118,7 +118,6 @@ func _line_of(stream: Stream, values: List<Printable>): String {
     var line = ""
     var looks_checked = false
     var shows_looks = false
-    var plain = Look()
     var index = 0
     while index < values.count() {
         var value = values[index]
@@ -129,6 +128,7 @@ func _line_of(stream: Stream, values: List<Printable>): String {
                 shows_looks = _shows_looks_on(stream)
             }
             if shows_looks {
+                var plain = Look()
                 text = _styled_text(value, plain)
             }
         }
